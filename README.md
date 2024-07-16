@@ -8,9 +8,9 @@ Instructions and description in English: This repository tracks the tncidence of
 
 Parts of this workflow:
 
-The first step was to create repository secrets holding a key for a Redcap API: On github, go to settings --> secrets --> actions --> new repository secret --> enter redcap API key
-Ensure the key name you enter matches the key names used in main.yml
-Main.yml will run every Monday morning, or every time new information is pushed to the github repository.
-Redcap_data_processing.R reads the Redcap database using the secret tokens and makes publicly available excel files for use by R Shiny. Recap_data_processing is written to ensure that no personal protected data is uploaded to this github repository.
-app.R creates the interactive Shiny app interface.
-deploy_app.R will restart the Shiny app when run. The app is re-deployed every monday morning, according to the main.yml document.
+1. The first step was to create repository secrets holding a key for a Redcap API: On github, go to settings --> secrets --> actions --> new repository secret --> enter redcap API key
+2. Ensure the key name you enter matches the key names used in main.yml
+3. Main.yml will run every Monday morning, or every time new information is pushed to the github repository.
+4. Redcap_data_processing.R reads the Redcap database using the secret tokens and makes publicly available excel files for use by R Shiny. Recap_data_processing is written to ensure that no personal protected data is uploaded to this github repository.
+5. app.R creates the interactive Shiny app interface.
+6. deploy_app.R will restart the Shiny app when run. The app is re-deployed every monday morning, according to the main.yml document.
