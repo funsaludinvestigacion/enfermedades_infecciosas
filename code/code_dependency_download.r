@@ -18,7 +18,6 @@ remotes::install_version("digest", version = "0.6.36")
 remotes::install_version("bslib", version = "0.7.0")
 remotes::install_version("shinythemes", version = "1.2.0")
 remotes::install_version("reactable", version = "0.4.4")
-remotes::install_version("tidyr", version = "1.3.1")
 remotes::install_version("patchwork", version = "1.2.0")
 
 
