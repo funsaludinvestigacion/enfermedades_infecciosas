@@ -19,6 +19,7 @@ remotes::install_version("bslib", version = "0.7.0")
 remotes::install_version("shinythemes", version = "1.2.0")
 remotes::install_version("reactable", version = "0.4.4")
 remotes::install_version("patchwork", version = "1.2.0")
+remotes::install_version("grid", version = "4.4.1")
 
 
 # Load libraries
@@ -36,3 +37,4 @@ library(shinythemes)
 library(reactable)
 library(tidyr)
 library(patchwork)
+library(grid)

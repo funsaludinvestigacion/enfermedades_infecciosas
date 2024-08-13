@@ -1,7 +1,10 @@
 # Load the necessary libraries ------------------------------------------------------
-
-
-
+library(REDCapR)
+library(bslib)
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
+library(lubridate)
 
 # Load in the data ------------------------------------------------------------------
 influenza_token <- Sys.getenv("influenza_token")
@@ -22,11 +25,11 @@ influenza <-
 # The goal from this study is to identify the most common symptoms.
 
 # Primera llamada
-influenza$epiweek_1_llamada <- floor_date(
+influenza$epiweek_1_llamada <- lubridate::floor_date(
   influenza$fecha_hora_controles, unit = "week", week_start = 1)
 
 # Visita síntomatica
-influenza$epiweek_sintomatica <- floor_date(
+influenza$epiweek_sintomatica <- lubridate::floor_date(
   influenza$fecha_hora_visit_sint, unit = "week", week_start = 1)
 
 
@@ -36,7 +39,7 @@ influenza$epiweek_sintomatica <- floor_date(
 #visita_sintom
 
 # Create epiweek
-influenza$epiweek_sintomatica <- floor_date(influenza$fecha_hora_visit_sint, unit = "week", week_start = 1)
+influenza$epiweek_sintomatica <- lubridate::floor_date(influenza$fecha_hora_visit_sint, unit = "week", week_start = 1)
 
 columns_agri_sintomas_sintomatica <- c(
   # "tos_sintomatica", # en los ultimos 7 dias
@@ -83,7 +86,7 @@ columns_agri_sintomas_sintomatica_rename <- c(
 
 # Visita - Primera semana -------------------------------------------------
 
-influenza$epiweek_semana1 <- floor_date(influenza$fecha_hora_visita_1sem, unit = "week", week_start = 1)
+influenza$epiweek_semana1 <- lubridate::floor_date(influenza$fecha_hora_visita_1sem, unit = "week", week_start = 1)
 
 columns_agri_sintomas_semana1 <- c(
   "tos_1sem",
@@ -130,7 +133,7 @@ columns_agri_sintomas_semana1_rename <- c(
 # Visita - Cuarta semana ------------------------------------------------------
 
 # Create epiweek
-influenza$epiweek_semana4 <- floor_date(influenza$fecha_hora_visita_1mes, unit = "week", week_start = 1)
+influenza$epiweek_semana4 <- lubridate::floor_date(influenza$fecha_hora_visita_1mes, unit = "week", week_start = 1)
 
 columns_agri_sintomas_semana4 <- c(
   # "tos_7dias_1mes", # in past 7 days -- not going to include
@@ -178,7 +181,7 @@ columns_agri_sintomas_semana4_rename <- c(
 # Looking at muestras from FunSalud Laboratory (only from symptomatic individuals)------------------
 
 # Create epiweek
-influenza$epiweek_recolec <- floor_date(influenza$fecha_recolec, unit = "week", week_start = 1)
+influenza$epiweek_recolec <- lubridate::floor_date(influenza$fecha_recolec, unit = "week", week_start = 1)
 
 # Issue 1: How to deal with follow-up results (if sample is unprocessed or indeterminant (3 or 5))
 # We can create a new column for this
