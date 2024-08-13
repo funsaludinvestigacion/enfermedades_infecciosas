@@ -4,8 +4,8 @@
 library(rsconnect)
 
 # Save secret token for connecting to R shiny account
-r_shiny_account_secret <- Sys.getenv("r_shiny_account_token")
-r_shiny_token <- Sys.getenv("r_shiny_token")
+shinyio_token <- Sys.getenv("shinyio_token")
+shinyio_secret <- Sys.getenv("shinyio_secret")
 
 
 # Connect the r script below to an R shiny account
