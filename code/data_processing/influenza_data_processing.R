@@ -5,6 +5,7 @@ library(ggplot2)
 library(ggrepel)
 library(dplyr)
 library(lubridate)
+library(tidyr)
 
 # Load in the data ------------------------------------------------------------------
 influenza_token <- Sys.getenv("influenza_token")
@@ -439,7 +440,7 @@ symptom_summary_wide_allweeks[is.na(symptom_summary_wide_allweeks)] <- 0
 
 # Next, we need to convert this from a wide to long dataset
 symptoms_summary_counts <- symptom_summary_wide_allweeks %>%
-  pivot_longer(
+  tidyr::pivot_longer(
     cols = all_of(columns_agri_sintomas_clean_names),
     names_to = "Síntoma",
     values_to = "Count"
