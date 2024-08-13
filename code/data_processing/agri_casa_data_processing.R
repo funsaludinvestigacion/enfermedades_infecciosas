@@ -18,7 +18,7 @@ agri_casa <-
     token = agri_casa_token
   )$data
 
-agri_casa$epiweek_v_rutina <- floor_date(agri_casa$fecha_visita_vig_rut, unit = "week", week_start = 1)
+agri_casa$epiweek_v_rutina <- lubridate::floor_date(agri_casa$fecha_visita_vig_rut, unit = "week", week_start = 1)
 
 #los ultimos dos numeros del id corresponde al individuo, y el primero cinco a la familia
 # Crear un ID de familia
@@ -30,7 +30,7 @@ agri_casa$id_familia <- substr(agri_casa$record_id, 1, 5)
 # Begin processing pcr positive data --------------------------------------------------
 
 # Crear fecha
-agri_casa$epiweek_muestra_funsalud <-floor_date(agri_casa$fecha_recoleccion_m, unit = "week", week_start = 1)
+agri_casa$epiweek_muestra_funsalud <-lubridate::floor_date(agri_casa$fecha_recoleccion_m, unit = "week", week_start = 1)
 
 # Look at singleplex results (symtomatic and visitas intensivas) -------------
 # Only contains information for SARS-COV-2
@@ -163,7 +163,7 @@ first_intensive_df$date_positive_intens <- ifelse(!is.na(first_intensive_df$fech
 first_intensive_df$date_positive_intens <- as.Date(first_intensive_df$date_positive_intens, origin = "1970-01-01")
 
 # Create an epiweek column to obscure personal protective information
-first_intensive_df$epiweek_positive_intes <- floor_date(first_intensive_df$date_positive_intens, unit = "week", week_start = 1)
+first_intensive_df$epiweek_positive_intes <- lubridate::floor_date(first_intensive_df$date_positive_intens, unit = "week", week_start = 1)
 
 
 # Create denominator -----------------------------------------------------------------------------
@@ -184,7 +184,7 @@ incidence_intens_denominator <- agri_casa%>%
 incidence_intens_denominator_count <- incidence_intens_denominator%>%
   mutate(date_denominator = ifelse(realizado_vig_rut==1, fecha_visita_vig_rut,
                                                         ifelse(se_realizo_visit_intens==1, fecha_visit_intens, NA)),
-         epiweek_denominator = floor_date(as.Date(date_denominator, origin = "1970-01-01"), unit = "week", week_start = 1))%>%
+         epiweek_denominator = lubridate::floor_date(as.Date(date_denominator, origin = "1970-01-01"), unit = "week", week_start = 1))%>%
   # select one row per individual per week
   dplyr::group_by(record_id, epiweek_denominator)%>%
   dplyr::slice(1)%>%
@@ -300,7 +300,7 @@ summary_pos_denom_agri_casa <- merge(summary_pos_agri_casa, incidence_intens_den
 
 # Look at ILI syndrome counts--------------------------------------
 # Create epiweek
-agri_casa$epiweek_v_rutina <- floor_date(agri_casa$fecha_visita_vig_rut, unit = "week", week_start = 1)
+agri_casa$epiweek_v_rutina <- lubridate::floor_date(agri_casa$fecha_visita_vig_rut, unit = "week", week_start = 1)
 
 
 # Create a dataset for ILI syndromic illness (difficulty breathing, fever, cough)
@@ -323,7 +323,7 @@ agri_symptoms_ILI <- agri_casa%>%
   # create an epiweek variable
   mutate(date_symptoms = ifelse(realizado_vig_rut==1 & is.na(se_realizo_visit_intens), fecha_visita_vig_rut,
                                    ifelse(se_realizo_visit_intens==1 & is.na(realizado_vig_rut), fecha_visit_intens, NA)),
-         epiweek_symptoms = floor_date(as.Date(date_symptoms, origin = "1970-01-01"), unit = "week", week_start = 1))%>%
+         epiweek_symptoms = lubridate::floor_date(as.Date(date_symptoms, origin = "1970-01-01"), unit = "week", week_start = 1))%>%
   dplyr::group_by(epiweek_symptoms)%>%
   dplyr::summarise(tos_count = n_distinct(record_id[tos_visit_ints >= 2 | tos_flm_visit_ints >= 2 | tos_vig_rut == 1]),
                    fiebre_count = n_distinct(record_id[sensa_fiebre_visit_ints >= 2 | fiebre_vig_rut == 1]),
@@ -392,7 +392,7 @@ agri_casa_symptoms <- agri_casa%>%
   # create an epiweek variable
   mutate(date_symptoms = ifelse(realizado_vig_rut==1 & is.na(se_realizo_visit_intens), fecha_visita_vig_rut,
                                 ifelse(se_realizo_visit_intens==1 & is.na(realizado_vig_rut), fecha_visit_intens, NA)),
-         epiweek_symptoms = floor_date(as.Date(date_symptoms, origin = "1970-01-01"), unit = "week", week_start = 1))
+         epiweek_symptoms = lubridate::floor_date(as.Date(date_symptoms, origin = "1970-01-01"), unit = "week", week_start = 1))
 
 
 # ISSUE 6: We don't know what someone will choose on the symptom tracker (there are a lot of possible combinations!)

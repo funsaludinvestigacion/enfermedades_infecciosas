@@ -1,8 +1,16 @@
-
 # Load libraries -----------------------------------------------------------
+library(REDCapR)
+library(bslib)
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
+library(lubridate)
+library(digest)
 library(tidyr)
+library(dplyr)
 library(grid)
 library(patchwork)
+library(lubridate)
 
 # Load data -----------------------------------------------------------------
 
@@ -19,7 +27,7 @@ namru_biofire <-
 
 # Create epiweek--------------------------------------------------------------
 
-namru_biofire$epiweek_recoleccion <- floor_date(namru_biofire$fecha_recoleccion, unit = "week", week_start = 1)
+namru_biofire$epiweek_recoleccion <- lubridate::floor_date(namru_biofire$fecha_recoleccion, unit = "week", week_start = 1)
 
 # Is each individual is currently mentioned once in the dataset?
 nrow(unique(namru_biofire%>%
