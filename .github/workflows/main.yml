@@ -73,7 +73,7 @@ jobs:
 
       - name: Deploy applications
         env:
-          r_shiny_account_token: ${{ secrets.R_SHINY_ACCOUNT_TOKEN }}
-          r_shiny_token: ${{ secrets.R_SHINY_TOKEN }}
+          shinyio_secret: ${{ secrets.SHINYIO_SECRET }}
+          shinyio_token: ${{ secrets.SHINYIO_TOKEN }}
         run: |
           Rscript code/deploy_app.R
