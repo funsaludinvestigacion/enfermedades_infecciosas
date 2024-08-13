@@ -28,7 +28,7 @@ jobs:
           namru_biofire_token: ${{ secrets.NAMRU_BIOFIRE_TOKEN }}
           agri_casa_token: ${{ secrets.AGRI_CASA_TOKEN }}
         run: |
-          Rscript code/code_dependency_download.R
+          # Rscript code/code_dependency_download.R
           Rscript code/data_processing/agri_casa_data_processing.R
           Rscript code/data_processing/influenza_data_processing.R
           Rscript code/data_processing/namru_biofire_data_processing.R
