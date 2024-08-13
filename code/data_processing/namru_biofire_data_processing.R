@@ -5,6 +5,9 @@ library(grid)
 library(patchwork)
 
 # Load data -----------------------------------------------------------------
+
+namru_biofire_token <- Sys.getenv("namru_biofire_token")
+
 uri <- "https://redcap.ucdenver.edu/api/"
 
 namru_biofire <- 
