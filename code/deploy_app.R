@@ -9,7 +9,7 @@ r_shiny_token <- Sys.getenv("r_shiny_token")
 
 
 # Connect the r script below to an R shiny account
-rsconnect::setAccountInfo(name='funsaludinvestigacion', token=r_shiny_token, secret= r_shiny_account_secret)
+rsconnect::setAccountInfo(name='funsaludinvestigacion', token=shinyio_token, secret= shinyio_secret)
 
 # Deploy app
 rsconnect::deployApp('code/', forceUpdate = TRUE, launch.browser = FALSE)
