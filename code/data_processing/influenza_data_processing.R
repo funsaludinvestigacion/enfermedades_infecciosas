@@ -4,6 +4,7 @@
 
 
 # Load in the data ------------------------------------------------------------------
+influenza_token <- Sys.getenv("influenza_token")
 
 uri <- "https://redcap.ucdenver.edu/api/"
 

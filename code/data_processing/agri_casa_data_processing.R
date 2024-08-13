@@ -8,6 +8,8 @@ library(lubridate)
 library(digest)
 
 # Load data ----------------------------------------------------------------------
+agri_casa_token <- Sys.getenv("agri_casa_token")
+
 uri <- "https://redcap.ucdenver.edu/api/"
 
 agri_casa <- 
