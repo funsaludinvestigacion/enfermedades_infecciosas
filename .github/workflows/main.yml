@@ -40,6 +40,7 @@ jobs:
              && git diff --quiet --exit-code \
              docs/agri_casa_symptom_summary_updated.csv \
              && git diff --quiet --exit-code docs/influenza_summary_updated.csv \
+             && git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv \
              && git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv; then
             echo "No changes in CSV files. Skipping commit and push."
           else
@@ -57,6 +58,9 @@ jobs:
             fi
             if ! git diff --quiet --exit-code docs/influenza_summary_updated.csv; then
               git add docs/influenza_summary_updated.csv
+            fi
+            if ! git diff --quiet --exit-code docs/influenza_summary_updated.csv; then
+              git add docs/influenza_symptom_summary_updated.csv
             fi
             if ! git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv; then
               git add docs/namru_biofire_summary_updated.csv

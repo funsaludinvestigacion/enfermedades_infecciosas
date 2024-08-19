@@ -10,6 +10,7 @@ library(patchwork)
 
 # Load dataframes -----------------------------------------------------------------------
 influenza_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/influenza_summary_updated.csv")
+influenza_symptom_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/influenza_symptom_summary_updated.csv")
 agri_casa_symptom_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/agri_casa_symptom_summary_updated.csv")
 agri_casa_incidence_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/agri_casa_summary_updated.csv")
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/namru_biofire_summary_updated.csv")
@@ -269,25 +270,22 @@ ui_tab2 <- function() {
 ui_tab3 <- function() { 
   fluidPage(
     titlePanel(""),
-    
-    sidebarLayout(
-      sidebarPanel(  
-            # Date range input
-      dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
-                     start = "2020-06-29", end = Sys.Date())
-      ),
       mainPanel(
+        # Date range input now in mainPanel
+        dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
+                       start = "2020-06-29", end = Sys.Date()),
+        
         # Add information about the study
         h2("Estudio NAMRU/Biofire: Pruebas de Enfermedades Infecciosas Emergentes", style = "color: orange;"),
         p(Info_Biofire),
         fluidRow(
-      column(12, reactableOutput("table_tab3")),
-      column(12, plotOutput("combined_plot_tab3"))
-        ),
+          column(12, div(style = "text-align: center;", reactableOutput("table_tab3"))),
+          column(12, plotOutput("combined_plot_tab3"))
       )
     )
   )
 }
+
 
 # Define UI for Tab 4
 ui_tab4 <- function() { 
@@ -341,7 +339,7 @@ server <- function(input, output) {
   
   influenza_symptoms_data <- reactive({
   
-    influenza_symptoms_summary_subset_pre <- symptom_summary
+    influenza_symptoms_summary_subset_pre <- influenza_symptom_summary
     influenza_symptoms_summary_subset <- influenza_symptoms_summary_subset_pre[influenza_symptoms_summary_subset_pre[[input$virus]] == 1, ]
 
     # Filter data based on selected date range
