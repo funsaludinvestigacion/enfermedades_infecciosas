@@ -418,4 +418,7 @@ summary_combined <- lapply(columns_to_process, function(col) generate_summary(me
 # Save the summary dataframe -----------------------------------------------
 influenza_csv_file <- "docs/influenza_summary_updated.csv"
 write.csv(summary_combined, file = influenza_csv_file, row.names = FALSE)
+                           
+influenza_symptom_csv_file <- "docs/influenza_symptom_summary_updated.csv"
+write.csv(symptom_summary, file = influenza_symptom_csv_file, row.names = FALSE)
 # ---------------------------------------------------------------------------
