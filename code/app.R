@@ -199,7 +199,7 @@ ui_tab1 <- function() {
       sidebarPanel(
         # Date range input
         dateRangeInput("date_range_input_tab1", "Eligir el período del tiempo:",
-                       start = "2020-06-29", end = Sys.Date()),
+                       start = "2020-06-29", end = Sys.Date(), separator = " a "),
         # Dropdown menu for selecting disease
         radioButtons("virus", "Virus:",
                      c("Influenza A" = "resul_inf_a_all",
@@ -237,7 +237,8 @@ ui_tab2 <- function() {
           "date_range_input_tab2",
           "Eligir el período del tiempo:",
           start = "2023-10-02",
-          end = Sys.Date()
+          end = Sys.Date(),
+          separator = " a "
         ),
         # Add the virus selection and date range input similar to Tab 1
         radioButtons("virus_agri", "Virus:",
@@ -272,7 +273,7 @@ ui_tab3 <- function() {
       mainPanel(
         # Date range input now in mainPanel
         dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
-                       start = "2020-06-29", end = Sys.Date()),
+                       start = "2020-06-29", end = Sys.Date(), separator = " a "),
         
         # Add information about the study
         h2("Estudio NAMRU/Biofire: Pruebas de Enfermedades Infecciosas Emergentes", style = "color: orange;"),
