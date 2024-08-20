@@ -344,7 +344,7 @@ semana1_visit_pos <- merge_with_date_condition(agri_positivity_data,
                                                date_diff = 21)
 
 # Define where the symptoms came from
-semana1_visit_pos$visit_type <- "Semana 1: una semana despues de la recoleción"
+semana1_visit_pos$visit_type <- "Semana 1: una semana despúes de la recoleción"
 
 # Make the symptoms binary
 semana1_visit_pos_bin <- semana1_visit_pos %>%
@@ -368,7 +368,7 @@ semana4_visit_pos <- merge_with_date_condition(agri_positivity_data,
                                                date_diff = 42)
 
 # Define where the symptoms came from
-semana4_visit_pos$visit_type <- "Semana 4: cuatro semanas despues de la recoleción"
+semana4_visit_pos$visit_type <- "Semana 4: cuatro semanas despúes de la recoleción"
 
 # Make the symptoms binary
 semana4_visit_pos_bin <- semana4_visit_pos %>%

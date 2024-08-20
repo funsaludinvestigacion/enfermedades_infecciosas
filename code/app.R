@@ -29,9 +29,8 @@ Si algún miembro de la familia se da positiva por una prueba de una enfermedad 
 el resto de la familia recibirá dos visitas intensivas cada semana para entender la transmición de estas enfermedades respiratorias.
 "
 
-Info_Biofire <- "El equipo ofrece el Sistema Biofire para personas con síntomas de fiebre, falta de aire y tos, quienes están en el hospital afiliado con el estudio.
-El Sistema Biofire evalúa si un paciente está infectado con un amplio abanico de posibles enfermedades infecciosas.
-Los resultados acumulados de las pruebas de Biofire están compartidos aquí."
+Info_Biofire <- "En el hospital afilado con el estudio, los proveedores ofrecen el Sistema Biofire a los pacientes que experimentan síntomas de fiebre, falta de aire y tos.
+El Sistema Biofire es una prueba rápida para un amplio abanico de posibles enfermedades infecciosas. Los resultados acumulados de las pruebas de Biofire están compartidos aquí, organizados por semana."
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish
