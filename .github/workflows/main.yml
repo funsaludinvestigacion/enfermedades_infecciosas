@@ -59,7 +59,7 @@ jobs:
             if ! git diff --quiet --exit-code docs/influenza_summary_updated.csv; then
               git add docs/influenza_summary_updated.csv
             fi
-            if ! git diff --quiet --exit-code docs/influenza_summary_updated.csv; then
+            if ! git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv; then
               git add docs/influenza_symptom_summary_updated.csv
             fi
             if ! git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv; then
