@@ -9,11 +9,11 @@ library(tidyr)
 library(patchwork)
 
 # Load dataframes -----------------------------------------------------------------------
-influenza_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/influenza_summary_updated.csv")
-influenza_symptom_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/influenza_symptom_summary_updated.csv")
-agri_casa_symptom_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/agri_casa_symptom_summary_updated.csv")
-agri_casa_incidence_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/agri_casa_summary_updated.csv")
-namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/ggionet1/Guatemala_Infectious_Incidence/main/docs/namru_biofire_summary_updated.csv")
+influenza_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/influenza_summary_updated.csv")
+influenza_symptom_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/influenza_symptom_summary_updated.csv")
+agri_casa_symptom_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/agri_casa_summary_updated.csv")
+agri_casa_incidence_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/agri_casa_incidence_summary_updated.csv")
+namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
 
 # Information about each study ------------------------
 
@@ -286,18 +286,6 @@ ui_tab3 <- function() {
   )
 }
 
-
-# Define UI for Tab 4
-ui_tab4 <- function() { 
-  fluidPage(
-    titlePanel("Todos Datos"),
-    fluidRow(column=6,
-             # Date range input
-             dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
-                            start = "2020-06-29", end = Sys.Date()))
-             
-    )
-}
 
 # Define UI for application
 ui <- fluidPage(
