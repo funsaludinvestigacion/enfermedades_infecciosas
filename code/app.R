@@ -407,7 +407,7 @@ server <- function(input, output) {
       scale_fill_manual(values = c("Total" = "grey", "Prueba Positiva" = "red")) +
       theme_classic() +
       labs(
-        title = paste("Número de individuos con un resultados de", selected_virus_label),
+        title = paste("Número de individuos con resultados de", selected_virus_label),
         x = "",
         y = "",
         fill = "Resultado"
@@ -436,7 +436,7 @@ server <- function(input, output) {
         scale_fill_manual(values = c("Total" = "grey", "Prueba Negativa" = "blue")) +
         theme_classic() +
         labs(
-          title = paste("Número de individuos con un resultados de", selected_virus_label),
+          title = paste("Número de individuos con resultados de", selected_virus_label),
           x = "",
           y = "",
           fill = "Resultado"
