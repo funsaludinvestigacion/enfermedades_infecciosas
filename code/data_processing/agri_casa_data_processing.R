@@ -8,7 +8,8 @@ library(lubridate)
 library(digest)
 
 # Load data ----------------------------------------------------------------------
-agri_casa_token <- Sys.getenv("agri_casa_token")
+readRenviron(".Renviron")
+agri_casa_token = Sys.getenv("agri_casa_token")
 
 uri <- "https://redcap.ucdenver.edu/api/"
 
@@ -35,19 +36,6 @@ agri_casa$epiweek_muestra_funsalud <-lubridate::floor_date(agri_casa$fecha_recol
 # Look at singleplex results (symtomatic and visitas intensivas) -------------
 # Only contains information for SARS-COV-2
 
-# Make follow-up values numeric and match the code for the COBAS results
-agri_casa$ctgen_rep_resul_num <- ifelse(
-                                    is.na(agri_casa$ctgen_rep_resul), NA,
-                                        ifelse(
-                                          agri_casa$ctgen_rep_resul=="POSITIVO", 1,
-                                               ifelse(
-                                                 agri_casa$ctgen_rep_resul=="NEGATIVO", 2,
-                                                      ifelse(
-                                                        agri_casa$ctgen_rep_resul=="INVÁLIDO" | agri_casa$ctgen_rep_resul=="INCONCLUSO", 3, NA)
-                                                 )
-                                          )
-                                    )
-
 # Create overall numeric variable using original and repeated results
 agri_casa$vctg_resul_num <- ifelse(
   is.na(agri_casa$vctg_resul) & is.na(agri_casa$ctgen_rep_resul_num), NA,
@@ -62,17 +50,108 @@ agri_casa$vctg_resul_num <- ifelse(
           (agri_casa$vctg_resul == "INVÁLIDO" | agri_casa$vctg_resul == "INCONCLUSO") & is.na(agri_casa$ctgen_rep_resul_num),
           3,
           NA)
-        )
       )
     )
   )
+)
+
+# Make follow-up values numeric and match the code for the COBAS results
+agri_casa$ctgen_rep_resul_num <- ifelse(
+                                    is.na(agri_casa$ctgen_rep_resul), NA,
+                                        ifelse(
+                                          agri_casa$ctgen_rep_resul=="POSITIVO", 1,
+                                               ifelse(
+                                                 agri_casa$ctgen_rep_resul=="NEGATIVO", 2,
+                                                      ifelse(
+                                                        agri_casa$ctgen_rep_resul=="INVÁLIDO" | agri_casa$ctgen_rep_resul=="INCONCLUSO", 3, NA)
+                                                 )
+                                          )
+                                    )
 
 # Check that no information was lost
 # table(is.na(agri_casa$vctg_resul_num))[1] >= table(is.na(agri_casa$vctg_resul))[1]
 
+# Look at multiplex results (symtomatic and visitas intensivas) -------------
+# Create overall numeric variable using original and repeated results
+
+# For infa variables
+agri_casa$multiplex_infa <- ifelse(
+  is.na(agri_casa$res_mp_infa) & is.na(agri_casa$res_mp_infa_3) & 
+    is.na(agri_casa$res_mp_infa_2) & is.na(agri_casa$res_mp_infa_4), NA,
+  ifelse(
+    !is.na(agri_casa$res_mp_infa_4), 
+    ifelse(agri_casa$res_mp_infa_4 == "POSITIVO", 1, 
+           ifelse(agri_casa$res_mp_infa_4 == "NEGATIVO", 2, 3)),
+    ifelse(
+      !is.na(agri_casa$res_mp_infa_2), 
+      ifelse(agri_casa$res_mp_infa_2 == "POSITIVO", 1, 
+             ifelse(agri_casa$res_mp_infa_2 == "NEGATIVO", 2, 3)),
+      ifelse(
+        !is.na(agri_casa$res_mp_infa_3), 
+        ifelse(agri_casa$res_mp_infa_3 == "POSITIVO", 1, 
+               ifelse(agri_casa$res_mp_infa_3 == "NEGATIVO", 2, 3)),
+        ifelse(
+          agri_casa$res_mp_infa == "POSITIVO", 1, 
+          ifelse(agri_casa$res_mp_infa == "NEGATIVO", 2, 3)
+        )
+      )
+    )
+  )
+)
+
+# For infb variables
+agri_casa$multiplex_infb <- ifelse(
+  is.na(agri_casa$res_mp_infb) & is.na(agri_casa$res_mp_infb_3) & 
+    is.na(agri_casa$res_mp_infb_2) & is.na(agri_casa$res_mp_infb_4), NA,
+  ifelse(
+    !is.na(agri_casa$res_mp_infb_4), 
+    ifelse(agri_casa$res_mp_infb_4 == "POSITIVO", 1, 
+           ifelse(agri_casa$res_mp_infb_4 == "NEGATIVO", 2, 3)),
+    ifelse(
+      !is.na(agri_casa$res_mp_infb_2), 
+      ifelse(agri_casa$res_mp_infb_2 == "POSITIVO", 1, 
+             ifelse(agri_casa$res_mp_infb_2 == "NEGATIVO", 2, 3)),
+      ifelse(
+        !is.na(agri_casa$res_mp_infb_3), 
+        ifelse(agri_casa$res_mp_infb_3 == "POSITIVO", 1, 
+               ifelse(agri_casa$res_mp_infb_3 == "NEGATIVO", 2, 3)),
+        ifelse(
+          agri_casa$res_mp_infb == "POSITIVO", 1, 
+          ifelse(agri_casa$res_mp_infb == "NEGATIVO", 2, 3)
+        )
+      )
+    )
+  )
+)
+
+# For covid variables
+agri_casa$multiplex_covid <- ifelse(
+  is.na(agri_casa$res_mp_covid) & is.na(agri_casa$res_mp_covid_3) & 
+    is.na(agri_casa$res_mp_covid_2) & is.na(agri_casa$res_mp_covid_4), NA,
+  ifelse(
+    !is.na(agri_casa$res_mp_covid_4), 
+    ifelse(agri_casa$res_mp_covid_4 == "POSITIVO", 1, 
+           ifelse(agri_casa$res_mp_covid_4 == "NEGATIVO", 2, 3)),
+    ifelse(
+      !is.na(agri_casa$res_mp_covid_2), 
+      ifelse(agri_casa$res_mp_covid_2 == "POSITIVO", 1, 
+             ifelse(agri_casa$res_mp_covid_2 == "NEGATIVO", 2, 3)),
+      ifelse(
+        !is.na(agri_casa$res_mp_covid_3), 
+        ifelse(agri_casa$res_mp_covid_3 == "POSITIVO", 1, 
+               ifelse(agri_casa$res_mp_covid_3 == "NEGATIVO", 2, 3)),
+        ifelse(
+          agri_casa$res_mp_covid == "POSITIVO", 1, 
+          ifelse(agri_casa$res_mp_covid == "NEGATIVO", 2, 3)
+        )
+      )
+    )
+  )
+)
+
 
 # Look at COBAS results (PCR for symptomatics) and singleplex --------------------------------
-# Issue 1: How to deal with follow-up results (if sample is unprocessed or indeterminant)
+# Issue 1: How to deal with follow-up results (if sample is unprocessed or indeterminate)
 # We can create a new column for this
 create_new_column_agri_casa <- function(df, col1, col2, new_col) {
   df[[new_col]] <- ifelse(is.na(df[[col1]]) & is.na(df[[col2]]), NA,
@@ -103,27 +182,30 @@ for (cols in columns_to_iterate_agricasa) {
   agri_casa <- create_new_column_agri_casa(agri_casa, cols[[1]], cols[[2]], cols[[3]])
 }
 
-# Look at VSG results only? NO HAY NADA EN ESTA SECCION ----------------------
+# Look at VSR results only? NO HAY NADA EN ESTA SECCION ----------------------
 # table(agri_casa$pcr_srv, useNA = "always")
 
 # Find positive or negative status by week per individual ----------------------
 # Issue 2: What if the same individual is tested multiple times in the same week?
 # We don't care if the result is the same
 # We do care if one is positive (always prefer the positive value)
-# Since the minimum value is the preferred data type (1 = positve, 2 = negative), select for minimum value
+# Since the minimum value is the preferred data type (1 = positive, 2 = negative), select for minimum value
 filter_group_slice_agri_casa <- function(data, column) {
   data %>%
     dplyr::filter(!is.na(!!sym(column))) %>%
     dplyr::group_by(record_id, epiweek_muestra_funsalud) %>%
-    dplyr::slice(which.min(!!sym(column)))%>%
-    dplyr::select(c(record_id, epiweek_muestra_funsalud, column))
+    dplyr::slice(which.min(!!sym(column))) %>%
+    dplyr::select(all_of(c("record_id", "epiweek_muestra_funsalud", column)))
 }
 
 columns_to_process_agri_casa <- c("sars_cov2_all_funsalud",
                                   "inf_a_all_funsalud",
                                   "inf_b_all_funsalud",
                                   "vsr_all_funsalud",
-                                  "vctg_resul_num")
+                                  "vctg_resul_num",
+                                  "multiplex_infa",
+                                  "multiplex_infb",
+                                  "multiplex_covid")
 
 # Create a place to store summarized data
 summary_dataframes_agri_casa <- list()
@@ -138,11 +220,38 @@ merged_summary_agri_casa <- Reduce(function(x, y) merge(x, y, by = c("record_id"
                                                         all = TRUE), summary_dataframes_agri_casa)
 
 # Create a combined column for sars_cov2 using singleplex and COBAS results---------------
-merged_summary_agri_casa <- merged_summary_agri_casa%>%
-  dplyr::mutate(sars_cov2_singleplex_cobas = ifelse(is.na(vctg_resul_num) &
-                                                                is.na(sars_cov2_all_funsalud), NA,
-                                                              pmin(vctg_resul_num, sars_cov2_all_funsalud, na.rm = TRUE)))
+#merged_summary_agri_casa <- merged_summary_agri_casa%>%
+ # dplyr::mutate(sars_cov2_singleplex_cobas = ifelse(is.na(vctg_resul_num) &
+  #                                                              is.na(sars_cov2_all_funsalud), NA,
+   #                                                           pmin(vctg_resul_num, sars_cov2_all_funsalud, na.rm = TRUE)))
 
+
+# Create a combined column for multiplex_covid using singleplex and COBAS results ---------------
+merged_summary_agri_casa <- merged_summary_agri_casa %>%
+  dplyr::mutate(
+    # Combine sars_cov2 from cobas with singleplex_cobas multiplex_covid
+    sars_cov2_combined = ifelse(
+      is.na(vctg_resul_num) & is.na(sars_cov2_all_funsalud) & 
+        is.na(multiplex_covid), 
+      NA, 
+      pmin(
+        pmin(vctg_resul_num, sars_cov2_all_funsalud, na.rm = TRUE), 
+        multiplex_covid, 
+        na.rm = TRUE
+      )),
+    # Combine multiplex_infa with inf_a_all_funsalud
+    multiplex_infa_combined = ifelse(
+      is.na(inf_a_all_funsalud) & is.na(multiplex_infa), 
+      NA, 
+      pmin(inf_a_all_funsalud, multiplex_infa, na.rm = TRUE)
+    ),
+    # Combine multiplex_infb with inf_b_all_funsalud
+    multiplex_infb_combined = ifelse(
+      is.na(inf_b_all_funsalud) & is.na(multiplex_infb), 
+      NA, 
+      pmin(inf_b_all_funsalud, multiplex_infb, na.rm = TRUE)
+    )
+  )
 
 # Begin processing intensive visit data --------------------------------------------------
 
@@ -199,9 +308,9 @@ incidence_intens_denominator_count <- incidence_intens_denominator%>%
 merged_summary_agri_casa_subset <- merged_summary_agri_casa %>%
   dplyr::select("record_id",
                 "epiweek_muestra_funsalud",
-                "sars_cov2_singleplex_cobas",
-                "inf_a_all_funsalud",
-                "inf_b_all_funsalud",
+                "sars_cov2_combined",
+                "multiplex_infa_combined",
+                "multiplex_infb_combined",
                 "vsr_all_funsalud")
 
 # Separate the enfermedad_activacion column into three separate columns
@@ -223,11 +332,11 @@ pcr_intens_visit_incidence_summary_pre <- merge(merged_summary_agri_casa_subset,
 # Create overall columns
 pcr_intens_visit_incidence_summary <- pcr_intens_visit_incidence_summary_pre%>%
   dplyr::mutate(
-    sars_cov2_all = pmin(sars_cov2_singleplex_cobas, sars_cov_intens, na.rm = TRUE),
-    influenza_all = pmin(inf_a_all_funsalud, inf_b_all_funsalud, influenza_intens, na.rm = TRUE),
+    sars_cov2_all = pmin(sars_cov2_combined, sars_cov_intens, na.rm = TRUE),
+    influenza_all = pmin(multiplex_infa_combined, multiplex_infb_combined, influenza_intens, na.rm = TRUE),
     vsr_all = pmin(vsr_all_funsalud, vsr_intens, na.rm = TRUE)
   )%>%
-  # because our denominator is coming from another dataset (total number of individuals with routine and intensive vists)
+  # because our denominator is coming from another dataset (total number of individuals with routine and intensive visits)
   # we can filter out any rows where there is not a 1 (positive result) in our columns of interest
   dplyr::filter((sars_cov2_all==1 | influenza_all==1 | vsr_all==1))
 
