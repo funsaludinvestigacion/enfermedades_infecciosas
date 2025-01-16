@@ -191,7 +191,7 @@ columns_hisnaso <- columns_hisnaso[columns_hisnaso != "Negativo_hisnaso"]
 # Define UI for random distribution app ----
 # Sidebar layout with input and output definitions ----
 
-# Define UI for Tab 1
+# Define UI for Tab 1 (AGRI)
 ui_tab1 <- function() {
   fluidPage(
     titlePanel("Estudio Agri"),
@@ -199,7 +199,7 @@ ui_tab1 <- function() {
       sidebarPanel(
         # Date range input
         dateRangeInput("date_range_input_tab1", "Eligir el período del tiempo:",
-                       start = "2020-06-29", end = Sys.Date(), separator = " a "),
+                       start = "2020-06-29", end = "2024-09-30", separator = " a "),
         # Dropdown menu for selecting disease
         radioButtons("virus", "Virus:",
                      c("Influenza A" = "resul_inf_a_all",
@@ -225,7 +225,7 @@ ui_tab1 <- function() {
 }
 
 
-# Define UI for Tab 2
+# Define UI for Tab 2 (AGRICASA EXPANSION)
 
 ui_tab2 <- function() {
   fluidPage(
@@ -237,7 +237,7 @@ ui_tab2 <- function() {
           "date_range_input_tab2",
           "Eligir el período del tiempo:",
           start = "2023-10-02",
-          end = Sys.Date(),
+          end = "2024-07-31",
           separator = " a "
         ),
         # Add the virus selection and date range input similar to Tab 1
@@ -266,7 +266,7 @@ ui_tab2 <- function() {
 }
 
 
-# Define UI for Tab 3
+# Define UI for Tab 3 (BIOFIRE)
 ui_tab3 <- function() { 
   fluidPage(
     titlePanel(""),
@@ -276,12 +276,42 @@ ui_tab3 <- function() {
                        start = "2020-06-29", end = Sys.Date(), separator = " a "),
         
         # Add information about the study
-        h2("Estudio NAMRU/Biofire: Pruebas de Enfermedades Infecciosas Emergentes", style = "color: orange;"),
+        h2("Estudio Biofire: Pruebas de Enfermedades Infecciosas y Febriles", style = "color: orange;"),
         p(Info_Biofire),
         fluidRow(
           column(12, div(style = "text-align: center;", reactableOutput("table_tab3"))),
           column(12, plotOutput("combined_plot_tab3"))
       )
+    )
+  )
+}
+
+# Define UI for Tab 4 (VIGICASA)
+ui_tab4 <- function() { 
+  fluidPage(
+    titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en casas"),
+    mainPanel(
+      h2("Viene pronto!", style = "color: orange; text-align: center;")
+    )
+  )
+}
+
+# Define UI for Tab 5 (VIGIFINCA - BANASA)
+ui_tab5 <- function() { 
+  fluidPage(
+    titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Banasa"),
+    mainPanel(
+      h2("Viene pronto!", style = "color: orange; text-align: center;")
+    )
+  )
+}
+
+# Define UI for Tab 6 (VIGIFINCA - PANTALEON)
+ui_tab6 <- function() { 
+  fluidPage(
+    titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Pantaleon"),
+    mainPanel(
+      h2("Viene pronto!", style = "color: orange; text-align: center;")
     )
   )
 }
@@ -301,7 +331,10 @@ ui <- fluidPage(
     # Define the three tabs
     tabPanel("Estudio AGRI", ui_tab1()),
     tabPanel("Estudio AGRI-CASA", ui_tab2()),
-    tabPanel("Estudio NAMRU-Biofire", ui_tab3())
+    tabPanel("Estudio Biofire", ui_tab3()),
+    tabPanel("VIGICASA", ui_tab4()),
+    tabPanel("VIGIFINCA - BANASA", ui_tab5()),
+    tabPanel("VIGIFINCA - PANTALEON", ui_tab6())
     )
   )
 
@@ -344,7 +377,7 @@ server <- function(input, output) {
     
     # Make sure each week is represented (put a 0 as count if not represented already)-----------
     # Step 1: Generate a complete sequence of dates (epiweeks in this case)
-    date_range <- seq(as.Date("2020-06-29"), Sys.Date(), by = "weeks")
+    date_range <- seq(as.Date("2020-06-29"), as.Date("2024-09-30"), by = "weeks")
     
     # Step 2: Expand dataset to include all possible combinations of epiweek and visit_type
     expand_date_df <- expand.grid(
@@ -978,6 +1011,10 @@ output$combined_plot_tab3 <- renderPlot({
     # Display the combined plot with specified width and height
     combined_plot
 }, height = 900, width = 875) 
+
+# --------------------------------------------------------------------------
+#                             VIGILANCIA
+# --------------------------------------------------------------------------
 
 
 }
