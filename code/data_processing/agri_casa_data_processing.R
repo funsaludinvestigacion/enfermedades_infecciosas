@@ -19,6 +19,8 @@ agri_casa <-
     token = agri_casa_token
   )$data
 
+# agri_casa2 <- agri_casa
+# agri_casa <- agri_casa2
 agri_casa$epiweek_v_rutina <- lubridate::floor_date(agri_casa$fecha_visita_vig_rut, unit = "week", week_start = 1)
 
 #los ultimos dos numeros del id corresponde al individuo, y el primero cinco a la familia
@@ -35,6 +37,19 @@ agri_casa$epiweek_muestra_funsalud <-lubridate::floor_date(agri_casa$fecha_recol
 
 # Look at singleplex results (symtomatic and visitas intensivas) -------------
 # Only contains information for SARS-COV-2
+
+# Make singleplex repetition numeric and match the code for the COBAS results
+agri_casa$ctgen_rep_resul_num <- ifelse(
+  is.na(agri_casa$ctgen_rep_resul), NA,
+  ifelse(
+    agri_casa$ctgen_rep_resul=="POSITIVO", 1,
+    ifelse(
+      agri_casa$ctgen_rep_resul=="NEGATIVO", 2,
+      ifelse(
+        agri_casa$ctgen_rep_resul=="INVÁLIDO" | agri_casa$ctgen_rep_resul=="INCONCLUSO", 3, NA)
+    )
+  )
+)
 
 # Create overall numeric variable using original and repeated results
 agri_casa$vctg_resul_num <- ifelse(
@@ -55,18 +70,6 @@ agri_casa$vctg_resul_num <- ifelse(
   )
 )
 
-# Make follow-up values numeric and match the code for the COBAS results
-agri_casa$ctgen_rep_resul_num <- ifelse(
-                                    is.na(agri_casa$ctgen_rep_resul), NA,
-                                        ifelse(
-                                          agri_casa$ctgen_rep_resul=="POSITIVO", 1,
-                                               ifelse(
-                                                 agri_casa$ctgen_rep_resul=="NEGATIVO", 2,
-                                                      ifelse(
-                                                        agri_casa$ctgen_rep_resul=="INVÁLIDO" | agri_casa$ctgen_rep_resul=="INCONCLUSO", 3, NA)
-                                                 )
-                                          )
-                                    )
 
 # Check that no information was lost
 # table(is.na(agri_casa$vctg_resul_num))[1] >= table(is.na(agri_casa$vctg_resul))[1]
@@ -74,77 +77,122 @@ agri_casa$ctgen_rep_resul_num <- ifelse(
 # Look at multiplex results (symtomatic and visitas intensivas) -------------
 # Create overall numeric variable using original and repeated results
 
+# Make multiplex repetition numeric and match the code for the COBAS results
+#### Note that this does not include QIAGEN results because those were never done
+# as of 16-01-2025. Those variables would need to be added in res_mp_infa_2, res_mp_infa_4
+# res_mp_infb_2, res_mp_infb_4, res_mp_cov_2, res_mp_cov_4
+
 # For infa variables
-agri_casa$multiplex_infa <- ifelse(
-  is.na(agri_casa$res_mp_infa) & is.na(agri_casa$res_mp_infa_3) & 
-    is.na(agri_casa$res_mp_infa_2) & is.na(agri_casa$res_mp_infa_4), NA,
+agri_casa$multiInfArep <- ifelse(
+  is.na(agri_casa$res_mp_infa_3), NA,
   ifelse(
-    !is.na(agri_casa$res_mp_infa_4), 
-    ifelse(agri_casa$res_mp_infa_4 == "POSITIVO", 1, 
-           ifelse(agri_casa$res_mp_infa_4 == "NEGATIVO", 2, 3)),
+    agri_casa$res_mp_infa_3=="POSITIVO", 1,
     ifelse(
-      !is.na(agri_casa$res_mp_infa_2), 
-      ifelse(agri_casa$res_mp_infa_2 == "POSITIVO", 1, 
-             ifelse(agri_casa$res_mp_infa_2 == "NEGATIVO", 2, 3)),
+      agri_casa$res_mp_infa_3=="NEGATIVO", 2,
       ifelse(
-        !is.na(agri_casa$res_mp_infa_3), 
-        ifelse(agri_casa$res_mp_infa_3 == "POSITIVO", 1, 
-               ifelse(agri_casa$res_mp_infa_3 == "NEGATIVO", 2, 3)),
-        ifelse(
-          agri_casa$res_mp_infa == "POSITIVO", 1, 
-          ifelse(agri_casa$res_mp_infa == "NEGATIVO", 2, 3)
-        )
-      )
+        agri_casa$res_mp_infa_3=="INVÁLIDO" | agri_casa$res_mp_infa_3 =="INCONCLUSO", 3, NA)
     )
   )
 )
 
-# For infb variables
-agri_casa$multiplex_infb <- ifelse(
-  is.na(agri_casa$res_mp_infb) & is.na(agri_casa$res_mp_infb_3) & 
-    is.na(agri_casa$res_mp_infb_2) & is.na(agri_casa$res_mp_infb_4), NA,
+agri_casa$res_mp_infa <- ifelse(
+  is.na(agri_casa$res_mp_infa), NA,
   ifelse(
-    !is.na(agri_casa$res_mp_infb_4), 
-    ifelse(agri_casa$res_mp_infb_4 == "POSITIVO", 1, 
-           ifelse(agri_casa$res_mp_infb_4 == "NEGATIVO", 2, 3)),
+    agri_casa$res_mp_infa=="POSITIVO", 1,
     ifelse(
-      !is.na(agri_casa$res_mp_infb_2), 
-      ifelse(agri_casa$res_mp_infb_2 == "POSITIVO", 1, 
-             ifelse(agri_casa$res_mp_infb_2 == "NEGATIVO", 2, 3)),
+      agri_casa$res_mp_infa=="NEGATIVO", 2,
       ifelse(
-        !is.na(agri_casa$res_mp_infb_3), 
-        ifelse(agri_casa$res_mp_infb_3 == "POSITIVO", 1, 
-               ifelse(agri_casa$res_mp_infb_3 == "NEGATIVO", 2, 3)),
-        ifelse(
-          agri_casa$res_mp_infb == "POSITIVO", 1, 
-          ifelse(agri_casa$res_mp_infb == "NEGATIVO", 2, 3)
-        )
-      )
+        agri_casa$res_mp_infa=="INVÁLIDO" | agri_casa$res_mp_infa_3 =="INCONCLUSO", 3, NA)
+    )
+  )
+)
+
+# Create overall numeric variable using original and repeated results
+agri_casa$multiplex_infa <- ifelse(
+  is.na(agri_casa$res_mp_infa) & is.na(agri_casa$multiInfArep), NA,
+  ifelse(
+    !is.na(agri_casa$res_mp_infa) & is.na(agri_casa$multiInfArep), agri_casa$res_mp_infa,
+    ifelse(
+      !is.na(agri_casa$res_mp_infa) & !is.na(agri_casa$multiInfArep), 
+      pmin(agri_casa$res_mp_infa, agri_casa$multiInfArep, na.rm = TRUE),
+      NA
+    )
+  )
+)
+
+
+# For infb variables
+agri_casa$multiInfBrep <- ifelse(
+  is.na(agri_casa$res_mp_infb_3), NA,
+  ifelse(
+    agri_casa$res_mp_infb_3=="POSITIVO", 1,
+    ifelse(
+      agri_casa$res_mp_infb_3=="NEGATIVO", 2,
+      ifelse(
+        agri_casa$res_mp_infb_3=="INVÁLIDO" | agri_casa$res_mp_infb_3 =="INCONCLUSO", 3, NA)
+    )
+  )
+)
+
+agri_casa$res_mp_infb <- ifelse(
+  is.na(agri_casa$res_mp_infb), NA,
+  ifelse(
+    agri_casa$res_mp_infb=="POSITIVO", 1,
+    ifelse(
+      agri_casa$res_mp_infb=="NEGATIVO", 2,
+      ifelse(
+        agri_casa$res_mp_infb=="INVÁLIDO" | agri_casa$res_mp_infb_3 =="INCONCLUSO", 3, NA)
+    )
+  )
+)
+
+# Create overall numeric variable using original and repeated results
+agri_casa$multiplex_infb <- ifelse(
+  is.na(agri_casa$res_mp_infb) & is.na(agri_casa$multiInfBrep), NA,
+  ifelse(
+    !is.na(agri_casa$res_mp_infb) & is.na(agri_casa$multiInfBrep), agri_casa$res_mp_infb,
+    ifelse(
+      !is.na(agri_casa$res_mp_infb) & !is.na(agri_casa$multiInfBrep), 
+      pmin(agri_casa$res_mp_infb, agri_casa$multiInfBrep, na.rm = TRUE),
+      NA
     )
   )
 )
 
 # For covid variables
-agri_casa$multiplex_covid <- ifelse(
-  is.na(agri_casa$res_mp_covid) & is.na(agri_casa$res_mp_covid_3) & 
-    is.na(agri_casa$res_mp_covid_2) & is.na(agri_casa$res_mp_covid_4), NA,
+agri_casa$multiCOVrep <- ifelse(
+  is.na(agri_casa$res_mp_covid_3), NA,
   ifelse(
-    !is.na(agri_casa$res_mp_covid_4), 
-    ifelse(agri_casa$res_mp_covid_4 == "POSITIVO", 1, 
-           ifelse(agri_casa$res_mp_covid_4 == "NEGATIVO", 2, 3)),
+    agri_casa$res_mp_covid_3=="POSITIVO", 1,
     ifelse(
-      !is.na(agri_casa$res_mp_covid_2), 
-      ifelse(agri_casa$res_mp_covid_2 == "POSITIVO", 1, 
-             ifelse(agri_casa$res_mp_covid_2 == "NEGATIVO", 2, 3)),
+      agri_casa$res_mp_covid_3=="NEGATIVO", 2,
       ifelse(
-        !is.na(agri_casa$res_mp_covid_3), 
-        ifelse(agri_casa$res_mp_covid_3 == "POSITIVO", 1, 
-               ifelse(agri_casa$res_mp_covid_3 == "NEGATIVO", 2, 3)),
-        ifelse(
-          agri_casa$res_mp_covid == "POSITIVO", 1, 
-          ifelse(agri_casa$res_mp_covid == "NEGATIVO", 2, 3)
-        )
-      )
+        agri_casa$res_mp_covid_3=="INVÁLIDO" | agri_casa$res_mp_covid_3 =="INCONCLUSO", 3, NA)
+    )
+  )
+)
+
+agri_casa$res_mp_covid <- ifelse(
+  is.na(agri_casa$res_mp_covid), NA,
+  ifelse(
+    agri_casa$res_mp_covid=="POSITIVO", 1,
+    ifelse(
+      agri_casa$res_mp_covid=="NEGATIVO", 2,
+      ifelse(
+        agri_casa$res_mp_covid=="INVÁLIDO" | agri_casa$res_mp_covid =="INCONCLUSO", 3, NA)
+    )
+  )
+)
+
+# Create overall numeric variable using original and repeated results
+agri_casa$multiplex_covid <- ifelse(
+  is.na(agri_casa$res_mp_covid) & is.na(agri_casa$multiCOVrep), NA,
+  ifelse(
+    !is.na(agri_casa$res_mp_covid) & is.na(agri_casa$multiCOVrep), agri_casa$res_mp_covid,
+    ifelse(
+      !is.na(agri_casa$res_mp_covid) & !is.na(agri_casa$multiCOVrep), 
+      pmin(agri_casa$res_mp_covid, agri_casa$multiCOVrep, na.rm = TRUE),
+      NA
     )
   )
 )
@@ -538,3 +586,4 @@ agri_casa_symptoms_summary_anonymized <- agri_casa_symptoms_summary %>%
 # Save the summary dataframe------------------------------------
 agri_casa_symptom_csv_file <- "docs/agri_casa_symptom_summary_updated.csv"
 write.csv(agri_casa_symptoms_summary_anonymized, file = agri_casa_symptom_csv_file, row.names = FALSE)
+
