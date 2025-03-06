@@ -17,20 +17,21 @@ namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinv
 
 # Information about each study ------------------------
 
-Info_Agri <- "Cada semana, entre 8-15 trabajadores agrícolas son contactados por teléfono y responden a preguntas sobre su salud.
-\n Si experimentan síntomas indicando una infección respiratoria, como tos seca, fiebre, y falta de aire, el equipo FunSalud recogerá una muestra. 
-\n Después de pruebas de PCR, el equipo sigue a las personas con síntomas por un mes, haciendo visitas aproximadamente 7 días (semana 1) y 28 días después (semana 4) de la recogida de muestras.
+Info_Agri <- "Este estudio es una vigilancia en las fincas de Banasa de los trabajadores Agrícolas. Trabajadores con síntomas son captados en sus lugares de trabajo
+\n y también cada semana, entre 8-15 trabajadores agrícolas son contactados por teléfono y responden a preguntas sobre su salud.
+\n Si experimentan síntomas indicando una infección respiratoria, como tos seca, fiebre, y falta de aire, el equipo FUNSALUD recogerá una muestra. 
+\n Después de pruebas de PCR, el equipo sigue a las personas con síntomas por un mes, haciendo visitas aproximadamente 7 días y 28 días después de la recogida de muestras.
 El objetivo es entender cuales síntomas están asociados con cual infección respiratoria.
 "
 
-Info_AgriCasa <- "Cientos de familias están inscritas en este estudio. 
-Cada semana en la visita de rutina, el equipo médico pregunta a una familia si cada miembro de la familia se siente en buena salud.
-Si algún miembro de la familia se da positiva por una prueba de una enfermedad respiratoria (SARS-COV-2, VSR, Influenza),
-el resto de la familia recibirá dos visitas intensivas cada semana para entender la transmición de estas enfermedades respiratorias.
+Info_AgriCasa <- "Ciento cicuentas casa están inscritas en este estudio. 
+Cada semana en la visita de rutina, el equipo de campo pregunta a cada miembro de la familia si se siente en buena salud. Si algún miembro
+tiene síntomas se le hace una prueba para SARS-COV-2, VSR, y Influenza A/B Si algún miembro de la familia se da positiva toda la familia 
+recibirá dos visitas intensivas cada semana para entender la transmición de estas enfermedades respiratorias.
 "
 
-Info_Biofire <- "En el hospital afilado con el estudio, los proveedores ofrecen el Sistema Biofire a los pacientes que experimentan síntomas de fiebre, falta de aire y tos.
-El Sistema Biofire es una prueba rápida para un amplio abanico de posibles enfermedades infecciosas. Los resultados acumulados de las pruebas de Biofire están compartidos aquí, organizados por semana."
+Info_Biofire <- "En el Hospital Nacional de Coatepeque, a los pacientes que experimentan síntomas de fiebre o tos se les corre un panel febril o respiratorio de Biofire.
+Los paneles Biofire son una prueba rápida para un amplio abanico de posibles enfermedades infecciosas. Los resultados acumulados de las pruebas de Biofire están compartidos aquí, organizados por semana."
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish
@@ -88,6 +89,8 @@ symptom_map <- list(
 # NAMRU/BIOFIRE:
 # Vector mapping column names to pathogen names
 pathogen_names <- c(
+  "res_dengue" = "Dengue",
+  "res_dengue_2" = "Dengue",
   "patogenos_positivos_sangre___1" = "Chikungunya",
   "patogenos_positivos_sangre___2" = "Fiebre hemorrágica de Crimean-Congo",
   "patogenos_positivos_sangre___3" = "Dengue",
@@ -133,6 +136,8 @@ pathogen_names <- c(
 )
 
 columns_of_interest_biofire <- c(
+  "res_dengue",
+  "res_dengue_2",
   "patogenos_positivos_sangre___1",
   "patogenos_positivos_sangre___2",
   "patogenos_positivos_sangre___3",
@@ -178,7 +183,7 @@ columns_of_interest_biofire <- c(
 )
 
 # Create list without negatives separated by sample type
-columns_sangre <- columns_of_interest_biofire[grep("sangre",
+columns_sangre <- columns_of_interest_biofire[grep("sangre|dengue", 
                                                    columns_of_interest_biofire)]
 columns_sangre <- columns_sangre[columns_sangre != "Negativo_sangre"]
 
@@ -202,14 +207,14 @@ ui_tab1 <- function() {
                        start = "2020-06-29", end = "2024-09-30", separator = " a "),
         # Dropdown menu for selecting disease
         radioButtons("virus", "Virus:",
-                     c("Influenza A" = "resul_inf_a_all",
+                     c("Todos viruses identificados" = "resul_virus_all",
+                       "Influenza A" = "resul_inf_a_all",
                        "Influenza B" = "resul_inf_b_all",
                        "Influenza (A & B)" = "resul_inf_all",
                        "VSR" = "resul_rsv_all",
                        "SARS-CoV-2 confirmado por PCR" = "resul_sars_all",
                        "SARS-CoV-2 confirmado por prueba rápida de antígenos" = "resul_covid_19_all",
                        "SARS-CoV-2 (confirmado por PCR o prueba rápida)" = "resul_sars_covid_all",
-                       "Todos viruses identificados" = "resul_virus_all",
                        "Enfermedad no identificada (síntomas con pruebas negativas)" = "resul_neg_all")
         )
       ),
@@ -286,8 +291,18 @@ ui_tab3 <- function() {
   )
 }
 
-# Define UI for Tab 4 (VIGICASA)
+# Define UI for Tab 4 (GIHSN)
 ui_tab4 <- function() { 
+  fluidPage(
+    titlePanel("Red Mundial de Vigilancia para Influenza en Hospitales"),
+    mainPanel(
+      h2("Viene pronto!", style = "color: orange; text-align: center;")
+    )
+  )
+}
+
+# Define UI for Tab 5 (VIGICASA)
+ui_tab5 <- function() { 
   fluidPage(
     titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en casas"),
     mainPanel(
@@ -296,8 +311,8 @@ ui_tab4 <- function() {
   )
 }
 
-# Define UI for Tab 5 (VIGIFINCA - BANASA)
-ui_tab5 <- function() { 
+# Define UI for Tab 6 (VIGIFINCA - BANASA)
+ui_tab6 <- function() { 
   fluidPage(
     titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Banasa"),
     mainPanel(
@@ -306,8 +321,8 @@ ui_tab5 <- function() {
   )
 }
 
-# Define UI for Tab 6 (VIGIFINCA - PANTALEON)
-ui_tab6 <- function() { 
+# Define UI for Tab 7 (VIGIFINCA - PANTALEON)
+ui_tab7 <- function() { 
   fluidPage(
     titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Pantaleon"),
     mainPanel(
@@ -332,9 +347,10 @@ ui <- fluidPage(
     tabPanel("Estudio AGRI", ui_tab1()),
     tabPanel("Estudio AGRI-CASA", ui_tab2()),
     tabPanel("Estudio Biofire", ui_tab3()),
-    tabPanel("VIGICASA", ui_tab4()),
-    tabPanel("VIGIFINCA - BANASA", ui_tab5()),
-    tabPanel("VIGIFINCA - PANTALEON", ui_tab6())
+    tabPanel("GIHSN", ui_tab4()),
+    tabPanel("VIGICASA", ui_tab5()),
+    tabPanel("VIGIFINCA - BANASA", ui_tab6()),
+    tabPanel("VIGIFINCA - PANTALEON", ui_tab7())
     )
   )
 
@@ -731,17 +747,25 @@ server <- function(input, output) {
   
   # Count the number of positive and negative results for each
   # Calculate total counts of 1s for each column
-  biofire_total_tested_pre <- namru_biofire_summary%>%
-    group_by(epiweek_recoleccion)%>%
-    dplyr::summarise(count_sangre_total = max(0,
-                                              sum(result_sangre_complt==1 | result_sangre_complt==2, na.rm = TRUE)),
-                     count_nasof_total = max(0,
-                                             sum(result_hispd_nasof==1 | result_hispd_nasof==2, na.rm=TRUE)),
-                     )
+  biofire_total_tested_pre <- namru_biofire_summary %>%
+    group_by(epiweek_recoleccion) %>%
+    dplyr::summarise(
+      count_sangre_total = sum(result_sangre_complt == 0 | result_sangre_complt == 1 | result_sangre_complt == 2 | res_dengue == 1 | res_dengue_2 == 1, na.rm = TRUE),
+      count_nasof_total = sum(result_hispd_nasof == 1 | result_hispd_nasof == 2, na.rm = TRUE)
+    )
+  
+  #biofire_total_tested_pre <- namru_biofire_summary%>%
+   # group_by(epiweek_recoleccion)%>%
+    #dplyr::summarise(count_sangre_total = max(0,
+     #                                         sum(result_sangre_complt==0 | result_sangre_complt==1 | result_sangre_complt==2 | res_dengue == 1 | res_dengue_2 == 1, na.rm = TRUE)),
+      #               count_nasof_total = max(0,
+       #                                      sum(result_hispd_nasof==1 | result_hispd_nasof==2, na.rm=TRUE)), # here I am leaving out cobas because during the small window
+        #                                                                                                      # when panels weren't run if cobas was positive, there was not a cobas positive
+         #            )
   
   # Add negative column
   namru_biofire_summary_anonymized_wneg <- namru_biofire_summary%>%
-  mutate(Negativo_sangre = ifelse(result_sangre_complt==2, 1, 0), 
+  mutate(Negativo_sangre = ifelse((result_sangre_complt==2 & (res_dengue == 2 | res_dengue_2 == 2)) | (result_sangre_complt==0 & (res_dengue == 2 | res_dengue_2 == 2)), 1, 0), 
          Negativo_hisnaso = ifelse(result_hispd_nasof==2, 1, 0))
   
   # Function to create summary dataset for specified columns
@@ -795,7 +819,7 @@ server <- function(input, output) {
   # Get list of column names
   colnames_namru_counts_pre <- colnames(namru_biofire_summary_counts)
   colnames_namru_counts <- setdiff(colnames_namru_counts_pre, c("epiweek_recoleccion"))
-  colnames_namru_counts_sangre <- grep("^count_patogenos_positivos_sangre", 
+  colnames_namru_counts_sangre <- grep("^count_res_dengue|^count_patogenos_positivos_sangre", 
                                        colnames_namru_counts, value = TRUE)
   colnames_namru_counts_hisnaso <- grep("^count_patogenos_positivos_hisnaso", 
                                         colnames_namru_counts, value = TRUE)
@@ -827,7 +851,7 @@ server <- function(input, output) {
     `Todas pruebas de sangre` = count_sangre_total,
     `Todas pruebas naso/orofaríngeo` = count_nasof_total,
     `Tipo de Muestra` = case_when(
-      grepl("sangre", pathogen_code, ignore.case = TRUE) ~ "Sangre",
+      grepl("sangre|dengue", pathogen_code, ignore.case = TRUE) ~ "Sangre",
       grepl("hisnaso", pathogen_code, ignore.case = TRUE) ~ "Naso/orofaríngeo",
       TRUE ~ NA_character_)) %>%
     dplyr::select(-c("count_sangre_total", "count_nasof_total"))
@@ -880,7 +904,7 @@ filtered_biofire_plot_df <- reactive({
            `Todas pruebas de sangre` = count_sangre_total,
            `Todas pruebas naso/orofaríngeo` = count_nasof_total,
            `Tipo de Muestra` = case_when(
-             grepl("sangre", pathogen_code, ignore.case = TRUE) ~ "Sangre",
+             grepl("sangre|dengue", pathogen_code, ignore.case = TRUE) ~ "Sangre",
              grepl("hisnaso", pathogen_code, ignore.case = TRUE) ~ "Naso/orofaríngeo",
              TRUE ~ NA_character_)) %>%
     dplyr::select(-c("count_sangre_total", "count_nasof_total"))

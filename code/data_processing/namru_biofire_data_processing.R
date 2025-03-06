@@ -12,8 +12,8 @@ library(patchwork)
 library(lubridate)
 
 # Load data -----------------------------------------------------------------
-
 namru_biofire_token <- Sys.getenv("namru_biofire_token")
+new_biofire <- Sys.getenv("new_biofire")
 
 uri <- "https://redcap.ucdenver.edu/api/"
 
@@ -23,12 +23,83 @@ namru_biofire <-
     token = namru_biofire_token
   )$data
 
+# New biofire data base ---------------------------------------------------------
+# As of 1/1/2025 we have a new biofire database, here I join it to the old one
+# because many columns are the same.
+namru_biofire_new <- 
+  REDCapR::redcap_read(
+    redcap_uri  = uri, 
+    token = new_biofire
+  )$data
+
+# Get common and unique column names
+common_cols <- intersect(names(namru_biofire), names(namru_biofire_new))
+unique_cols_old <- setdiff(names(namru_biofire), common_cols)
+unique_cols_new <- setdiff(names(namru_biofire_new), common_cols)
+
+# Add missing columns to namru_biofire_new (with NA)
+for (col in unique_cols_old) {
+  namru_biofire_new[[col]] <- NA  
+}
+
+# Add missing columns to namru_biofire (with NA)
+for (col in unique_cols_new) {
+  namru_biofire[[col]] <- NA  
+}
+
+# Reorder namru_biofire_new to match namru_biofire
+namru_biofire_new <- namru_biofire_new[, names(namru_biofire)]
+
+for (col in names(namru_biofire)) {
+  if (col %in% unique_cols_new) {
+    if (!identical(class(namru_biofire[[col]]), class(namru_biofire_new[[col]]))) {
+      target_type <- class(namru_biofire_new[[col]])[1]  # Take the first class if multiple exist
+      
+      if (inherits(namru_biofire_new[[col]], "character")) {
+        namru_biofire[[col]] <- as.character(namru_biofire[[col]])
+      } else if (inherits(namru_biofire_new[[col]], "double") | inherits(namru_biofire_new[[col]], "numeric")) {
+        namru_biofire[[col]] <- as.numeric(namru_biofire[[col]])
+      } else if (inherits(namru_biofire_new[[col]], "integer")) {
+        namru_biofire[[col]] <- as.integer(namru_biofire[[col]])
+      } else if (inherits(namru_biofire_new[[col]], "logical")) {
+        namru_biofire[[col]] <- as.logical(namru_biofire[[col]])
+      } else if (inherits(namru_biofire_new[[col]], "Date")) {
+        namru_biofire[[col]] <- as.Date(namru_biofire[[col]], origin = "1970-01-01")
+      } else {
+        message(paste("Skipping unknown type for column:", col))
+      }
+    }
+  }
+}
+
+# Convert columns in namru_biofire_new to match namru_biofire's types
+for (col in names(namru_biofire)) {
+  if (!identical(class(namru_biofire[[col]]), class(namru_biofire_new[[col]])) & !(col %in% unique_cols_new)) {
+    target_type <- class(namru_biofire[[col]])[1]  # Ensure a single class is used
+    
+    if (inherits(namru_biofire[[col]], "character")) {
+      namru_biofire_new[[col]] <- as.character(namru_biofire_new[[col]])
+    } else if (inherits(namru_biofire[[col]], "double") | inherits(namru_biofire[[col]], "numeric")) {
+      namru_biofire_new[[col]] <- as.numeric(namru_biofire_new[[col]])
+    } else if (inherits(namru_biofire[[col]], "integer")) {
+      namru_biofire_new[[col]] <- as.integer(namru_biofire_new[[col]])
+    } else if (inherits(namru_biofire[[col]], "logical")) {
+      namru_biofire_new[[col]] <- as.logical(namru_biofire_new[[col]])
+    } else if (inherits(namru_biofire[[col]], "Date")) {
+      namru_biofire_new[[col]] <- as.Date(namru_biofire_new[[col]], origin = "1970-01-01")
+    } else {
+      message(paste("Skipping unknown type for column:", col))
+    }
+  }
+}
+
+# Now bind rows safely
+namru_biofire <- bind_rows(namru_biofire, namru_biofire_new)
 
 # Create epiweek--------------------------------------------------------------
-
 namru_biofire$epiweek_recoleccion <- lubridate::floor_date(namru_biofire$fecha_recoleccion, unit = "week", week_start = 1)
 
-# Is each individual is currently mentioned once in the dataset?
+# Is each individual currently mentioned once in the dataset? - WHAT WOULD YOU DO IF NOT? AGRI/AGRICASA HAVE MULTIPLE
 nrow(unique(namru_biofire%>%
               dplyr::filter((! is.na(result_sangre_complt)) | (! is.na(result_hispd_nasof)))%>%
               select(record_id))
@@ -39,6 +110,8 @@ nrow(unique(namru_biofire%>%
 # Find columns with pathogen results -----------------------------------------
 # Columns of interest
 columns_of_interest_biofire <- c(
+  "res_dengue",
+  "res_dengue_2",
   "patogenos_positivos_sangre___1",
   "patogenos_positivos_sangre___2",
   "patogenos_positivos_sangre___3",
@@ -93,12 +166,14 @@ namru_biofire_subset <- namru_biofire%>%
                 #id_agricasa_lab,
                 #id_norovirus_lab,
                 #id_pulsoximetria_lab,
-                #id_xeno_lab, # No es de una persona -- es de un mosquito
+                #id_xeno_lab, 
                 epiweek_recoleccion,
+                res_dengue,
+                res_dengue_2,
                 result_sangre_complt,
                 result_hispd_nasof,
                 all_of(columns_of_interest_biofire))%>%
-  dplyr::filter((! is.na(result_sangre_complt)) | (! is.na(result_hispd_nasof)))
+  dplyr::filter((! is.na(result_sangre_complt)) | (! is.na(result_hispd_nasof)) | (! is.na(res_dengue)))
 
 # Clean data to only include NEW cases -----------------------------------------
 # We want to filter out any results where a person was positive the previous three weeks
