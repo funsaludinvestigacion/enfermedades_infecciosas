@@ -9,6 +9,7 @@ library(tidyr)
 library(patchwork)
 library(DT)
 library(stringr)
+library(lubridate)
 
 # Load dataframes -----------------------------------------------------------------------
 influenza_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/influenza_summary_updated.csv")
