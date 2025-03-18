@@ -9,7 +9,6 @@ library(digest)
 library(tidyr)
 library(dplyr)
 library(patchwork)
-library(lubridate)
 
 # Load data -----------------------------------------------------------------
 namru_biofire_token <- Sys.getenv("namru_biofire_token")

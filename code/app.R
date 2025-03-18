@@ -7,6 +7,8 @@ library(shinythemes)
 library(reactable)
 library(tidyr)
 library(patchwork)
+library(DT)
+library(stringr)
 
 # Load dataframes -----------------------------------------------------------------------
 influenza_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/influenza_summary_updated.csv")
@@ -14,6 +16,7 @@ influenza_symptom_summary <- read.csv("https://raw.githubusercontent.com/funsalu
 agri_casa_symptom_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/agri_casa_summary_updated.csv")
 agri_casa_incidence_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/agri_casa_incidence_summary_updated.csv")
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
+gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 
 # Information about each study ------------------------
 
@@ -24,14 +27,17 @@ Info_Agri <- "Este estudio es una vigilancia en las fincas de Banasa de los trab
 El objetivo es entender cuales síntomas están asociados con cual infección respiratoria.
 "
 
-Info_AgriCasa <- "Ciento cicuentas casa están inscritas en este estudio. 
+Info_AgriCasa <- "Ciento cicuentas casas están inscritas en este estudio. 
 Cada semana en la visita de rutina, el equipo de campo pregunta a cada miembro de la familia si se siente en buena salud. Si algún miembro
 tiene síntomas se le hace una prueba para SARS-COV-2, VSR, y Influenza A/B Si algún miembro de la familia se da positiva toda la familia 
-recibirá dos visitas intensivas cada semana para entender la transmición de estas enfermedades respiratorias.
-"
+recibirá dos visitas intensivas cada semana para entender la transmición de estas enfermedades respiratorias."
 
 Info_Biofire <- "En el Hospital Nacional de Coatepeque, a los pacientes que experimentan síntomas de fiebre o tos se les corre un panel febril o respiratorio de Biofire.
 Los paneles Biofire son una prueba rápida para un amplio abanico de posibles enfermedades infecciosas. Los resultados acumulados de las pruebas de Biofire están compartidos aquí, organizados por semana."
+
+Info_GIHSN <- "Somos un sitio como parte de la Red Mundial de Vigilancia de Influenza (<a href='https://gihsn.org' target='_blank'>GIHSN</a>). En el Hospital Nacional de Coatepeque, 
+a los pacientes que experimentan síntomas de fiebre y/o tos se les corre pruebas de Sars-CoV-2, Influenza A/B y VSR y se secuencia los positivos. Todos los datos son compartidos
+con la red para mejorar capacidad de vigilancia y respuesta a viruses respiratorios."
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish
@@ -196,6 +202,16 @@ columns_hisnaso <- columns_hisnaso[columns_hisnaso != "Negativo_hisnaso"]
 # Define UI for random distribution app ----
 # Sidebar layout with input and output definitions ----
 
+# Define UI for Summary Tab
+ui_tab_summary <- function() { 
+  fluidPage(
+    titlePanel(""),
+    mainPanel(
+      h2("", style = "color: orange; text-align: center;")
+    )
+  )
+}
+
 # Define UI for Tab 1 (AGRI)
 ui_tab1 <- function() {
   fluidPage(
@@ -294,49 +310,79 @@ ui_tab3 <- function() {
 # Define UI for Tab 4 (GIHSN)
 ui_tab4 <- function() { 
   fluidPage(
-    titlePanel("Red Mundial de Vigilancia para Influenza en Hospitales"),
-    mainPanel(
-      h2("Viene pronto!", style = "color: orange; text-align: center;")
+    titlePanel(""),
+    sidebarLayout(
+      sidebarPanel(
+        # Date range input
+        dateRangeInput("date_range_input_tab4", "Eligir el período del tiempo:",
+                       start = "2025-03-04", end = Sys.Date(), separator = " a "),
+        
+        # Dropdown menu for selecting hospital
+        radioButtons("hospital", "Hospital:",
+                     choices = c("Ambos Hospitales",
+                                 "Hospital de Coatepeque", 
+                                 "Hospital de Chimaltenango")
+        ),
+        
+        # Dropdown menu for selecting virus
+        selectInput("virus", 
+                    "Selecciona Virus:",
+                    choices = c("Todos Virus", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "VSR"))
+      ),
+      
+      mainPanel(
+        # Add information about the study
+        h2("Red Mundial de Vigilancia de Influenza en Hospitales", style = "color: orange;"),
+        p(HTML(Info_GIHSN)),
+        
+        # Table output for the data summary
+        DTOutput("summary_table_tab4"),
+        
+        # Plot output for the graph
+        plotOutput("disease_plot_tab4")
+      )
     )
   )
 }
+
+
 
 # Define UI for Tab 5 (VIGICASA)
-ui_tab5 <- function() { 
-  fluidPage(
-    titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en casas"),
-    mainPanel(
-      h2("Viene pronto!", style = "color: orange; text-align: center;")
-    )
-  )
-}
+#ui_tab5 <- function() { 
+ # fluidPage(
+  #  titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en casas"),
+   # mainPanel(
+    #  h2("Viene pronto!", style = "color: orange; text-align: center;")
+    #)
+  #)
+#}
 
 # Define UI for Tab 6 (VIGIFINCA - BANASA)
-ui_tab6 <- function() { 
-  fluidPage(
-    titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Banasa"),
-    mainPanel(
-      h2("Viene pronto!", style = "color: orange; text-align: center;")
-    )
-  )
-}
+#ui_tab6 <- function() { 
+ # fluidPage(
+  #  titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Banasa"),
+   # mainPanel(
+    #  h2("Viene pronto!", style = "color: orange; text-align: center;")
+    #)
+  #)
+#}
 
 # Define UI for Tab 7 (VIGIFINCA - PANTALEON)
-ui_tab7 <- function() { 
-  fluidPage(
-    titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Pantaleon"),
-    mainPanel(
-      h2("Viene pronto!", style = "color: orange; text-align: center;")
-    )
-  )
-}
+#ui_tab7 <- function() { 
+ # fluidPage(
+  #  titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Pantaleon"),
+   # mainPanel(
+    #  h2("Viene pronto!", style = "color: orange; text-align: center;")
+    #)
+  #)
+#}
 
 
 # Define UI for application
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Enfermedades Respiratorias en Guatemala"),
+  titlePanel("Enfermedades Respiratorias y Febriles en Guatemala"),
   
   # Theme
   theme = shinytheme("united"),
@@ -344,13 +390,14 @@ ui <- fluidPage(
   # Main panel content goes here
   tabsetPanel(
     # Define the three tabs
+    tabPanel("Introducción", ui_tab_summary()),
     tabPanel("Estudio AGRI", ui_tab1()),
     tabPanel("Estudio AGRI-CASA", ui_tab2()),
     tabPanel("Estudio Biofire", ui_tab3()),
     tabPanel("GIHSN", ui_tab4()),
-    tabPanel("VIGICASA", ui_tab5()),
-    tabPanel("VIGIFINCA - BANASA", ui_tab6()),
-    tabPanel("VIGIFINCA - PANTALEON", ui_tab7())
+    #tabPanel("VIGICASA", ui_tab5()),
+    #tabPanel("VIGIFINCA - BANASA", ui_tab6()),
+    #tabPanel("VIGIFINCA - PANTALEON", ui_tab7())
     )
   )
 
@@ -505,7 +552,7 @@ server <- function(input, output) {
     geom_tile(aes(fill = Count), color='black') +
     facet_wrap(~ visit_type, ncol = 1, scales = "free_y") +
     labs(
-      title="Número de individuos experimentando un dado síntoma por semana \n después de una prueba de PCR",
+      title="Número de individuos experimentando un dado síntoma por semana después \n de una prueba de PCR",
       x = "Semana de recogida de muestra de PCR",
       y = "",
       fill= "Número de individuos"
@@ -566,7 +613,7 @@ server <- function(input, output) {
         legend.position = "top",
         plot.margin = margin(10, 10, 10, 10)
       ) +
-      labs(title = paste("Número de individuos \n por semana en la Vigilancia de Rutina \n o Vigilancia Intensa con", selected_virus_label_agri),
+      labs(title = paste("Número de individuos por semana en la Vigilancia de Rutina \n o Vigilancia Intensa con", selected_virus_label_agri),
            x = "Epiweek (Semana cuando se detectó la infección por primera vez)",
            y = "Número de individuos",
            fill = "") +
@@ -678,7 +725,7 @@ server <- function(input, output) {
         geom_bar(aes(y = pct_ILI_symptoms, fill = "Experimentan fiebre, tos, \n o falta de aire"), stat = "identity", color = "black", alpha = 0.5) +
         geom_bar(aes(y = pct_prueba_positiva, fill = "Primera Prueba Positiva"), stat = "identity", color = "black", alpha = 0.5) +
         labs(
-          title = paste("Porcentaje de individuos \n por semana en la Vigilancia de Rutina \n o Vigilancia Intensa con", selected_virus_label_agri),
+          title = paste("Porcentaje de individuos por semana en la Vigilancia de Rutina \n o Vigilancia Intensa con", selected_virus_label_agri),
           x = "Semana",
           y = "% de individuos", 
           fill = ""
@@ -1035,6 +1082,109 @@ output$combined_plot_tab3 <- renderPlot({
     # Display the combined plot with specified width and height
     combined_plot
 }, height = 900, width = 875) 
+
+# --------------------------------------------------------------------------
+#                             GIHSN
+# --------------------------------------------------------------------------
+
+####### This is the table
+# Reactive expression for the filtered data based on date range and selected hospital
+# Filter data based on date range and hospital selection
+filtered_data_gihsn <- reactive({
+  date_range <- input$date_range_input_tab4
+  hospital_filter <- input$hospital
+  
+  # Convert the date range into epiweeks and years
+  start_date <- as.Date(date_range[1])
+  end_date <- as.Date(date_range[2])
+  
+  start_epiweek <- epiweek(start_date)  
+  end_epiweek <- epiweek(end_date)
+  start_year <- year(start_date)       
+  end_year <- year(end_date)           
+  
+  # Ungroup the data if it has any grouping variables
+  gihsn_summary_ungrouped <- gihsn_summary %>% ungroup()
+  
+  # If "Ambos Hospitales" is selected, combine both hospitals
+  if (hospital_filter == "Ambos Hospitales") {
+    filtered <- gihsn_summary_ungrouped %>%
+      filter(
+        (year == start_year & epiweek >= start_epiweek) |
+          (year == end_year & epiweek <= end_epiweek) |
+          (year > start_year & year < end_year)
+      )
+  } else {
+    filtered <- gihsn_summary_ungrouped %>%
+      filter(hospital == hospital_filter) %>%
+      filter(
+        (year == start_year & epiweek >= start_epiweek) |
+          (year == end_year & epiweek <= end_epiweek) |
+          (year > start_year & year < end_year)
+      )
+  }
+  
+  return(filtered)
+})
+
+output$summary_table_tab4 <- renderDT({
+  filtered_data <- filtered_data_gihsn()
+  
+  if (is.null(filtered_data) || nrow(filtered_data) == 0) {
+    return(datatable(data.frame(Message = "No data available for this selection")))
+  }
+  
+  datatable(filtered_data %>%
+              select(year, epiweek, total_tested, total_pos, sars_cov2_pos, inf_a_pos, inf_b_pos, vsr_pos) %>%
+              rename(
+                Año = year,
+                Epiweek = epiweek,
+                `Total Muestreados` = total_tested,
+                `Total Positivos` = total_pos,
+                `Positivo Sars-CoV-2` = sars_cov2_pos,
+                `Positivo Influenza A` = inf_a_pos,
+                `Positivo Influenza B` = inf_b_pos,
+                `Positivo VSR` = vsr_pos
+              ), options = list(searching = FALSE))
+})
+
+####### Now for the Graph
+output$disease_plot_tab4 <- renderPlot({
+  # Get filtered data based on user selections
+  filtered_data <- filtered_data_gihsn()
+  
+  # If there's no data after filtering, return an empty plot
+  if (nrow(filtered_data) == 0) {
+    return(ggplot() + labs(title = "No data available for this selection"))
+  }
+  
+  # Determine which variable to use for "Total Positivos"
+  filtered_data <- filtered_data %>%
+    mutate(
+      total_pos_dynamic = case_when(
+        input$virus == "Influenza A" ~ inf_a_pos,
+        input$virus == "Influenza B" ~ inf_b_pos,
+        input$virus == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
+        input$virus == "SARS-CoV-2" ~ sars_cov2_pos,
+        input$virus == "VSR" ~ vsr_pos,
+        TRUE ~ total_pos  # Default: all positives
+      )
+    )
+  
+  # Convert epiweek & year into a proper date for x-axis
+  filtered_data <- filtered_data %>%
+    mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
+
+  
+  # Generate the plot
+  ggplot(filtered_data, aes(x = epiweek_date)) +
+    geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +  # Grey background
+    geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +  # Red foreground
+    scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+    labs(x = "Epiweek", y = "# Muestreados", fill = "Resultado") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+})
 
 # --------------------------------------------------------------------------
 #                             VIGILANCIA
