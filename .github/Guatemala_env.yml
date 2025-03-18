@@ -25,3 +25,5 @@ dependencies:
   - r-patchwork=1.2.0
   - r-DT=0.33
   - r-stringr=1.5.1
+  - curl=7.88.1
+  - r-httr=1.4.5
