@@ -22,6 +22,12 @@ jobs:
           environment-file: .github/Guatemala_env.yml
           environment-name: Guatemala_env
 
+      # Add a step to update the conda environment and ensure dependencies are up to date
+      - name: Update environment and install dependencies
+        run: |
+          micromamba env update --file .github/Guatemala_env.yml --prune
+          micromamba activate Guatemala_env  # Activate the environment after updating
+
       - name: Run R scripts
         env:
           influenza_token: ${{ secrets.INFLUENZA_TOKEN }}
