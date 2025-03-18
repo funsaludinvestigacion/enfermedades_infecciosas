@@ -6,7 +6,7 @@ library(dplyr)
 library(stringr)
 
 # Load data -----------------------------------------------------------------
-gihsn_token <- Sys.getenv("gihsn")
+gihsn_token <- Sys.getenv("gihsn_token")
 
 uri <- "https://redcap.ucdenver.edu/api/"
 
