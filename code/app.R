@@ -204,14 +204,14 @@ columns_hisnaso <- columns_hisnaso[columns_hisnaso != "Negativo_hisnaso"]
 # Sidebar layout with input and output definitions ----
 
 # Define UI for Summary Tab
-ui_tab_summary <- function() { 
-  fluidPage(
-    titlePanel(""),
-    mainPanel(
-      h2("", style = "color: orange; text-align: center;")
-    )
-  )
-}
+#ui_tab_summary <- function() { 
+ # fluidPage(
+  #  titlePanel(""),
+   # mainPanel(
+    #  h2("", style = "color: orange; text-align: center;")
+    #)
+  #)
+#}
 
 # Define UI for Tab 1 (AGRI)
 ui_tab1 <- function() {
@@ -391,7 +391,7 @@ ui <- fluidPage(
   # Main panel content goes here
   tabsetPanel(
     # Define the three tabs
-    tabPanel("Introducción", ui_tab_summary()),
+    #tabPanel("Introducción", ui_tab_summary()),
     tabPanel("Estudio AGRI", ui_tab1()),
     tabPanel("Estudio AGRI-CASA", ui_tab2()),
     tabPanel("Estudio Biofire", ui_tab3()),
@@ -1132,7 +1132,7 @@ output$summary_table_tab4 <- renderDT({
   filtered_data <- filtered_data_gihsn()
   
   if (is.null(filtered_data) || nrow(filtered_data) == 0) {
-    return(datatable(data.frame(Message = "No data available for this selection")))
+    return(datatable(data.frame(Message = "No hay datos disponibles para esta selección / No data available for this selection")))
   }
   
   datatable(filtered_data %>%
