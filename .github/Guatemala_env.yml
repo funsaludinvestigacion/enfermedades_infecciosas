@@ -12,7 +12,7 @@ dependencies:
   - r-usethis=2.2.3
   - r-REDCapR=1.1.0
   - r-ggplot2=3.5.1
-  - r-lubridate=1.9.3
+  - r-lubridate=1.9.4
   - r-purrr=1.0.2
   - r-ggrepel=0.9.5
   - r-dplyr=1.1.4
