@@ -1,4 +1,4 @@
-name: Weekly Data Update and Deployment
+name: Weekly Data Update and Deployment 
 
 on:
   schedule:
