@@ -20,6 +20,9 @@ namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinv
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 
 # Information about each study ------------------------
+Header_Agri <- "Estudio Agri: Síntomas de enfermedades respiratorias en trabajadores agrícolas"
+  
+Header_Agri_eng <- "Agri Study: Respiratory illness symptoms in farm workers"
 
 Info_Agri <- "Este estudio es una vigilancia en las fincas de AgroAmerica con trabajadores Agrícolas del area de Banasa. Trabajadores con síntomas 
 son captados en su lugar de trabajo y posteriormente cada semana entre 8-15 trabajadores agrícolas son contactados por teléfono quienes responden a 
@@ -28,19 +31,49 @@ enfermería de investigación de FUNSALUDGUATE-CU, procederá a tomar una muestr
 por un mes, haciendo visitas durante los 7 y 28 días después de la recolección de las muestras. El objetivo es entender cuales síntomas están asociados con que 
 infección respiratoria y la carga clínica y económica."
 
+Info_Agri_eng <- "This study is an agricultural worker disease surveillance in AgroAmerica's Banasa farms. Workers with symptoms are identified in their workplace and each week
+between 8-15 agricultural workers are contacted by phone to answer questions about their health. If they experience symptoms indicating a respiratory infection, such as cough, fever, or difficulty breathing 
+the research nursing team from FUNSALUDGUATE-CU collects a nasal swab. After conducting PCR tests, the team follows up with symptomatic individuals for a month, making visits on days 7 and 28 after sample collection. 
+The goal is to understand which symptoms are associated with specific respiratory infections and their clinical and economic burdens."
+
+Header_AgriCasa <- "Estudio AgriCasa: síntomas y número de personas con resultados positivos por semana"
+  
+Header_AgriCasa_eng <- "AgriCasa study: symptoms and number of people with positive tests per week"
+  
 Info_AgriCasa <- "Ciento cincuentas casas están inscritas en este estudio. Cada semana en la visita de rutina, el equipo de campo de los enfermeros de investigación, 
 preguntan a cada miembro de la familia si se sienten bien de salud. Si algún miembro refiere tener síntomas, se le hace una prueba para SARS-COV-2, VSR, e Influenza A/B. 
 Si algún miembro de la familia tiene una prueba positiva toda la familia recibirá dos visitas intensivas cada semana para entender la transmisión de estas enfermedades 
 respiratorias entre la casa y de la casa a la finca y viceversa."
 
-Info_Biofire <- "En el Hospital Nacional de Coatepeque, a los pacientes que experimentan tos y otros síntomas se les corre un panel respiratorio de Biofire. A los pacientes que experimentan fiebre (sin tos) se les corre una prueba antígena NS1 
-de Dengue. Dependiendo en la disponabilidad de pruebas, a los sujetos que salen negativo por Dengue en la prueba de tamizje, se les corre un panel febril de Biofire. Los paneles Biofire son pruebas de PCR para un amplio abanico de posibles 
-enfermedades infecciosas. Los resultados acumulados de las pruebas de Biofire y Dengue NS1 están compartidos aquí, organizados por semana."
+Info_AgriCasa_eng <- "One hundred and fifty households are enrolled in this study. Each week, during the routine visit, the field team of research nurses asks each family member 
+if they are feeling well. If any member reports having symptoms, they are tested for SARS-CoV-2, RSV, and Influenza A/B. If any family member tests positive, the entire household 
+will receive two intensive visits each week to understand the transmission of these respiratory diseases within the home, between the home and the farm, and vice versa."
 
+Header_Biofire <- "Estudio Biofire: Pruebas de Enfermedades Infecciosas y Febriles"
+  
+Header_Biofire_eng <- "Biofire Study: Respiratory and Febrile Illness Tests"
+
+Info_Biofire <- "En el Hospital Nacional de Coatepeque, a los pacientes que experimentan tos se les corre un panel respiratorio de Biofire. A los pacientes que experimentan fiebre 
+(sin tos) se les corre una prueba para identificar  antígeno NS1 de Dengue. Dependiendo en la disponabilidad de pruebas, a los sujetos que salen con una prueba negativa para Dengue 
+en la prueba de tamizaje, se les corre el panel febril de Biofire. Los paneles  de Biofire son pruebas de PCR para un amplio abanico de posibles resultados de enfermedades infecciosas. 
+Los resultados acumulados de las pruebas de Biofire y Dengue NS1 están compartidos aquí, organizados por semana epidemiológica."
+
+Info_Biofire_eng <- "At the National Hospital of Coatepeque, patients who experience cough are tested with a Biofire respiratory panel. Patients who experience fever (without cough) are tested for 
+the Dengue NS1 antigen. Depending on the availability of tests, subjects who test negative for Dengue in the screening test have their sample tested on the Biofire febrile panel. Biofire panels are 
+PCR tests for a wide range of possible infectious disease outcomes. The cumulative results of the Biofire and Dengue NS1 tests are shared here, organized by epidemiological week."
+
+Header_GIHSN <- "Red Mundial de Vigilancia de Influenza en Hospitales"
+  
+Header_GIHSN_eng <- "Global Influenza Hospital Surveillance Network"
+  
 Info_GIHSN <- "Somos un sitio que forma parte de la Red Mundial de Vigilancia de Influenza (<a href='https://gihsn.org' target='_blank'>GIHSN</a>). En el Hospital Nacional 
-de Coatepeque y el Hospital de Chimaltenango. Formarán parte de esta vigilancia los pacientes que experimenten síntomas de fiebre y/o tos, a ellos se les corren pruebas de 
-Sars-CoV-2, Influenza A/B y VSR y se secuenciarán los  resultados positivos. Todos los datos serán compartidos con la red mundial para mejorar capacidad de vigilancia, la decisiones 
+de Coatepeque y el Hospital de Chimaltenango. Forman parte de esta vigilancia los pacientes que experimenten síntomas de fiebre y/o tos, a ellos se les corren pruebas de 
+Sars-CoV-2, Influenza A/B y VSR y se secuencia los resultados positivos. Todos los datos son compartidos con la red mundial para mejorar capacidad de vigilancia, la decisiones 
 vacunales de Influenza anual y respuesta a viruses respiratorios."
+
+Info_GIHSN_eng <- "We are a site that is part of the Global Influenza Surveillance Network (<a href='https://gihsn.org' target='_blank'>GIHSN</a>). At the National Hospital of Coatepeque and the Hospital of Chimaltenango, 
+patients who experience symptoms of fever and/or cough are part of this surveillance. They are tested for Sars-CoV-2, Influenza A/B, and VSR, and the positive results are sequenced. All data is shared with the global network to 
+improve surveillance capacity, annual influenza vaccination decisions, and response to respiratory viruses."
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish
@@ -234,9 +267,15 @@ ui_tab_summary <- function() {
 # Define UI for Tab 1 (AGRI)
 ui_tab1 <- function() {
   fluidPage(
-    titlePanel("Estudio Agri"),
+    titlePanel(""),
     sidebarLayout(
       sidebarPanel(
+       
+        # Language selection
+        radioButtons("language_agri", "Idioma / Language:", 
+                     choices = c("Español" = "es", "English" = "en"), 
+                     selected = "es"),
+        
         # Date range input
         dateRangeInput("date_range_input_tab1", "Eligir el período del tiempo:",
                        start = "2020-06-29", end = "2024-09-30", separator = " a "),
@@ -255,8 +294,10 @@ ui_tab1 <- function() {
       ),
       mainPanel(
         # Add information about the study
-        h2("Síntomas de enfermedades respiratorias en trabajadores agrícolas", style = "color: orange;"),
-        p(Info_Agri),
+        h2(textOutput("header_agri_text"), style = "color: orange;"),
+        textOutput("info_agri_text"),
+        br(),
+        br(),
         # Plot output for the graph
         plotOutput("disease_plot_tab1")
       )
@@ -273,6 +314,12 @@ ui_tab2 <- function() {
     
     sidebarLayout(
       sidebarPanel(
+        
+        # Language selection
+        radioButtons("language_agricasa", "Idioma / Language:", 
+                     choices = c("Español" = "es", "English" = "en"), 
+                     selected = "es"),
+        
         dateRangeInput(
           "date_range_input_tab2",
           "Eligir el período del tiempo:",
@@ -293,12 +340,13 @@ ui_tab2 <- function() {
         ),
       mainPanel(
         # Add information about the study
-        h2("Estudio de familias: síntomas y número de personas con resultados positivos por semana", style = "color: orange;"),
-        p(Info_AgriCasa),
+        h2(textOutput("header_agricasa_text"), style = "color: orange;"),
+        textOutput("info_agricasa_text"),
+        br(),
         fluidRow(
-          column(12, plotOutput("pct_plot_tab2")),  # Combined percentage incident symptom plot
-          column(12, plotOutput("incidence_plot_tab2")),  #  Incidence count plot
-          column(12, plotOutput("symptoms_plot_tab2"))  # Symptom count plot
+          column(12, plotOutput("pct_plot_tab2", height = "350px")),  # Combined percentage incident symptom plot
+          column(12, plotOutput("incidence_plot_tab2", height = "350px")),
+          column(12, plotOutput("symptoms_plot_tab2", height = "500px"))  # Symptom count plot
         )
       )
     )
@@ -310,37 +358,36 @@ ui_tab2 <- function() {
 ui_tab3 <- function() { 
   fluidPage(
     titlePanel(""),
-    mainPanel(
-      # Study information
-      h2("Estudio Biofire: Pruebas de Enfermedades Infecciosas y Febriles", style = "color: orange;"),
-      p(Info_Biofire),
-      
-      # Add space before "Paneles de Biofire"
-      br(),
-      
-      # Date range input
-      dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
-                     start = "2020-06-29", end = Sys.Date(), separator = " a "),
-      
-      # Centered title and table
-      div(style = "text-align: center;",
-          h3("Paneles de Biofire"),
-          reactableOutput("table_tab3")
+    sidebarLayout(
+      sidebarPanel(
+        width = 2,
+        # Language selection moved to the sidebar
+        radioButtons("language_biofire", "Idioma / Language:", 
+                     choices = c("Español" = "es", "English" = "en"), 
+                     selected = "es")
       ),
       
-      # Slightly reduce spacing before "combined_plot_tab3"
-      plotOutput("combined_plot_tab3")
-      
-      #,
-      
-      # Display the dengue plot with more space above and center it properly
-      #div(
-       # style = "text-align: center; margin-top: 550px; margin-left: 175px;",  # Added margin for space above
-       # h3(style = "text-align: left; margin-left: 70px;", "Resultados de Pruebas Rápidas de Dengue"),
-       # p(style = "text-align: left; margin-left: 30px; font-style: italic;", 
-       #   "*Algunos sujetos recibieron pruebas de Dengue y se les corrió un panel febríl; pueden estar representados en ambas gráficas"),  # Italicized text
-       # plotOutput("dengue_plot_tab3", width = "100%", height = "400px")  # Adjust width and height
-      #)
+      mainPanel(
+        # Study information
+        h2(textOutput("header_biofire_text"), style = "color: orange;"),
+        textOutput("info_biofire_text"),
+        
+        # Add space before "Paneles de Biofire"
+        br(),
+        
+        # Date range input remains here
+        dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
+                       start = "2020-06-29", end = Sys.Date(), separator = " a "),
+        
+        # Centered title and table
+        div(style = "text-align: center;",
+            h3("Paneles de Biofire"),
+            reactableOutput("table_tab3")
+        ),
+        
+        # Slightly reduce spacing before "combined_plot_tab3"
+        plotOutput("combined_plot_tab3")
+      )
     )
   )
 }
@@ -352,6 +399,10 @@ ui_tab4 <- function() {
     titlePanel(""),
     sidebarLayout(
       sidebarPanel(
+        # Language selection
+        radioButtons("language_gihsn", "Idioma / Language:", 
+                     choices = c("Español" = "es", "English" = "en"), 
+                     selected = "es"),
         # Date range input
         dateRangeInput("date_range_input_tab4", "Eligir el período del tiempo:",
                        start = "2025-03-04", end = Sys.Date(), separator = " a "),
@@ -371,9 +422,10 @@ ui_tab4 <- function() {
       
       mainPanel(
         # Add information about the study
-        h2("Red Mundial de Vigilancia de Influenza en Hospitales", style = "color: orange;"),
-        p(HTML(Info_GIHSN)),
-        
+        h2(textOutput("header_gihsn_text"), style = "color: orange;"),
+        uiOutput("info_gihsn_text"),
+        br(),
+        br(),
         # Table output for the data summary
         DTOutput("summary_table_tab4"),
         
@@ -383,8 +435,6 @@ ui_tab4 <- function() {
     )
   )
 }
-
-
 
 # Define UI for Tab 5 (VIGICASA)
 #ui_tab5 <- function() { 
@@ -450,7 +500,7 @@ server <- function(input, output) {
   output$summary_content <- renderUI({
     if (input$language == "es") {
       tagList(
-        h3("Bienvenidos a nuestro Dashboard donde realizamos un seguimiento de las enfermedades respiratorias y febriles en Guatemala"),
+        h3(strong("Bienvenidos a nuestro Dashboard donde realizamos un seguimiento de las enfermedades respiratorias y febriles en Guatemala")),
         br(),
         p("Nuestros datos se publican semanalmente a partir de nuestros diversos proyectos de vigilancia en trabajadores agrícolas, comunidades y hospitales en el suroeste de Guatemala. Este proyecto es una colaboración entre la Fundación para la Salud Integral de los Guatemaltecos (FUNSALUDGUATE-CU) y los Centros para el Control y la Prevención de Enfermedades (CDC). Trabajamos con trabajadores agrícolas de banano y sus familias, trabajadores de caña de azúcar, el Hospital Nacional de Coatepeque, el Hospital Nacional de Chimaltenango, así como con organizaciones a nivel mundial."),
         br(),
@@ -463,7 +513,7 @@ server <- function(input, output) {
         ),
         br(),
         br(),
-        p("FUNSALUD es una colaboración única entre AgroAmerica y la Universidad de Colorado dedicada a servir a las comunidades rurales del suroeste de Guatemala. El sitio ofrece atención clínica, programas de atención primaria en salud en las comunitarios y sirve como un centro de investigación científica de clase mundial. FUNSALUD está ubicado entre plantaciones de banano en las tierras bajas de la costa, de la región del Trifinio."),
+        p("FUNSALUD es una colaboración única entre AgroAmerica y la Universidad de Colorado dedicada a servir a las comunidades rurales del suroeste de Guatemala. El sitio ofrece atención clínica, programas de atención primaria en salud en las comunidades y sirve como un centro de investigación científica de clase mundial. FUNSALUD está ubicado entre plantaciones de banano en las tierras bajas de la costa, de la región del Trifinio."),
         br(),
         img(src = "photos/map_image.png", width = "100%"),
         br(),
@@ -504,9 +554,54 @@ server <- function(input, output) {
   })
   
   # ----------------------------------------------------------------------------
+  #                               HEADERS
+  #----------------------------------------------------------------------------
+  # Translatable headers
+  output$header_agri_text <- renderText({
+    if (input$language_agri == "es") {
+      Header_Agri
+    } else {
+      Header_Agri_eng
+    }
+  })
+  
+  output$header_agricasa_text <- renderText({
+    if (input$language_agricasa == "es") {
+      Header_AgriCasa
+    } else {
+      Header_AgriCasa_eng
+    }
+  })
+  
+  output$header_biofire_text <- renderText({
+    if (input$language_biofire == "es") {
+      Header_Biofire
+    } else {
+      Header_Biofire_eng
+    }
+  })
+  
+  output$header_gihsn_text <- renderText({
+    if (input$language_gihsn == "es") {
+      Header_GIHSN
+    } else {
+      Header_GIHSN_eng
+    }
+  })
+  
+  # ----------------------------------------------------------------------------
   #                               AGRI / INFLUENZA
   #----------------------------------------------------------------------------
 
+  # Reactive text output for study information
+  output$info_agri_text <- renderText({
+    if (input$language_agri == "es") {
+      Info_Agri  # Spanish version
+    } else {
+      Info_Agri_eng  # English version
+    }
+  })
+  
   # Positivity data ----------------------------------------------------------
   # Reactive expression to filter data based on selected disease and date range
   filtered_data <- reactive({
@@ -673,6 +768,15 @@ server <- function(input, output) {
   #                               AGRI CASA
   #----------------------------------------------------------------------------
   
+  # Reactive text output for study information
+  output$info_agricasa_text <- renderText({
+    if (input$language_agricasa == "es") {
+      Info_AgriCasa  # Spanish version
+    } else {
+      Info_AgriCasa_eng  # English version
+    }
+  })
+  
   # Agri-Casa Incidence-----------------------------------------------------------------------
   
   # Reactive expression to filter data based on selected disease and date range
@@ -773,7 +877,7 @@ server <- function(input, output) {
       geom_bar(aes(y = denominator, fill = "Total"), stat = "identity", color="black") +
       geom_bar(aes(y = count, fill = "Experimentan Síntomas"), stat = "identity", color="black") +
       labs(
-        title = "Individuos con los síntomas especificados \n por semana en la Vigilancia de Rutina \n o Vigilancia Intensa",
+        title = "Individuos con los síntomas especificados por semana en la Vigilancia de Rutina \n o Vigilancia Intensa",
         x = "Semana",
         y = "Número de individuos", 
         fill=""
@@ -866,7 +970,7 @@ server <- function(input, output) {
       geom_bar(aes(y = pct_combo_symptoms, fill = "Experimentan Síntomas"), stat = "identity", color = "black", alpha = 0.5) +
       geom_bar(aes(y = pct_prueba_positiva, fill = "Primera Prueba Positiva"), stat = "identity", color = "black", alpha = 0.5) +
       labs(
-        title = paste("Porcentaje de individuos \n por semana en la Vigilancia de Rutina \n o Vigilancia Intensa con", selected_virus_label_agri),
+        title = paste("Porcentaje de individuos por semana en la Vigilancia de Rutina \n o Vigilancia Intensa con", selected_virus_label_agri),
         x = "Semana",
         y = "% de individuos", 
         fill = ""
@@ -888,6 +992,15 @@ server <- function(input, output) {
   # --------------------------------------------------------------------------
   #                             BIOFIRE
   # --------------------------------------------------------------------------
+  
+  # Reactive text output for study information
+  output$info_biofire_text <- renderText({
+    if (input$language_biofire == "es") {
+      Info_Biofire  # Spanish version
+    } else {
+      Info_Biofire_eng  # English version
+    }
+  })
   
   # Count the number of positive and negative results for each
   # Calculate total counts of 1s for each column
@@ -1225,6 +1338,15 @@ output$dengue_plot_tab3 <- renderPlot({
 #                             GIHSN
 # --------------------------------------------------------------------------
 
+# Reactive text output for study information
+output$info_gihsn_text <- renderUI({
+  if (input$language_gihsn == "es") {
+    HTML(Info_GIHSN)  # Spanish version
+  } else {
+    HTML(Info_GIHSN_eng)  # English version
+  }
+})
+
 ####### This is the table
 # Reactive expression for the filtered data based on date range and selected hospital
 # Filter data based on date range and hospital selection
@@ -1283,7 +1405,7 @@ output$summary_table_tab4 <- renderDT({
                 `Positivo Influenza A` = inf_a_pos,
                 `Positivo Influenza B` = inf_b_pos,
                 `Positivo VSR` = vsr_pos
-              ), options = list(searching = FALSE))
+              ), options = list(searching = FALSE), rownames = FALSE)
 })
 
 ####### Now for the Graph
