@@ -21,24 +21,26 @@ gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigaci
 
 # Information about each study ------------------------
 
-Info_Agri <- "Este estudio es una vigilancia en las fincas de Banasa de los trabajadores Agrícolas. Trabajadores con síntomas son captados en sus lugares de trabajo
-\n y también cada semana, entre 8-15 trabajadores agrícolas son contactados por teléfono y responden a preguntas sobre su salud.
-\n Si experimentan síntomas indicando una infección respiratoria, como tos seca, fiebre, y falta de aire, el equipo FUNSALUD recogerá una muestra. 
-\n Después de pruebas de PCR, el equipo sigue a las personas con síntomas por un mes, haciendo visitas aproximadamente 7 días y 28 días después de la recogida de muestras.
-El objetivo es entender cuales síntomas están asociados con cual infección respiratoria.
-"
+Info_Agri <- "Este estudio es una vigilancia en las fincas de AgroAmerica con trabajadores Agrícolas del area de Banasa. Trabajadores con síntomas 
+son captados en su lugar de trabajo y posteriormente cada semana entre 8-15 trabajadores agrícolas son contactados por teléfono quienes responden a 
+preguntas sobre su salud. Si experimentan síntomas que indiquen una infección respiratoria, como tos seca, fiebre, y dificultad para respirar, el equipo de 
+enfermería de investigación de FUNSALUDGUATE-CU, procederá a tomar una muestra. Después de realizar pruebas de PCR, el equipo sigue a las personas con síntomas 
+por un mes, haciendo visitas durante los 7 y 28 días después de la recolección de las muestras. El objetivo es entender cuales síntomas están asociados con que 
+infección respiratoria y la carga clínica y económica."
 
-Info_AgriCasa <- "Ciento cicuentas casas están inscritas en este estudio. 
-Cada semana en la visita de rutina, el equipo de campo pregunta a cada miembro de la familia si se siente en buena salud. Si algún miembro
-tiene síntomas se le hace una prueba para SARS-COV-2, VSR, y Influenza A/B Si algún miembro de la familia se da positiva toda la familia 
-recibirá dos visitas intensivas cada semana para entender la transmición de estas enfermedades respiratorias."
+Info_AgriCasa <- "Ciento cincuentas casas están inscritas en este estudio. Cada semana en la visita de rutina, el equipo de campo de los enfermeros de investigación, 
+preguntan a cada miembro de la familia si se sienten bien de salud. Si algún miembro refiere tener síntomas, se le hace una prueba para SARS-COV-2, VSR, e Influenza A/B. 
+Si algún miembro de la familia tiene una prueba positiva toda la familia recibirá dos visitas intensivas cada semana para entender la transmisión de estas enfermedades 
+respiratorias entre la casa y de la casa a la finca y viceversa."
 
-Info_Biofire <- "En el Hospital Nacional de Coatepeque, a los pacientes que experimentan síntomas de fiebre o tos se les corre un panel febril o respiratorio de Biofire.
-Los paneles Biofire son una prueba rápida para un amplio abanico de posibles enfermedades infecciosas. Los resultados acumulados de las pruebas de Biofire están compartidos aquí, organizados por semana."
+Info_Biofire <- "En el Hospital Nacional de Coatepeque, a los pacientes que experimentan tos y otros síntomas se les corre un panel respiratorio de Biofire. A los pacientes que experimentan fiebre (sin tos) se les corre una prueba antígena NS1 
+de Dengue. Dependiendo en la disponabilidad de pruebas, a los sujetos que salen negativo por Dengue en la prueba de tamizje, se les corre un panel febril de Biofire. Los paneles Biofire son pruebas de PCR para un amplio abanico de posibles 
+enfermedades infecciosas. Los resultados acumulados de las pruebas de Biofire y Dengue NS1 están compartidos aquí, organizados por semana."
 
-Info_GIHSN <- "Somos un sitio como parte de la Red Mundial de Vigilancia de Influenza (<a href='https://gihsn.org' target='_blank'>GIHSN</a>). En el Hospital Nacional de Coatepeque, 
-a los pacientes que experimentan síntomas de fiebre y/o tos se les corre pruebas de Sars-CoV-2, Influenza A/B y VSR y se secuencia los positivos. Todos los datos son compartidos
-con la red para mejorar capacidad de vigilancia y respuesta a viruses respiratorios."
+Info_GIHSN <- "Somos un sitio que forma parte de la Red Mundial de Vigilancia de Influenza (<a href='https://gihsn.org' target='_blank'>GIHSN</a>). En el Hospital Nacional 
+de Coatepeque y el Hospital de Chimaltenango. Formarán parte de esta vigilancia los pacientes que experimenten síntomas de fiebre y/o tos, a ellos se les corren pruebas de 
+Sars-CoV-2, Influenza A/B y VSR y se secuenciarán los  resultados positivos. Todos los datos serán compartidos con la red mundial para mejorar capacidad de vigilancia, la decisiones 
+vacunales de Influenza anual y respuesta a viruses respiratorios."
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish
@@ -95,9 +97,9 @@ symptom_map <- list(
 
 # NAMRU/BIOFIRE:
 # Vector mapping column names to pathogen names
-pathogen_names <- c(
-  "res_dengue" = "Dengue",
-  "res_dengue_2" = "Dengue",
+pathogen_names <- c( # removed dengue
+  #"res_dengue" = "Dengue", 
+  #"res_dengue_2" = "Dengue",
   "patogenos_positivos_sangre___1" = "Chikungunya",
   "patogenos_positivos_sangre___2" = "Fiebre hemorrágica de Crimean-Congo",
   "patogenos_positivos_sangre___3" = "Dengue",
@@ -142,9 +144,9 @@ pathogen_names <- c(
   "Negativo_hisnaso" = "Negativo"
 )
 
-columns_of_interest_biofire <- c(
-  "res_dengue",
-  "res_dengue_2",
+columns_of_interest_biofire <- c( # removed dengue
+  #"res_dengue",
+  #"res_dengue_2",
   "patogenos_positivos_sangre___1",
   "patogenos_positivos_sangre___2",
   "patogenos_positivos_sangre___3",
@@ -190,7 +192,7 @@ columns_of_interest_biofire <- c(
 )
 
 # Create list without negatives separated by sample type
-columns_sangre <- columns_of_interest_biofire[grep("sangre|dengue", 
+columns_sangre <- columns_of_interest_biofire[grep("sangre", # removed dengue
                                                    columns_of_interest_biofire)]
 columns_sangre <- columns_sangre[columns_sangre != "Negativo_sangre"]
 
@@ -204,6 +206,22 @@ columns_hisnaso <- columns_hisnaso[columns_hisnaso != "Negativo_hisnaso"]
 # Sidebar layout with input and output definitions ----
 
 # Define UI for Summary Tab
+ui_tab_summary <- function() {
+  fluidPage(
+    titlePanel(NULL), # No large title since it's already in the main UI
+    sidebarLayout(
+      sidebarPanel(
+        width = 2,  # Reduces the width of the sidebar
+        radioButtons("language", "Idioma / Language:", 
+                     choices = c("Español" = "es", "English" = "en"), 
+                     selected = "es")
+      ),
+      mainPanel(
+        uiOutput("summary_content")
+      )
+    )
+  )
+}
 #ui_tab_summary <- function() { 
  # fluidPage(
   #  titlePanel(""),
@@ -292,21 +310,41 @@ ui_tab2 <- function() {
 ui_tab3 <- function() { 
   fluidPage(
     titlePanel(""),
-      mainPanel(
-        # Date range input now in mainPanel
-        dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
-                       start = "2020-06-29", end = Sys.Date(), separator = " a "),
-        
-        # Add information about the study
-        h2("Estudio Biofire: Pruebas de Enfermedades Infecciosas y Febriles", style = "color: orange;"),
-        p(Info_Biofire),
-        fluidRow(
-          column(12, div(style = "text-align: center;", reactableOutput("table_tab3"))),
-          column(12, plotOutput("combined_plot_tab3"))
-      )
+    mainPanel(
+      # Study information
+      h2("Estudio Biofire: Pruebas de Enfermedades Infecciosas y Febriles", style = "color: orange;"),
+      p(Info_Biofire),
+      
+      # Add space before "Paneles de Biofire"
+      br(),
+      
+      # Date range input
+      dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
+                     start = "2020-06-29", end = Sys.Date(), separator = " a "),
+      
+      # Centered title and table
+      div(style = "text-align: center;",
+          h3("Paneles de Biofire"),
+          reactableOutput("table_tab3")
+      ),
+      
+      # Slightly reduce spacing before "combined_plot_tab3"
+      plotOutput("combined_plot_tab3")
+      
+      #,
+      
+      # Display the dengue plot with more space above and center it properly
+      #div(
+       # style = "text-align: center; margin-top: 550px; margin-left: 175px;",  # Added margin for space above
+       # h3(style = "text-align: left; margin-left: 70px;", "Resultados de Pruebas Rápidas de Dengue"),
+       # p(style = "text-align: left; margin-left: 30px; font-style: italic;", 
+       #   "*Algunos sujetos recibieron pruebas de Dengue y se les corrió un panel febríl; pueden estar representados en ambas gráficas"),  # Italicized text
+       # plotOutput("dengue_plot_tab3", width = "100%", height = "400px")  # Adjust width and height
+      #)
     )
   )
 }
+
 
 # Define UI for Tab 4 (GIHSN)
 ui_tab4 <- function() { 
@@ -391,11 +429,11 @@ ui <- fluidPage(
   # Main panel content goes here
   tabsetPanel(
     # Define the three tabs
-    #tabPanel("Introducción", ui_tab_summary()),
+    tabPanel("Introducción", ui_tab_summary()),
     tabPanel("Estudio AGRI", ui_tab1()),
     tabPanel("Estudio AGRI-CASA", ui_tab2()),
     tabPanel("Estudio Biofire", ui_tab3()),
-    tabPanel("GIHSN", ui_tab4()),
+    tabPanel("Vigilancia GIHSN", ui_tab4()),
     #tabPanel("VIGICASA", ui_tab5()),
     #tabPanel("VIGIFINCA - BANASA", ui_tab6()),
     #tabPanel("VIGIFINCA - PANTALEON", ui_tab7())
@@ -406,6 +444,64 @@ ui <- fluidPage(
 # Define server logic ----
 server <- function(input, output) {
   
+  # ----------------------------------------------------------------------------
+  #                               SUMMARY/INTRODUCCIÓN
+  #----------------------------------------------------------------------------
+  output$summary_content <- renderUI({
+    if (input$language == "es") {
+      tagList(
+        h3("Bienvenidos a nuestro Dashboard donde realizamos un seguimiento de las enfermedades respiratorias y febriles en Guatemala"),
+        br(),
+        p("Nuestros datos se publican semanalmente a partir de nuestros diversos proyectos de vigilancia en trabajadores agrícolas, comunidades y hospitales en el suroeste de Guatemala. Este proyecto es una colaboración entre la Fundación para la Salud Integral de los Guatemaltecos (FUNSALUDGUATE-CU) y los Centros para el Control y la Prevención de Enfermedades (CDC). Trabajamos con trabajadores agrícolas de banano y sus familias, trabajadores de caña de azúcar, el Hospital Nacional de Coatepeque, el Hospital Nacional de Chimaltenango, así como con organizaciones a nivel mundial."),
+        br(),
+        img(src = "photos/drone_site_image.png", width = "100%"),
+        tags$small(
+          tags$a(href = "https://www.npr.org/sections/goatsandsoda/2023/02/19/1153911199/a-kid-in-guatemala-had-a-dream-today-shes-a-disease-detective",
+                 tags$em("Luis Echeverria - NPR"), 
+                 style = "color: black;", 
+                 target = "_blank")
+        ),
+        br(),
+        br(),
+        p("FUNSALUD es una colaboración única entre AgroAmerica y la Universidad de Colorado dedicada a servir a las comunidades rurales del suroeste de Guatemala. El sitio ofrece atención clínica, programas de atención primaria en salud en las comunitarios y sirve como un centro de investigación científica de clase mundial. FUNSALUD está ubicado entre plantaciones de banano en las tierras bajas de la costa, de la región del Trifinio."),
+        br(),
+        img(src = "photos/map_image.png", width = "100%"),
+        br(),
+        br(),
+        p("El sitio ha realizado investigaciones durante más de 10 años, centrándose en las enfermedades infecciosas de alta carga regional, específicamente en la vigilancia de enfermedades respiratorias y febriles, en trabajadores agrícolas, hogares de la comunidad y personas hospitalizadas en los centros asistenciales locales. Trabajamos con un laboratorio catalogado nivel 4, que funciona principalmente con energía solar, cuenta con las pruebas diagnósticas básicas, capacidad de hacer PCR en tiempo real, serología y secuenciación, así como una variedad de otras pruebas de investigación."),
+        br(),
+        img(src = "photos/staff_photo_guate.jpg", width = "100%"),
+        br(),
+        br()
+      )
+    } else {
+      tagList(
+        h3("Welcome to our Dashboard tracking respiratory and febrile illnesses in Guatemala"),
+        br(),
+        p("Our data is published weekly from our various surveillance projects in farm workers, communities and hospitals across southwestern Guatemala. This project is a collaboration between la Fundación para la Salud Integral de los Guatemaltecos (FUNSALUDGUATE-CU) and Centers for Disease Control (CDC). We work with banana farmworkers and their families, sugar cane farm workers, the Hospital Nacional de Coatepeque and the Hospital Nacional de Chimaltenango as well as organizations worldwide."),
+        br(),
+        img(src = "photos/drone_site_image.png", width = "100%"),
+        tags$small(
+          tags$a(href = "https://www.npr.org/sections/goatsandsoda/2023/02/19/1153911199/a-kid-in-guatemala-had-a-dream-today-shes-a-disease-detective",
+                 tags$em("Luis Echeverria - NPR"), 
+                 style = "color: black;", 
+                 target = "_blank")
+        ),
+        br(),
+        br(),
+        p("FUNSALUD is a unique partnership between AgroAmerica and the University of Colorado dedicated to serving rural communities in southwestern Guatemala. The site provides clinical care, community programs, and serves as a world-class research hub. FUNSALUD is located among the banana plantation in the coastal lowlands of the Trifinio region."),
+        br(),
+        img(src = "photos/map_image.png", width = "100%"),
+        br(),
+        br(),
+        p("The site has conducted research for over 10+ years focusing primarily on regional high burden infectious diseases, specifically on respiratory and febrile disease surveillance in farm workers, community members and local hospitals. Our class four lab runs primarily on solar power, has basic diagnostic testing, real-time PCR capability, sequencing and serology as well as a variety of other research testing."),
+        br(),
+        img(src = "photos/staff_photo_guate.jpg", width = "100%"),
+        br(),
+        br()
+      )
+    }
+  })
   
   # ----------------------------------------------------------------------------
   #                               AGRI / INFLUENZA
@@ -798,22 +894,13 @@ server <- function(input, output) {
   biofire_total_tested_pre <- namru_biofire_summary %>%
     group_by(epiweek_recoleccion) %>%
     dplyr::summarise(
-      count_sangre_total = sum(result_sangre_complt == 0 | result_sangre_complt == 1 | result_sangre_complt == 2 | res_dengue == 1 | res_dengue_2 == 1, na.rm = TRUE),
+      count_sangre_total = sum(result_sangre_complt == 1 | result_sangre_complt == 2, na.rm = TRUE), # removed dengue, check commit 9c2d9d0 for what gabi had, she used "maxes"
       count_nasof_total = sum(result_hispd_nasof == 1 | result_hispd_nasof == 2, na.rm = TRUE)
     )
   
-  #biofire_total_tested_pre <- namru_biofire_summary%>%
-   # group_by(epiweek_recoleccion)%>%
-    #dplyr::summarise(count_sangre_total = max(0,
-     #                                         sum(result_sangre_complt==0 | result_sangre_complt==1 | result_sangre_complt==2 | res_dengue == 1 | res_dengue_2 == 1, na.rm = TRUE)),
-      #               count_nasof_total = max(0,
-       #                                      sum(result_hispd_nasof==1 | result_hispd_nasof==2, na.rm=TRUE)), # here I am leaving out cobas because during the small window
-        #                                                                                                      # when panels weren't run if cobas was positive, there was not a cobas positive
-         #            )
-  
   # Add negative column
-  namru_biofire_summary_anonymized_wneg <- namru_biofire_summary%>%
-  mutate(Negativo_sangre = ifelse((result_sangre_complt==2 & (res_dengue == 2 | res_dengue_2 == 2)) | (result_sangre_complt==0 & (res_dengue == 2 | res_dengue_2 == 2)), 1, 0), 
+  namru_biofire_summary_anonymized_wneg <- namru_biofire_summary %>%
+  mutate(Negativo_sangre = ifelse(result_sangre_complt==2, 1, 0), # removed dengue
          Negativo_hisnaso = ifelse(result_hispd_nasof==2, 1, 0))
   
   # Function to create summary dataset for specified columns
@@ -867,7 +954,7 @@ server <- function(input, output) {
   # Get list of column names
   colnames_namru_counts_pre <- colnames(namru_biofire_summary_counts)
   colnames_namru_counts <- setdiff(colnames_namru_counts_pre, c("epiweek_recoleccion"))
-  colnames_namru_counts_sangre <- grep("^count_res_dengue|^count_patogenos_positivos_sangre", 
+  colnames_namru_counts_sangre <- grep("^count_patogenos_positivos_sangre", # removed dengue
                                        colnames_namru_counts, value = TRUE)
   colnames_namru_counts_hisnaso <- grep("^count_patogenos_positivos_hisnaso", 
                                         colnames_namru_counts, value = TRUE)
@@ -899,7 +986,7 @@ server <- function(input, output) {
     `Todas pruebas de sangre` = count_sangre_total,
     `Todas pruebas naso/orofaríngeo` = count_nasof_total,
     `Tipo de Muestra` = case_when(
-      grepl("sangre|dengue", pathogen_code, ignore.case = TRUE) ~ "Sangre",
+      grepl("sangre", pathogen_code, ignore.case = TRUE) ~ "Sangre", # removed dengue
       grepl("hisnaso", pathogen_code, ignore.case = TRUE) ~ "Naso/orofaríngeo",
       TRUE ~ NA_character_)) %>%
     dplyr::select(-c("count_sangre_total", "count_nasof_total"))
@@ -952,7 +1039,7 @@ filtered_biofire_plot_df <- reactive({
            `Todas pruebas de sangre` = count_sangre_total,
            `Todas pruebas naso/orofaríngeo` = count_nasof_total,
            `Tipo de Muestra` = case_when(
-             grepl("sangre|dengue", pathogen_code, ignore.case = TRUE) ~ "Sangre",
+             grepl("sangre", pathogen_code, ignore.case = TRUE) ~ "Sangre", # removed dengue
              grepl("hisnaso", pathogen_code, ignore.case = TRUE) ~ "Naso/orofaríngeo",
              TRUE ~ NA_character_)) %>%
     dplyr::select(-c("count_sangre_total", "count_nasof_total"))
@@ -997,10 +1084,10 @@ output$combined_plot_tab3 <- renderPlot({
       y = ""
     ) +
     scale_y_continuous(breaks = seq(0, max(
-                                    max(biofire_total_tested_filtered$count_nasof_total, na.rm = TRUE),
-                                    max(biofire_total_tested_filtered$count_sangre_total, na.rm = TRUE)
-                                    ),
-                                    by = 1)) +
+      max(biofire_total_tested_filtered$count_nasof_total, na.rm = TRUE),
+      max(biofire_total_tested_filtered$count_sangre_total, na.rm = TRUE)
+    ),
+    by = 1)) +
     theme(axis.line = element_blank(), 
           plot.title = element_text(size = 12, face = "bold", hjust=0.5),  # Adjust title size and style
           axis.title.y = element_text(angle = 0, vjust = 0.5,face = "bold", margin = margin(r = -30)),
@@ -1008,7 +1095,7 @@ output$combined_plot_tab3 <- renderPlot({
           axis.text.y = element_text(size = 12, angle = 0, hjust = 1)  # Adjusted y-axis text size
           #axis.text.x = element_blank(),
           #axis.ticks.x = element_blank()
-          )+
+    )+
     scale_x_date(
       labels = format_date_spanish,
       limits = as.Date(c(input$date_range_input_tab3[1], input$date_range_input_tab3[2])),
@@ -1043,46 +1130,96 @@ output$combined_plot_tab3 <- renderPlot({
   
   filtered_data$forColor <-
     factor(paste0(filtered_data$`Tipo de Muestra`, " (", filtered_data$count , ")"))
+  
+  # Create a single ggplot object
+  tile_plot <- filtered_data %>%
+    arrange(`Tipo de Muestra`) %>%
+    ggplot(aes(x = epiweek_recoleccion, y = forcats::fct_relevel(`Patógeno`, "Negativo"))) +
+    geom_tile(aes(fill = forColor), color='black') +
+    facet_wrap(~ `Tipo de Muestra`, ncol = 1, scales = "free_y") +  # Facet by Tipo de Muestra
+    labs(
+      title="Número de personas con un dado resultado",
+      x = "Semana",
+      y = "",
+      fill= ""
+    ) +
+    theme_classic() +
+    scale_x_date(
+      labels = format_date_spanish,
+      limits = as.Date(c(input$date_range_input_tab3[1], input$date_range_input_tab3[2])),
+      expand = c(0, 0)  # Remove extra space at ends
+    ) +
+    #scale_fill_gradient(low = "#FFFFFF", high = "#FF0000")+
+    theme(
+      legend.position = "right",
+      plot.title = element_text(size = 12, face = "bold", hjust=0.5),  # Adjust title size and style
+      plot.margin = margin(0, 0, 0, 0),
+      panel.background = element_rect(fill = 'white'),
+      axis.line = element_blank(), 
+      axis.text.x = element_text(size = 12),
+      plot.background = element_rect(fill = 'white'),
+      strip.text = element_text(size = 14, face = "bold"),
+      axis.title.y = element_text(angle = 0, vjust = 0.5, face = "bold", margin = margin(r = -10)),
+      axis.text.y = element_text(size = 12, angle = 0, hjust = 1)  # Adjusted y-axis text size and color
+    )+
+    scale_fill_manual(values = color_palette_df$color, breaks = color_palette_df$category)
+  
+  # Add the total count to the top of the chart
+  combined_plot <- total_biofire_test_plot / tile_plot + plot_layout(heights = c(1, 3), widths = c(1, 1))
+  
+  # Display the combined plot with specified width and height
+  combined_plot
+}, height = 900, width = 875) 
 
-    # Create a single ggplot object
-    tile_plot <- filtered_data %>%
-      arrange(`Tipo de Muestra`) %>%
-      ggplot(aes(x = epiweek_recoleccion, y = forcats::fct_relevel(`Patógeno`, "Negativo"))) +
-      geom_tile(aes(fill = forColor), color='black') +
-      facet_wrap(~ `Tipo de Muestra`, ncol = 1, scales = "free_y") +  # Facet by Tipo de Muestra
-      labs(
-        title="Número de personas con un dado resultado",
-        x = "Semana",
-        y = "",
-        fill= ""
-      ) +
-      theme_classic() +
+# Create DENGUE plot -------------------------------------
+# Generate the dengue plot
+output$dengue_plot_tab3 <- renderPlot({
+  # Get the selected date range from the input
+  start_date <- input$date_range_input_tab3[1]  # This is the first value of the date range (start date)
+  end_date <- input$date_range_input_tab3[2]    # This is the second value of the date range (end date)
+  
+  # Ensure `epiweek_recoleccion` is in Date format
+  filtered_data <- namru_biofire_summary %>%
+    mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion)) %>%
+    filter(epiweek_recoleccion >= as.Date(start_date) & epiweek_recoleccion <= as.Date(end_date))
+  
+  # Check if there's any data in the selected date range
+  if (nrow(filtered_data) == 0 || sum(!is.na(filtered_data$res_dengue)) == 0) {
+    # If no data exists or no non-missing res_dengue, show the "No data available" message
+    plot.new()
+    grid::grid.text(
+      "No hay datos disponibles para esta selección / No data available for this selection", 
+      x = 0.5, y = 0.5, 
+      gp = grid::gpar(fontsize = 16)  # Adjust font size dynamically if necessary
+    )
+  } else {
+    # Summarize the data for the filtered date range
+    dengue_summary <- filtered_data %>%
+      group_by(epiweek_recoleccion) %>%
+      summarise(
+        total_tested = sum(!is.na(res_dengue)),  # Sum of non-missing `res_dengue` per epiweek
+        total_pos_dengue = sum(res_dengue == 1, na.rm = TRUE)  # Count positives
+      )
+    
+    # Generate the plot based on the filtered data
+    ggplot(dengue_summary, aes(x = epiweek_recoleccion)) +
+      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +  # Grey background
+      geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +  # Red foreground
+      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
       scale_x_date(
-        labels = format_date_spanish,
-        limits = as.Date(c(input$date_range_input_tab3[1], input$date_range_input_tab3[2])),
+        labels = format_date_spanish,  # Use custom function for formatting
+        limits = as.Date(c(start_date, end_date)),  # Dynamic x-axis range based on selected date
         expand = c(0, 0)  # Remove extra space at ends
       ) +
-      #scale_fill_gradient(low = "#FFFFFF", high = "#FF0000")+
-      theme(
-        legend.position = "right",
-        plot.title = element_text(size = 12, face = "bold", hjust=0.5),  # Adjust title size and style
-        plot.margin = margin(0, 0, 0, 0),
-        panel.background = element_rect(fill = 'white'),
-        axis.line = element_blank(), 
-        axis.text.x = element_text(size = 12),
-        plot.background = element_rect(fill = 'white'),
-        strip.text = element_text(size = 14, face = "bold"),
-        axis.title.y = element_text(angle = 0, vjust = 0.5, face = "bold", margin = margin(r = -10)),
-        axis.text.y = element_text(size = 12, angle = 0, hjust = 1)  # Adjusted y-axis text size and color
-      )+
-      scale_fill_manual(values = color_palette_df$color, breaks = color_palette_df$category)
-  
-    # Add the total count to the top of the chart
-    combined_plot <- total_biofire_test_plot / tile_plot + plot_layout(heights = c(1, 3), widths = c(1, 1))
-    
-    # Display the combined plot with specified width and height
-    combined_plot
-}, height = 900, width = 875) 
+      scale_y_continuous(
+        breaks = seq(0, ceiling(max(c(dengue_summary$total_tested, dengue_summary$total_pos_dengue))), by = 1),  # Integer steps on y-axis
+        labels = scales::comma,  # Format y-axis labels as integers
+        limits = c(0, NA)  # Ensure the y-axis starts at 0 and goes up dynamically
+      ) +
+      labs(x = "Epiweek", y = "# Muestreados", fill = "Resultado") +
+      theme_minimal()
+  }
+})
 
 # --------------------------------------------------------------------------
 #                             GIHSN
@@ -1156,7 +1293,7 @@ output$disease_plot_tab4 <- renderPlot({
   
   # If there's no data after filtering, return an empty plot
   if (nrow(filtered_data) == 0) {
-    return(ggplot() + labs(title = "No data available for this selection"))
+    return(ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection"))
   }
   
   # Determine which variable to use for "Total Positivos"

@@ -210,6 +210,11 @@ for (column in columns_of_interest_biofire) {
   temp_result <- generate_summary_biofire(namru_biofire_subset, column)
 }
 
+# combine the repeat with the original
+namru_biofire_summary$res_dengue <- ifelse(is.na(namru_biofire_summary$res_dengue_2), namru_biofire_summary$res_dengue,
+                                          ifelse(!is.na(namru_biofire_summary$res_dengue_2) & namru_biofire_summary$res_dengue_2 != 3, namru_biofire_summary$res_dengue_2, NA))
+
+namru_biofire_summary <- namru_biofire_summary %>% select(-res_dengue_2)
 
 # For additional data security, we will re-code participants-----------------------
 
