@@ -1,4 +1,4 @@
 "hospital","epiweek","year","total_tested","total_pos","total_neg","sars_cov2_pos","sars_cov2_neg","inf_a_pos","inf_a_neg","inf_b_pos","inf_b_neg","vsr_pos","vsr_neg","epiweek_date"
 "Hospital de Coatepeque",10,2025,4,1,3,0,4,1,3,0,4,0,4,2025-03-10
 "Hospital de Coatepeque",11,2025,7,3,4,0,7,3,4,0,7,0,7,2025-03-17
-"Hospital de Coatepeque",12,2025,4,1,3,0,4,1,3,0,4,0,4,2025-03-24
+"Hospital de Coatepeque",12,2025,6,3,3,0,6,3,3,0,6,0,6,2025-03-24
