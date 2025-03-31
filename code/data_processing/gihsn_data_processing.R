@@ -25,7 +25,8 @@ gihsn <- gihsn %>%
 resolve_result <- function(main, repit) {
   case_when(
     main == 1 | repit == 1 ~ 1,  # Prefer positive
-    main == 2 & (is.na(repit) | repit == 2) ~ 2,  # Keep negative if no positive
+    main == 2 & (is.na(repit) | repit == 2 | repit == 5) ~ 2,  # Keep negative if no positive
+    (main == 3 & (is.na(repit)) | repit == 3) ~ 3,  # Keep negative if no positive
     TRUE ~ NA_real_
   )
 }
