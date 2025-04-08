@@ -1440,7 +1440,7 @@ output$disease_plot_tab4 <- renderPlot({
   ggplot(filtered_data, aes(x = epiweek_date)) +
     geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +  # Grey background
     geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +  # Red foreground
-    scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+    scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "skyblue")) +
     labs(x = "Epiweek", y = "# Muestreados", fill = "Resultado") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
