@@ -430,7 +430,13 @@ ui_tab4 <- function() {
         DTOutput("summary_table_tab4"),
         
         # Plot output for the graph
-        plotOutput("disease_plot_tab4")
+        plotOutput("disease_plot_tab4"),
+        conditionalPanel(
+          condition = "input.virus == 'Influenza A'",
+          br(),
+          h4("Distribución de Subtipos de Influenza A", style = "color: steelblue;"),
+          plotOutput("influenza_a_subtypes_plot")
+        )
       )
     )
   )
@@ -1347,6 +1353,7 @@ output$info_gihsn_text <- renderUI({
   }
 })
 
+
 ####### This is the table
 # Reactive expression for the filtered data based on date range and selected hospital
 # Filter data based on date range and hospital selection
@@ -1447,6 +1454,39 @@ output$disease_plot_tab4 <- renderPlot({
     theme(axis.text.x = element_text(angle = 90, hjust = 1))
 })
 
+output$influenza_a_subtypes_plot <- renderPlot({
+  data <- filtered_data_gihsn()
+  
+  if (nrow(data) == 0) {
+    return(ggplot() + labs(title = "No hay datos disponibles para Influenza A"))
+  }
+  
+  # Convert epiweek & year into a proper date
+  data <- data %>%
+    mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
+  
+  # Pivot data for Influenza A subtypes
+  subtype_data <- data %>%
+    select(epiweek_date, inf_a_h1n1, inf_a_h3n2, inf_a_nosub) %>%
+    pivot_longer(cols = c(inf_a_h1n1, inf_a_h3n2, inf_a_nosub), 
+                 names_to = "Subtype", values_to = "Count") %>%
+    mutate(
+      Subtype = recode(Subtype,
+                       inf_a_h1n1 = "A(H1N1)",
+                       inf_a_h3n2 = "A(H3N2)",
+                       inf_a_nosub = "Sin subtipificar")
+    )
+  
+  ggplot(subtype_data, aes(x = epiweek_date, y = Count, fill = Subtype)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(values = c("A(H1N1)" = "#1b9e77", 
+                                 "A(H3N2)" = "#d95f02", 
+                                 "Sin subtipificar" = "#7570b3")) +
+    labs(x = "Semana epidemiológica", y = "Casos positivos",
+         fill = "Subtipo", title = "Subtipos de Influenza A") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+})
 # --------------------------------------------------------------------------
 #                             VIGILANCIA
 # --------------------------------------------------------------------------
