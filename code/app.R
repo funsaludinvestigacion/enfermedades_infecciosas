@@ -1467,7 +1467,7 @@ output$influenza_a_subtypes_plot <- renderPlot({
   
   # Pivot data for Influenza A subtypes
   subtype_data <- data %>%
-    select(epiweek_date, inf_a_h1n1, inf_a_h3n2, inf_a_nosub) %>%
+    select(epiweek, year, inf_a_h1n1, inf_a_h3n2, inf_a_nosub) %>%
     pivot_longer(cols = c(inf_a_h1n1, inf_a_h3n2, inf_a_nosub), 
                  names_to = "Subtype", values_to = "Count") %>%
     mutate(
@@ -1477,7 +1477,7 @@ output$influenza_a_subtypes_plot <- renderPlot({
                        inf_a_nosub = "Sin subtipificar")
     )
   
-  ggplot(subtype_data, aes(x = epiweek_date, y = Count, fill = Subtype)) +
+  ggplot(subtype_data, aes(x = factor(paste(year, epiweek, sep = "-")), y = Count, fill = Subtype)) +
     geom_bar(stat = "identity") +
     scale_fill_manual(values = c("A(H1N1)" = "#1b9e77", 
                                  "A(H3N2)" = "#d95f02", 
