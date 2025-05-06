@@ -1445,13 +1445,20 @@ output$disease_plot_tab4 <- renderPlot({
   
   # Generate the plot
   ggplot(filtered_data, aes(x = factor(paste(year, epiweek, sep = "-")))) +
-    geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +  # Grey background
-    geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +  # Red foreground
+    geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +
+    geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
     scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "skyblue")) +
-    scale_y_continuous(breaks = function(x) seq(0, ceiling(max(x)), by = 1)) +
+    scale_y_continuous(
+      breaks = function(x) seq(0, ceiling(max(x)), by = 1)
+    ) +
     labs(x = "Epiweek", y = "# Muestreados", fill = "Resultado") +
     theme_minimal() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1),
+      panel.grid.major.x = element_blank(),       # remove vertical major grid lines
+      panel.grid.minor.x = element_blank(),       # remove vertical minor grid lines
+      panel.grid.minor.y = element_blank()        # remove horizontal minor grid lines
+    )
 })
 
 output$influenza_a_subtypes_plot <- renderPlot({
