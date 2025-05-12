@@ -370,7 +370,7 @@ ui_tab3 <- function() {
         # Study information
         h2(textOutput("header_biofire_text"), style = "color: orange;"),
         textOutput("info_biofire_text"),
-        
+        br(),
         # Date range input
         dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
                        start = "2020-06-29", end = Sys.Date(), separator = " a "),
@@ -399,7 +399,10 @@ ui_tab3 <- function() {
         # Dengue plot below the line and further down
         div(style = "display: flex; justify-content: center;", 
             plotOutput("dengue_plot_tab3", height = "400px", width = "80%")
-        )
+        ),
+        br(),
+        br()
+        
       )
     )
   )
