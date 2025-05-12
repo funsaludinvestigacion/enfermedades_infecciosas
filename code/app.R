@@ -353,11 +353,10 @@ ui_tab2 <- function() {
   )
 }
 
-
-# Define UI for Tab 3 (BIOFIRE)
 ui_tab3 <- function() { 
   fluidPage(
     titlePanel(""),
+    
     sidebarLayout(
       sidebarPanel(
         width = 2,
@@ -372,21 +371,35 @@ ui_tab3 <- function() {
         h2(textOutput("header_biofire_text"), style = "color: orange;"),
         textOutput("info_biofire_text"),
         
-        # Add space before "Paneles de Biofire"
-        br(),
-        
-        # Date range input remains here
+        # Date range input
         dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
                        start = "2020-06-29", end = Sys.Date(), separator = " a "),
         
-        # Centered title and table
+        # Title and table centered
         div(style = "text-align: center;",
-            h3("Paneles de Biofire"),
+            h3("Paneles de Biofire")
+        ),
+        div(style = "text-align: center;",
             reactableOutput("table_tab3")
         ),
         
-        # Slightly reduce spacing before "combined_plot_tab3"
-        plotOutput("combined_plot_tab3")
+        # Combined plot
+        div(style = "text-align: center;", 
+            plotOutput("combined_plot_tab3", height = "400px", width = "80%")
+        ),
+        
+        # Horizontal line for separation
+        hr(style = "border-top: 2px solid black; margin-top: 550px; margin-bottom: 30px;"),
+        
+        # Title for Dengue Plot section
+        div(style = "text-align: center;", 
+            h3("Pruebas de Dengue NS1")  # Title before Dengue plot
+        ),
+        
+        # Dengue plot below the line and further down
+        div(style = "display: flex; justify-content: center;", 
+            plotOutput("dengue_plot_tab3", height = "400px", width = "80%")
+        )
       )
     )
   )
@@ -1335,8 +1348,17 @@ output$dengue_plot_tab3 <- renderPlot({
         labels = scales::comma,  # Format y-axis labels as integers
         limits = c(0, NA)  # Ensure the y-axis starts at 0 and goes up dynamically
       ) +
-      labs(x = "Epiweek", y = "# Muestreados", fill = "Resultado") +
-      theme_minimal()
+      labs(x = "Epiweek", y = "# Muestreados", fill = NULL) +  # Remove the legend title
+      theme_minimal() +
+      theme(
+        legend.position = "top",  # Move the legend to the top
+        legend.title = element_blank(),  # Ensure no legend title
+        legend.text = element_text(size = 10),  # Adjust the legend text font size (optional)
+        panel.grid.major.x = element_blank(),       # Remove vertical major grid lines
+        panel.grid.minor.x = element_blank(),       # Remove vertical minor grid lines
+        panel.grid.minor.y = element_blank()        # Remove horizontal minor grid lines
+      )
+    
   }
 })
 
@@ -1451,10 +1473,10 @@ output$disease_plot_tab4 <- renderPlot({
     scale_y_continuous(
       breaks = function(x) seq(0, ceiling(max(x)), by = 1)
     ) +
-    labs(x = "Epiweek", y = "# Muestreados", fill = "Resultado") +
+    labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
     theme_minimal() +
     theme(
-      axis.text.x = element_text(angle = 90, hjust = 1),
+      axis.text.x = element_text(angle = 45, hjust = 1),
       panel.grid.major.x = element_blank(),       # remove vertical major grid lines
       panel.grid.minor.x = element_blank(),       # remove vertical minor grid lines
       panel.grid.minor.y = element_blank()        # remove horizontal minor grid lines
