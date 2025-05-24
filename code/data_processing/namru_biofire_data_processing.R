@@ -111,6 +111,10 @@ nrow(unique(namru_biofire%>%
 columns_of_interest_biofire <- c(
   "res_dengue",
   "res_dengue_2",
+  "dengue_igg",
+  "dengue_igg_2",
+  "dengue_igm",
+  "dengue_igm_2",
   "patogenos_positivos_sangre___1",
   "patogenos_positivos_sangre___2",
   "patogenos_positivos_sangre___3",
@@ -169,6 +173,10 @@ namru_biofire_subset <- namru_biofire%>%
                 epiweek_recoleccion,
                 res_dengue,
                 res_dengue_2,
+                dengue_igg,
+                dengue_igg_2,
+                dengue_igm,
+                dengue_igm_2,
                 result_sangre_complt,
                 result_hispd_nasof,
                 all_of(columns_of_interest_biofire))%>%
@@ -214,7 +222,14 @@ for (column in columns_of_interest_biofire) {
 namru_biofire_summary$res_dengue <- ifelse(is.na(namru_biofire_summary$res_dengue_2), namru_biofire_summary$res_dengue,
                                           ifelse(!is.na(namru_biofire_summary$res_dengue_2) & namru_biofire_summary$res_dengue_2 != 3, namru_biofire_summary$res_dengue_2, NA))
 
-namru_biofire_summary <- namru_biofire_summary %>% select(-res_dengue_2)
+namru_biofire_summary$dengue_igg <- ifelse(is.na(namru_biofire_summary$dengue_igg_2), namru_biofire_summary$dengue_igg,
+                                           ifelse(!is.na(namru_biofire_summary$dengue_igg_2) & namru_biofire_summary$dengue_igg_2 != 3, namru_biofire_summary$dengue_igg_2, NA))
+
+namru_biofire_summary$dengue_igm <- ifelse(is.na(namru_biofire_summary$dengue_igm_2), namru_biofire_summary$dengue_igm,
+                                           ifelse(!is.na(namru_biofire_summary$dengue_igm_2) & namru_biofire_summary$dengue_igm_2 != 3, namru_biofire_summary$dengue_igm_2, NA))
+
+namru_biofire_summary <- namru_biofire_summary %>%
+  select(-res_dengue_2, -dengue_igg_2, -dengue_igm_2)
 
 # For additional data security, we will re-code participants-----------------------
 

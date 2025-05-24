@@ -393,7 +393,20 @@ ui_tab3 <- function() {
         
         # Title for Dengue Plot section
         div(style = "text-align: center;", 
-            h3("Pruebas de Dengue NS1")  # Title before Dengue plot
+            h3("Pruebas de Dengue")  # Title before Dengue plot
+        ),
+        
+        div(style = "display: flex; justify-content: center;",
+            reactableOutput("dengue_table_tab3", width = "80%")
+        ),
+        br(),
+        
+        # Buttons to switch dengue test type
+        div(style = "text-align: center; margin-bottom: 20px;",
+            radioButtons("dengue_test_type", NULL,
+                         choices = c("NS1", "IgG", "IgM"),
+                         selected = "NS1",
+                         inline = TRUE)  # Make buttons horizontal
         ),
         
         # Dengue plot below the line and further down
@@ -1306,64 +1319,98 @@ output$combined_plot_tab3 <- renderPlot({
   combined_plot
 }, height = 900, width = 875) 
 
-# Create DENGUE plot -------------------------------------
-# Generate the dengue plot
-output$dengue_plot_tab3 <- renderPlot({
-  # Get the selected date range from the input
-  start_date <- input$date_range_input_tab3[1]  # This is the first value of the date range (start date)
-  end_date <- input$date_range_input_tab3[2]    # This is the second value of the date range (end date)
+# Create DENGUE table -------------------------------------
+output$dengue_table_tab3 <- renderReactable({
+  req(input$date_range_input_tab3)
   
-  # Ensure `epiweek_recoleccion` is in Date format
+  start_date <- input$date_range_input_tab3[1]
+  end_date <- input$date_range_input_tab3[2]
+  
+  filtered_data <- namru_biofire_summary %>%
+    filter(epiweek_recoleccion >= start_date & epiweek_recoleccion <= end_date)
+  
+  dengue_summary <- tibble::tibble(
+    `Tipo de Prueba` = c("Dengue NS1", "Dengue IgG", "Dengue IgM"),
+    `# Personas Positivas` = c(
+      sum(filtered_data$res_dengue == 1, na.rm = TRUE),
+      sum(filtered_data$dengue_igg == 1, na.rm = TRUE),
+      sum(filtered_data$dengue_igm == 1, na.rm = TRUE)
+    ),
+    `Todas Personas Probadas` = c(
+      sum(!is.na(filtered_data$res_dengue)),
+      sum(!is.na(filtered_data$dengue_igg)),
+      sum(!is.na(filtered_data$dengue_igm))
+    )
+  )
+  
+  reactable::reactable(
+    dengue_summary,
+    bordered = TRUE,
+    striped = TRUE,
+    highlight = TRUE,
+    pagination = FALSE,
+    minRows = nrow(dengue_summary)
+  )
+})
+
+# Create DENGUE plot -------------------------------------
+output$dengue_plot_tab3 <- renderPlot({
+  start_date <- input$date_range_input_tab3[1]
+  end_date <- input$date_range_input_tab3[2]
+  test_type <- input$dengue_test_type  # Get selected test type
+  
+  # Map test type to column name and plot label
+  test_column <- dplyr::case_when(
+    test_type == "NS1" ~ "res_dengue",
+    test_type == "IgG" ~ "dengue_igg",
+    test_type == "IgM" ~ "dengue_igm"
+  )
+  
+  # Filter and prepare data
   filtered_data <- namru_biofire_summary %>%
     mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion)) %>%
-    filter(epiweek_recoleccion >= as.Date(start_date) & epiweek_recoleccion <= as.Date(end_date))
+    filter(epiweek_recoleccion >= as.Date(start_date),
+           epiweek_recoleccion <= as.Date(end_date))
   
-  # Check if there's any data in the selected date range
-  if (nrow(filtered_data) == 0 || sum(!is.na(filtered_data$res_dengue)) == 0) {
-    # If no data exists or no non-missing res_dengue, show the "No data available" message
+  if (nrow(filtered_data) == 0 || sum(!is.na(filtered_data[[test_column]])) == 0) {
     plot.new()
-    grid::grid.text(
-      "No hay datos disponibles para esta selección / No data available for this selection", 
-      x = 0.5, y = 0.5, 
-      gp = grid::gpar(fontsize = 16)  # Adjust font size dynamically if necessary
-    )
+    grid::grid.text("No hay datos disponibles para esta selección / No data available for this selection", 
+                    x = 0.5, y = 0.5, 
+                    gp = grid::gpar(fontsize = 16))
   } else {
-    # Summarize the data for the filtered date range
     dengue_summary <- filtered_data %>%
       group_by(epiweek_recoleccion) %>%
       summarise(
-        total_tested = sum(!is.na(res_dengue)),  # Sum of non-missing `res_dengue` per epiweek
-        total_pos_dengue = sum(res_dengue == 1, na.rm = TRUE)  # Count positives
+        total_tested = sum(!is.na(.data[[test_column]])),
+        total_pos_dengue = sum(.data[[test_column]] == 1, na.rm = TRUE),
+        .groups = "drop"
       )
     
-    # Generate the plot based on the filtered data
     ggplot(dengue_summary, aes(x = epiweek_recoleccion)) +
-      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +  # Grey background
-      geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +  # Red foreground
+      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +
+      geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
       scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
-      scale_x_date(
-        labels = format_date_spanish,  # Use custom function for formatting
-        limits = as.Date(c(start_date, end_date)),  # Dynamic x-axis range based on selected date
-        expand = c(0, 0)  # Remove extra space at ends
-      ) +
+      scale_x_date(labels = format_date_spanish,
+                   limits = as.Date(c(start_date, end_date)),
+                   expand = c(0, 0)) +
       scale_y_continuous(
-        breaks = seq(0, ceiling(max(c(dengue_summary$total_tested, dengue_summary$total_pos_dengue))), by = 1),  # Integer steps on y-axis
-        labels = scales::comma,  # Format y-axis labels as integers
-        limits = c(0, NA)  # Ensure the y-axis starts at 0 and goes up dynamically
+        breaks = seq(0, ceiling(max(c(dengue_summary$total_tested, dengue_summary$total_pos_dengue))), by = 1),
+        labels = scales::comma,
+        limits = c(0, NA)
       ) +
-      labs(x = "Epiweek", y = "# Muestreados", fill = NULL) +  # Remove the legend title
+      labs(x = "Epiweek", y = "# Muestreados", fill = NULL) +
       theme_minimal() +
       theme(
-        legend.position = "top",  # Move the legend to the top
-        legend.title = element_blank(),  # Ensure no legend title
-        legend.text = element_text(size = 10),  # Adjust the legend text font size (optional)
-        panel.grid.major.x = element_blank(),       # Remove vertical major grid lines
-        panel.grid.minor.x = element_blank(),       # Remove vertical minor grid lines
-        panel.grid.minor.y = element_blank()        # Remove horizontal minor grid lines
+        legend.position = "top",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 10),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()
       )
-    
   }
 })
+
 
 # --------------------------------------------------------------------------
 #                             GIHSN
