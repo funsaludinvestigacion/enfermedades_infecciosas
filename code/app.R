@@ -1368,9 +1368,10 @@ output$dengue_pcr_plot_tab3 <- renderPlot({
   req(input$date_range_input_tab3)
   
   dengue_pcr <- namru_biofire_summary %>%
+    filter(!is.na(r_dengue)) %>%
+    mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion)) %>%
     filter(epiweek_recoleccion >= input$date_range_input_tab3[1],
-           epiweek_recoleccion <= input$date_range_input_tab3[2],
-           !is.na(r_dengue))
+           epiweek_recoleccion <= input$date_range_input_tab3[2])
   
   df_plot <- dengue_pcr %>%
     mutate(
@@ -1402,6 +1403,7 @@ output$dengue_pcr_plot_tab3 <- renderPlot({
       axis.text.x = element_text(angle = 45, hjust = 1)
     )
 })
+
 
 # Create DENGUE table -------------------------------------
 output$dengue_table_tab3 <- renderReactable({
