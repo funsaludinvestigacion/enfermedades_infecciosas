@@ -16,7 +16,8 @@ influenza_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvesti
 influenza_symptom_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/influenza_symptom_summary_updated.csv")
 agri_casa_symptom_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/agri_casa_summary_updated.csv")
 agri_casa_incidence_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/agri_casa_incidence_summary_updated.csv")
-namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
+#namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
+namru_biofire_summary <- namru_biofire_summary_anonymized
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 
 # Information about each study ------------------------
@@ -27,13 +28,13 @@ Header_Agri_eng <- "Agri Study: Respiratory illness symptoms in farm workers"
 Info_Agri <- "Este estudio es una vigilancia en las fincas de AgroAmerica con trabajadores Agrícolas del area de Banasa. Trabajadores con síntomas 
 son captados en su lugar de trabajo y posteriormente cada semana entre 8-15 trabajadores agrícolas son contactados por teléfono quienes responden a 
 preguntas sobre su salud. Si experimentan síntomas que indiquen una infección respiratoria, como tos seca, fiebre, y dificultad para respirar, el equipo de 
-enfermería de investigación de FUNSALUDGUATE-CU, procederá a tomar una muestra. Después de realizar pruebas de PCR, el equipo sigue a las personas con síntomas 
+enfermería de investigación de FUNSALUD, procederá a tomar una muestra. Después de realizar pruebas de PCR, el equipo sigue a las personas con síntomas 
 por un mes, haciendo visitas durante los 7 y 28 días después de la recolección de las muestras. El objetivo es entender cuales síntomas están asociados con que 
 infección respiratoria y la carga clínica y económica."
 
 Info_Agri_eng <- "This study is an agricultural worker disease surveillance in AgroAmerica's Banasa farms. Workers with symptoms are identified in their workplace and each week
 between 8-15 agricultural workers are contacted by phone to answer questions about their health. If they experience symptoms indicating a respiratory infection, such as cough, fever, or difficulty breathing 
-the research nursing team from FUNSALUDGUATE-CU collects a nasal swab. After conducting PCR tests, the team follows up with symptomatic individuals for a month, making visits on days 7 and 28 after sample collection. 
+the research nursing team from FUNSALUD collects a nasal swab. After conducting PCR tests, the team follows up with symptomatic individuals for a month, making visits on days 7 and 28 after sample collection. 
 The goal is to understand which symptoms are associated with specific respiratory infections and their clinical and economic burdens."
 
 Header_AgriCasa <- "Estudio AgriCasa: síntomas y número de personas con resultados positivos por semana"
@@ -388,12 +389,33 @@ ui_tab3 <- function() {
             plotOutput("combined_plot_tab3", height = "400px", width = "80%")
         ),
         
+        br(),
+        
+        # New section: Arbovirus Additional Tests
+        div(style = "text-align: center; margin-top: 550px; margin-bottom: 30px;",
+            h3("Pruebas Adicionales de Arboviruses")
+        ),
+        
+        div(style = "display: flex; justify-content: center;",
+            reactableOutput("arbovirus_table_tab3", width = "80%")
+        ),
+        
         # Horizontal line for separation
-        hr(style = "border-top: 2px solid black; margin-top: 550px; margin-bottom: 30px;"),
+        hr(style = "border-top: 2px solid black; margin-top: 30px; margin-bottom: 30px;"),
+        
+        # Dengue PCR Section
+        div(style = "text-align: center; margin-bottom: 10px;",
+            h3("Dengue PCR")
+        ),
+        div(style = "display: flex; justify-content: center;",
+            plotOutput("dengue_pcr_plot_tab3", height = "400px", width = "80%")
+        ),
+        
+        br(),
         
         # Title for Dengue Plot section
         div(style = "text-align: center;", 
-            h3("Pruebas de Dengue")  # Title before Dengue plot
+            h3("Dengue Pruebas Rápidas")  # Title before Dengue plot
         ),
         
         div(style = "display: flex; justify-content: center;",
@@ -537,7 +559,7 @@ server <- function(input, output) {
       tagList(
         h3(strong("Bienvenidos a nuestro Dashboard donde realizamos un seguimiento de las enfermedades respiratorias y febriles en Guatemala")),
         br(),
-        p("Nuestros datos se publican semanalmente a partir de nuestros diversos proyectos de vigilancia en trabajadores agrícolas, comunidades y hospitales en el suroeste de Guatemala. Este proyecto es una colaboración entre la Fundación para la Salud Integral de los Guatemaltecos (FUNSALUDGUATE-CU) y los Centros para el Control y la Prevención de Enfermedades (CDC). Trabajamos con trabajadores agrícolas de banano y sus familias, trabajadores de caña de azúcar, el Hospital Nacional de Coatepeque, el Hospital Nacional de Chimaltenango, así como con organizaciones a nivel mundial."),
+        p("Nuestros datos se publican semanalmente a partir de nuestros diversos proyectos de vigilancia en trabajadores agrícolas, comunidades y hospitales en el suroeste de Guatemala. Este proyecto es una colaboración entre la Fundación para la Salud Integral de los Guatemaltecos (FUNSALUD) y los Centros para el Control y la Prevención de Enfermedades (CDC). Trabajamos con trabajadores agrícolas de banano y sus familias, trabajadores de caña de azúcar, el Hospital Nacional de Coatepeque, el Hospital Nacional de Chimaltenango, así como con organizaciones a nivel mundial."),
         br(),
         img(src = "photos/drone_site_image.png", width = "100%"),
         tags$small(
@@ -563,7 +585,7 @@ server <- function(input, output) {
       tagList(
         h3("Welcome to our Dashboard tracking respiratory and febrile illnesses in Guatemala"),
         br(),
-        p("Our data is published weekly from our various surveillance projects in farm workers, communities and hospitals across southwestern Guatemala. This project is a collaboration between la Fundación para la Salud Integral de los Guatemaltecos (FUNSALUDGUATE-CU) and Centers for Disease Control (CDC). We work with banana farmworkers and their families, sugar cane farm workers, the Hospital Nacional de Coatepeque and the Hospital Nacional de Chimaltenango as well as organizations worldwide."),
+        p("Our data is published weekly from our various surveillance projects in farm workers, communities and hospitals across southwestern Guatemala. This project is a collaboration between la Fundación para la Salud Integral de los Guatemaltecos (FUNSALUD) and Centers for Disease Control (CDC). We work with banana farmworkers and their families, sugar cane farm workers, the Hospital Nacional de Coatepeque and the Hospital Nacional de Chimaltenango as well as organizations worldwide."),
         br(),
         img(src = "photos/drone_site_image.png", width = "100%"),
         tags$small(
@@ -1318,6 +1340,69 @@ output$combined_plot_tab3 <- renderPlot({
   # Display the combined plot with specified width and height
   combined_plot
 }, height = 900, width = 875) 
+
+# Create OTHER ARBOVIRUS table -------------------------------------
+output$arbovirus_table_tab3 <- renderReactable({
+  req(input$date_range_input_tab3)
+  
+  arbo <- namru_biofire_summary %>%
+    filter(epiweek_recoleccion >= input$date_range_input_tab3[1],
+           epiweek_recoleccion <= input$date_range_input_tab3[2])
+  
+  arbovirus_summary <- tibble(
+    Patógeno = c("Oropouche", "Otros Arboviruses (FLAV/GRCV/GROV/ALPHA)"),
+    `# Personas Positivas` = c(
+      sum(arbo$r_oropouche == 1, na.rm = TRUE),
+      sum(arbo$r_arbovirus == 1, na.rm = TRUE)
+    ),
+    `Todas Personas Probadas` = c(
+      sum(!is.na(arbo$r_oropouche)),
+      sum(!is.na(arbo$r_arbovirus))
+    )
+  )
+  
+  reactable(arbovirus_summary, bordered = TRUE, striped = TRUE, highlight = TRUE)
+})
+
+# Create DENGUE PCR graph -------------------------------------
+output$dengue_pcr_plot_tab3 <- renderPlot({
+  req(input$date_range_input_tab3)
+  
+  dengue_pcr <- namru_biofire_summary %>%
+    filter(epiweek_recoleccion >= input$date_range_input_tab3[1],
+           epiweek_recoleccion <= input$date_range_input_tab3[2],
+           !is.na(r_dengue))
+  
+  df_plot <- dengue_pcr %>%
+    mutate(
+      resultado = case_when(
+        r_dengue == 2 ~ "Negativo",
+        r_dengue == 4 ~ "DENV-1",
+        r_dengue == 5 ~ "DENV-2",
+        r_dengue == 6 ~ "DENV-3",
+        TRUE ~ "Otro/Desconocido"
+      )
+    ) %>%
+    count(epiweek_recoleccion, resultado) %>%
+    tidyr::complete(epiweek_recoleccion, resultado, fill = list(n = 0))
+  
+  ggplot(df_plot, aes(x = epiweek_recoleccion, y = n, fill = resultado)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(values = c(
+      "Negativo" = "#999999",
+      "DENV-1" = "#E41A1C",
+      "DENV-2" = "#377EB8",
+      "DENV-3" = "#4DAF4A",
+      "Otro/Desconocido" = "#CCCCCC"
+    )) +
+    scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
+    labs(x = "Semana Epidemiológica", y = "Número de Casos", fill = "Resultado PCR") +
+    theme_minimal() +
+    theme(
+      legend.position = "bottom",
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+})
 
 # Create DENGUE table -------------------------------------
 output$dengue_table_tab3 <- renderReactable({
