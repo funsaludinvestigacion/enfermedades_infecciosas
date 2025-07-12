@@ -24,8 +24,8 @@ vigicasa$fech_tom <- ymd(vigicasa$fech_tom)
 # get rid of any blanks (non-filled out fichas)
 vigicasa <- vigicasa %>%
   filter(!(is.na(f_muestra) & is.na(fech_tom)))
-  
-# respiratory results
+
+############################ RESPIRATORY RESULTS
 # Set this to TRUE to exclude post-June 23 samples without flu or RSV testing
 exclude_flu_rsv_after_cutoff <- TRUE
 cutoff_date <- as.Date("2025-06-23")
@@ -70,7 +70,7 @@ resp_results <- vigicasa %>%
     vsr_neg   = ifelse(exclude_flu_rsv_after_cutoff & fecha_muestra > cutoff_date, 0, vsr_neg)
   )
 
-# dengue results
+############################ DENGUE RESULTS
 dengue_results <- vigicasa %>%
   filter(
     is.na(f_muestra) & 

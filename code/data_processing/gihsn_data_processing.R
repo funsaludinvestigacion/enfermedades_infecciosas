@@ -59,8 +59,8 @@ gihsn_results <- gihsn %>%
                                        inf_b_final == 1 | vsr_final == 1|inf_a_abi==1|
                                        inf_b_abi==1|sars_cov2_abi==1], na.rm = TRUE),
     total_neg = n_distinct(record_id[(sars_cov2_final == 2 & inf_a_final == 2 & 
-                                       inf_b_final == 2 & vsr_final == 2)|(inf_a_abi==1&
-                                                                             inf_b_abi==1&sars_cov2_abi==1)], na.rm = TRUE),
+                                        inf_b_final == 2 & vsr_final == 2)|(inf_a_abi==1&
+                                                                              inf_b_abi==1&sars_cov2_abi==1)], na.rm = TRUE),
     sars_cov2_pos = sum(sars_cov2_final == 1, na.rm = TRUE)+
       sum(sars_cov2_abi==1, na.rm = TRUE),
     sars_cov2_neg = sum(sars_cov2_final == 2, na.rm = TRUE)+

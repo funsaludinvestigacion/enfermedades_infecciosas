@@ -19,10 +19,11 @@ agri_casa_incidence_summary <- read.csv("https://raw.githubusercontent.com/funsa
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
-
+#vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
+vigifinca_summary <- vigifinca_results
 # Information about each study ------------------------
 Header_Agri <- "Estudio Agri: Síntomas de enfermedades respiratorias en trabajadores agrícolas"
-  
+
 Header_Agri_eng <- "Agri Study: Respiratory illness symptoms in farm workers"
 
 Info_Agri <- "Este estudio es una vigilancia en las fincas de AgroAmerica con trabajadores Agrícolas del area de Banasa. Trabajadores con síntomas 
@@ -39,9 +40,9 @@ The goal is to understand which symptoms are associated with specific respirator
 
 ##
 Header_AgriCasa <- "Estudio AgriCasa: síntomas y número de personas con resultados positivos por semana"
-  
+
 Header_AgriCasa_eng <- "AgriCasa study: symptoms and number of people with positive tests per week"
-  
+
 Info_AgriCasa <- "Ciento cincuentas casas están inscritas en este estudio. Cada semana en la visita de rutina, el equipo de campo de los enfermeros de investigación, 
 preguntan a cada miembro de la familia si se sienten bien de salud. Si algún miembro refiere tener síntomas, se le hace una prueba para SARS-COV-2, VSR, e Influenza A/B. 
 Si algún miembro de la familia tiene una prueba positiva toda la familia recibirá dos visitas intensivas cada semana para entender la transmisión de estas enfermedades 
@@ -53,7 +54,7 @@ will receive two intensive visits each week to understand the transmission of th
 
 ##
 Header_Biofire <- "Estudio Biofire: Pruebas de Enfermedades Infecciosas y Febriles"
-  
+
 Header_Biofire_eng <- "Biofire Study: Respiratory and Febrile Illness Tests"
 
 Info_Biofire <- "En el Hospital Nacional de Coatepeque, a los pacientes que experimentan tos se les corre un panel respiratorio de Biofire. A los pacientes que experimentan fiebre 
@@ -67,9 +68,9 @@ PCR tests for a wide range of possible infectious disease outcomes. The cumulati
 
 ##
 Header_GIHSN <- "Red Mundial de Vigilancia de Influenza en Hospitales"
-  
+
 Header_GIHSN_eng <- "Global Influenza Hospital Surveillance Network"
-  
+
 Info_GIHSN <- "Somos un sitio que forma parte de la Red Mundial de Vigilancia de Influenza (<a href='https://gihsn.org' target='_blank'>GIHSN</a>). En el Hospital Nacional 
 de Coatepeque y el Hospital de Chimaltenango. Forman parte de esta vigilancia los pacientes que experimenten síntomas de fiebre y/o tos, a ellos se les corren pruebas de 
 Sars-CoV-2, Influenza A/B y VSR y se secuencia los resultados positivos. Todos los datos son compartidos con la red mundial para mejorar capacidad de vigilancia, la decisiones 
@@ -284,12 +285,12 @@ ui_tab_summary <- function() {
   )
 }
 #ui_tab_summary <- function() { 
- # fluidPage(
-  #  titlePanel(""),
-   # mainPanel(
-    #  h2("", style = "color: orange; text-align: center;")
-    #)
-  #)
+# fluidPage(
+#  titlePanel(""),
+# mainPanel(
+#  h2("", style = "color: orange; text-align: center;")
+#)
+#)
 #}
 
 # Define UI for Tab 1 (AGRI)
@@ -298,7 +299,7 @@ ui_tab1 <- function() {
     titlePanel(""),
     sidebarLayout(
       sidebarPanel(
-       
+        
         # Language selection
         radioButtons("language_agri", "Idioma / Language:", 
                      choices = c("Español" = "es", "English" = "en"), 
@@ -361,11 +362,11 @@ ui_tab2 <- function() {
                        "Influenza" = "influenza_all",
                        "VSR" = "vsr_all",
                        "Todos" = "virus_all")),
-          # Checkboxes for symptom selection
-          checkboxGroupInput("symptoms", "Seleccionar Síntomas:",
-                             choices = names(symptom_map),
-                             selected = NULL)  # Initially no symptoms selected
-        ),
+        # Checkboxes for symptom selection
+        checkboxGroupInput("symptoms", "Seleccionar Síntomas:",
+                           choices = names(symptom_map),
+                           selected = NULL)  # Initially no symptoms selected
+      ),
       mainPanel(
         # Add information about the study
         h2(textOutput("header_agricasa_text"), style = "color: orange;"),
@@ -589,15 +590,34 @@ ui_tab6 <- function() {
         ),
         
         # Dropdown menu for selecting virus
-        selectInput("virus", 
+        selectInput("virus_tab6",   # changed inputId to virus_tab6 to keep it independent
                     "Selecciona Virus(es) / Select Virus(es):",
-                    choices = c("Todos Virus Respiratorios", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "VSR", "Dengue"))
+                    choices = c("Todos Virus Respiratorios", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "VSR", "Dengue")),
+        
+        # Conditionally show dengue test type radio buttons only when Dengue is selected
+        conditionalPanel(
+          condition = "input.virus_tab6 == 'Dengue'",
+          radioButtons("dengue_test_type_tab6", "Selecciona tipo de prueba Dengue / Select Dengue test:",
+                       choices = c("NS1", "IgM", "IgG"),
+                       selected = "NS1")
+        )
       ),
       
       mainPanel(
         # Add information about the study
         h2(textOutput("header_VFinca_text"), style = "color: orange;"),
         uiOutput("info_VFinca_text"),
+        br(),
+        uiOutput("dynamic_plot_title_tab6"),
+        
+        conditionalPanel(
+          condition = "input.virus_tab6 != 'Dengue'",
+          plotOutput("resp_plot_tab6")
+        ),
+        conditionalPanel(
+          condition = "input.virus_tab6 == 'Dengue'",
+          plotOutput("dengue_plot_tab6")
+        )
       )
     )
   )
@@ -623,8 +643,8 @@ ui <- fluidPage(
     tabPanel("Vigilancia GIHSN", ui_tab4()),
     tabPanel("VIGICASA", ui_tab5()),
     tabPanel("VIGIFINCA", ui_tab6()),
-    )
   )
+)
 
 
 # Define server logic ----
@@ -744,7 +764,7 @@ server <- function(input, output) {
   # ----------------------------------------------------------------------------
   #                               AGRI / INFLUENZA
   #----------------------------------------------------------------------------
-
+  
   # Reactive text output for study information
   output$info_agri_text <- renderText({
     if (input$language_agri == "es") {
@@ -766,14 +786,14 @@ server <- function(input, output) {
   # Symptoms by positivity ----------------------------------------------------
   
   influenza_symptoms_data <- reactive({
-  
+    
     influenza_symptoms_summary_subset_pre <- influenza_symptom_summary
     influenza_symptoms_summary_subset <- influenza_symptoms_summary_subset_pre[influenza_symptoms_summary_subset_pre[[input$virus]] == 1, ]
-
+    
     # Filter data based on selected date range
     influenza_symptoms_summary_subset_dates <- subset(influenza_symptoms_summary_subset,
-           epiweek1 >= input$date_range_input_tab1[1] & 
-             epiweek1 <= input$date_range_input_tab1[2])
+                                                      epiweek1 >= input$date_range_input_tab1[1] & 
+                                                        epiweek1 <= input$date_range_input_tab1[2])
     
     # Collapse symptoms based on count
     symptom_summary_wide <- influenza_symptoms_summary_subset_dates%>%
@@ -806,7 +826,7 @@ server <- function(input, output) {
         names_to = "Síntoma",
         values_to = "Count"
       )
-
+    
   })
   
   
@@ -830,35 +850,35 @@ server <- function(input, output) {
                       "resul_covid_19_all" = "SARS-CoV-2 confirmado por prueba rápida de antígenos", 
                       "resul_sars_covid_all" = "SARS-CoV-2 (confirmado por PCR o prueba rápida)",
                       "resul_virus_all" = "Todos viruses identificados"
-                      )
+    )
     selected_virus_label <- virus_labels[[input$virus]]
     
     # Incidence Plot ---------------------
     # Add the conditional layer if the virus is not "resul_neg_all"
     if (input$virus != "resul_neg_all") {
-    influenza_positivity_plot <- filtered %>%
-      dplyr::mutate(
-        epiweek_recolec_date = as.Date(epiweek_recolec),
-        count_all_column_name = ifelse(is.na(count_all_column_name), 0, count_all_column_name)
-      ) %>%
-      ggplot(aes(x = epiweek_recolec_date)) +
-      geom_bar(aes(y = .data[[count_all_column_name]], fill = "Total"), stat = "identity", color = "black") +
-      geom_bar(aes(y = .data[[count_pos_column_name]], fill = "Prueba Positiva"), stat = "identity", color = "black")+
-      scale_fill_manual(values = c("Total" = "grey", "Prueba Positiva" = "red")) +
-      theme_classic() +
-      labs(
-        title = paste("Número de individuos con resultados de", selected_virus_label),
-        x = "",
-        y = "",
-        fill = "Resultado"
-      ) +
-      scale_y_continuous(breaks = seq(0, max(filtered[[count_all_column_name]], na.rm = TRUE), by = 1)) +
-      scale_x_date(
-        labels = format_date_spanish,
-        limits = as.Date(c(input$date_range_input_tab1[1], input$date_range_input_tab1[2]))
-      )
+      influenza_positivity_plot <- filtered %>%
+        dplyr::mutate(
+          epiweek_recolec_date = as.Date(epiweek_recolec),
+          count_all_column_name = ifelse(is.na(count_all_column_name), 0, count_all_column_name)
+        ) %>%
+        ggplot(aes(x = epiweek_recolec_date)) +
+        geom_bar(aes(y = .data[[count_all_column_name]], fill = "Total"), stat = "identity", color = "black") +
+        geom_bar(aes(y = .data[[count_pos_column_name]], fill = "Prueba Positiva"), stat = "identity", color = "black")+
+        scale_fill_manual(values = c("Total" = "grey", "Prueba Positiva" = "red")) +
+        theme_classic() +
+        labs(
+          title = paste("Número de individuos con resultados de", selected_virus_label),
+          x = "",
+          y = "",
+          fill = "Resultado"
+        ) +
+        scale_y_continuous(breaks = seq(0, max(filtered[[count_all_column_name]], na.rm = TRUE), by = 1)) +
+        scale_x_date(
+          labels = format_date_spanish,
+          limits = as.Date(c(input$date_range_input_tab1[1], input$date_range_input_tab1[2]))
+        )
     }else if(input$virus == "resul_neg_all"){
-       filtered_wneg <- filtered %>%
+      filtered_wneg <- filtered %>%
         dplyr::mutate(
           epiweek_recolec_date = as.Date(epiweek_recolec),
           all_tested = ifelse(
@@ -869,8 +889,8 @@ server <- function(input, output) {
         )
       #colnames(influenza_positivity_plot)
       #print(influenza_positivity_plot%>%dplyr::select(all_tested, count_pos_resul_virus_all, count_neg_resul_virus_all))
-       influenza_positivity_plot <- filtered_wneg%>% 
-       ggplot(aes(x = epiweek_recolec_date)) +
+      influenza_positivity_plot <- filtered_wneg%>% 
+        ggplot(aes(x = epiweek_recolec_date)) +
         geom_bar(aes(y = all_tested, fill = "Total"), stat = "identity", color = "black") +
         geom_bar(aes(y = count_neg_resul_virus_all, fill = "Prueba Negativa"), stat = "identity", color = "black")+
         scale_fill_manual(values = c("Total" = "grey", "Prueba Negativa" = "blue")) +
@@ -887,33 +907,33 @@ server <- function(input, output) {
           limits = as.Date(c(input$date_range_input_tab1[1], input$date_range_input_tab1[2]))
         )
     }
-
+    
     
     
     # Symptom plot------------
     influenza_symptom_plot <- influenza_symptoms_df %>%
-    ggplot(aes(x = epiweek1, y = Síntoma)) +
-    geom_tile(aes(fill = Count), color='black') +
-    facet_wrap(~ visit_type, ncol = 1, scales = "free_y") +
-    labs(
-      title="Número de individuos experimentando un dado síntoma por semana después \n de una prueba de PCR",
-      x = "Semana de recogida de muestra de PCR",
-      y = "",
-      fill= "Número de individuos"
-    ) +
-    theme_classic() +
-    scale_fill_gradient(low = "#FFFFFF", high = "#FF0000")+
-    scale_x_date(
-      labels = format_date_spanish,
-      limits = as.Date(c(input$date_range_input_tab1[1], input$date_range_input_tab1[2])),
+      ggplot(aes(x = epiweek1, y = Síntoma)) +
+      geom_tile(aes(fill = Count), color='black') +
+      facet_wrap(~ visit_type, ncol = 1, scales = "free_y") +
+      labs(
+        title="Número de individuos experimentando un dado síntoma por semana después \n de una prueba de PCR",
+        x = "Semana de recogida de muestra de PCR",
+        y = "",
+        fill= "Número de individuos"
+      ) +
+      theme_classic() +
+      scale_fill_gradient(low = "#FFFFFF", high = "#FF0000")+
+      scale_x_date(
+        labels = format_date_spanish,
+        limits = as.Date(c(input$date_range_input_tab1[1], input$date_range_input_tab1[2])),
       )  # Remove extra space at ends
-  
-  # Combine ----------------------
-  influenza_combined_plot <- influenza_positivity_plot / influenza_symptom_plot + plot_layout(heights = c(1, 3), widths = c(1, 1))
-  # Display the combined plot with specified width and height
+    
+    # Combine ----------------------
+    influenza_combined_plot <- influenza_positivity_plot / influenza_symptom_plot + plot_layout(heights = c(1, 3), widths = c(1, 1))
+    # Display the combined plot with specified width and height
     influenza_combined_plot
-  
-}, height = 900, width = 750) 
+    
+  }, height = 900, width = 750) 
   
   
   # ----------------------------------------------------------------------------
@@ -946,7 +966,7 @@ server <- function(input, output) {
     
     # For code
     count_pos_column_name_agri <- paste0(input$virus_agri)
-
+    
     # For labels
     virus_labels_agri <- c("sars_cov2_all" = "SARS-CoV-2",
                            "influenza_all" = "Influenza",
@@ -1008,11 +1028,11 @@ server <- function(input, output) {
     
     # Merge with denominator from agri_casa_symptom_summary
     counts_w_denom <- left_join(counts, 
-                                     (agri_casa_symptom_summary %>% 
-                                        dplyr::select(epiweek_symptoms, denominator)%>%
-                                        dplyr::distinct(epiweek_symptoms, denominator, .keep_all = TRUE)), by = "epiweek_symptoms")
+                                (agri_casa_symptom_summary %>% 
+                                   dplyr::select(epiweek_symptoms, denominator)%>%
+                                   dplyr::distinct(epiweek_symptoms, denominator, .keep_all = TRUE)), by = "epiweek_symptoms")
     
-
+    
     return(counts_w_denom)
   })
   
@@ -1067,10 +1087,10 @@ server <- function(input, output) {
       
       # Add new columns
       filtered_agri$pct_prueba_positiva <- ifelse(filtered_agri$denominator <=0, 0,
-                                                     (filtered_agri[[count_pos_column_name_agri]] / filtered_agri$denominator)*100)
+                                                  (filtered_agri[[count_pos_column_name_agri]] / filtered_agri$denominator)*100)
       
       filtered_agri$pct_ILI_symptoms <- ifelse(filtered_agri$denominator <=0, 0,
-                                                  (filtered_agri$total_ili_count / filtered_agri$denominator)*100)
+                                               (filtered_agri$total_ili_count / filtered_agri$denominator)*100)
       
       filtered_agri %>%
         mutate(epiweek_muestra_funsalud = as.Date(epiweek_muestra_funsalud)) %>%
@@ -1098,48 +1118,48 @@ server <- function(input, output) {
     
     else{
       
-   
-    agri_casa_simptomas_2 <- filtered_data_tab2()
-    
-    
-  # Merge dataset
-    agri_casa_pct_df <- merge(x=agri_casa_simptomas_2, y=filtered_agri, by=c("epiweek_symptoms", "denominator"),
-                             by.y=c("epiweek_muestra_funsalud", "denominator"), all=TRUE)
-    
-    # Add new columns
-    agri_casa_pct_df$pct_prueba_positiva <- ifelse(agri_casa_pct_df$denominator <=0, 0,
-                                                   (agri_casa_pct_df[[count_pos_column_name_agri]] / agri_casa_pct_df$denominator)*100)
-    
-    agri_casa_pct_df$pct_combo_symptoms <- ifelse(agri_casa_pct_df$denominator <=0, 0,
-                                                  (agri_casa_pct_df$count / agri_casa_pct_df$denominator)*100)
-    
-    agri_casa_pct_df$pct_ILI_symptoms <- ifelse(agri_casa_pct_df$denominator <=0, 0,
-                                                (agri_casa_pct_df$total_ili_count / agri_casa_pct_df$denominator)*100)
-
-    agri_casa_pct_df %>%
-      mutate(epiweek_symptoms = as.Date(epiweek_symptoms)) %>%
-      ggplot(aes(x = epiweek_symptoms)) +
-      geom_bar(aes(y = pct_combo_symptoms, fill = "Experimentan Síntomas"), stat = "identity", color = "black", alpha = 0.5) +
-      geom_bar(aes(y = pct_prueba_positiva, fill = "Primera Prueba Positiva"), stat = "identity", color = "black", alpha = 0.5) +
-      labs(
-        title = paste("Porcentaje de individuos por semana en la Vigilancia de Rutina \n o Vigilancia Intensa con", selected_virus_label_agri),
-        x = "Semana",
-        y = "% de individuos", 
-        fill = ""
-      ) +
-      scale_fill_manual(
-        values = c("Experimentan Síntomas" = "gold", "Primera Prueba Positiva" = "red"),
-        labels = c("Experimentan Síntomas" = "Experimentan Síntomas",
-                   "Primera Prueba Positiva" = "Primera Prueba Positiva")
-      ) +
-      theme_classic() +
-      theme(
-        legend.position = "top",
-        plot.margin = margin(10, 10, 10, 10)
-      ) +
-      scale_x_date(labels = format_date_spanish, limits = as.Date(c(input$date_range_input_tab2[1], input$date_range_input_tab2[2])))
-    
-  }}, width = 500, height = 300)
+      
+      agri_casa_simptomas_2 <- filtered_data_tab2()
+      
+      
+      # Merge dataset
+      agri_casa_pct_df <- merge(x=agri_casa_simptomas_2, y=filtered_agri, by=c("epiweek_symptoms", "denominator"),
+                                by.y=c("epiweek_muestra_funsalud", "denominator"), all=TRUE)
+      
+      # Add new columns
+      agri_casa_pct_df$pct_prueba_positiva <- ifelse(agri_casa_pct_df$denominator <=0, 0,
+                                                     (agri_casa_pct_df[[count_pos_column_name_agri]] / agri_casa_pct_df$denominator)*100)
+      
+      agri_casa_pct_df$pct_combo_symptoms <- ifelse(agri_casa_pct_df$denominator <=0, 0,
+                                                    (agri_casa_pct_df$count / agri_casa_pct_df$denominator)*100)
+      
+      agri_casa_pct_df$pct_ILI_symptoms <- ifelse(agri_casa_pct_df$denominator <=0, 0,
+                                                  (agri_casa_pct_df$total_ili_count / agri_casa_pct_df$denominator)*100)
+      
+      agri_casa_pct_df %>%
+        mutate(epiweek_symptoms = as.Date(epiweek_symptoms)) %>%
+        ggplot(aes(x = epiweek_symptoms)) +
+        geom_bar(aes(y = pct_combo_symptoms, fill = "Experimentan Síntomas"), stat = "identity", color = "black", alpha = 0.5) +
+        geom_bar(aes(y = pct_prueba_positiva, fill = "Primera Prueba Positiva"), stat = "identity", color = "black", alpha = 0.5) +
+        labs(
+          title = paste("Porcentaje de individuos por semana en la Vigilancia de Rutina \n o Vigilancia Intensa con", selected_virus_label_agri),
+          x = "Semana",
+          y = "% de individuos", 
+          fill = ""
+        ) +
+        scale_fill_manual(
+          values = c("Experimentan Síntomas" = "gold", "Primera Prueba Positiva" = "red"),
+          labels = c("Experimentan Síntomas" = "Experimentan Síntomas",
+                     "Primera Prueba Positiva" = "Primera Prueba Positiva")
+        ) +
+        theme_classic() +
+        theme(
+          legend.position = "top",
+          plot.margin = margin(10, 10, 10, 10)
+        ) +
+        scale_x_date(labels = format_date_spanish, limits = as.Date(c(input$date_range_input_tab2[1], input$date_range_input_tab2[2])))
+      
+    }}, width = 500, height = 300)
   
   # --------------------------------------------------------------------------
   #                             BIOFIRE
@@ -1165,8 +1185,8 @@ server <- function(input, output) {
   
   # Add negative column
   namru_biofire_summary_anonymized_wneg <- namru_biofire_summary %>%
-  mutate(Negativo_sangre = ifelse(result_sangre_complt==2, 1, 0), # removed dengue
-         Negativo_hisnaso = ifelse(result_hispd_nasof==2, 1, 0))
+    mutate(Negativo_sangre = ifelse(result_sangre_complt==2, 1, 0), # removed dengue
+           Negativo_hisnaso = ifelse(result_hispd_nasof==2, 1, 0))
   
   # Function to create summary dataset for specified columns
   create_individual_summaries <- function(data, columns_to_summarize) {
@@ -1212,7 +1232,7 @@ server <- function(input, output) {
   namru_biofire_summary_counts[is.na(namru_biofire_summary_counts)] <- 0
   # Do same thing with all tests
   biofire_total_tested <- merge(biofire_total_tested_pre,
-                                        all_epiweeks, by="epiweek_recoleccion", all=TRUE)
+                                all_epiweeks, by="epiweek_recoleccion", all=TRUE)
   # Every time there is an NA in the dataset (because we just added a date in), replace with a 0
   biofire_total_tested[is.na(biofire_total_tested)] <- 0
   
@@ -1227,12 +1247,12 @@ server <- function(input, output) {
                                                                     "count_sangre_total",
                                                                     "count_nasof_total"))
   colnames_namru_counts_wtotals_wneg <- setdiff(colnames_namru_counts, c("epiweek_recoleccion",
-                                                                    "count_sangre_total",
-                                                                    "count_nasof_total",
-                                                                    "count_Negativo_sangre",
-                                                                    "count_Negativo_hisnaso"))
+                                                                         "count_sangre_total",
+                                                                         "count_nasof_total",
+                                                                         "count_Negativo_sangre",
+                                                                         "count_Negativo_hisnaso"))
   
-
+  
   # Define reactive expression to filter and transform data
   filtered_biofire_data <- reactive({
     # Filter data based on selected date range
@@ -1243,18 +1263,18 @@ server <- function(input, output) {
     # Perform data transformation as needed
     namru_long_data <- namru_biofire_summary_counts_filtered %>%
       tidyr::pivot_longer(cols = colnames_namru_counts_wtotals_wneg, 
-                   names_to = "pathogen_code", 
-                   values_to = "count",
-                   values_drop_na = TRUE) %>%
+                          names_to = "pathogen_code", 
+                          values_to = "count",
+                          values_drop_na = TRUE) %>%
       mutate(pathogen_code = recode(pathogen_code, !!!setNames(names(pathogen_names), paste0("count_", names(pathogen_names)))),
-    `Patógeno` = pathogen_names[as.character(pathogen_code)],
-    `Todas pruebas de sangre` = count_sangre_total,
-    `Todas pruebas naso/orofaríngeo` = count_nasof_total,
-    `Tipo de Muestra` = case_when(
-      grepl("sangre", pathogen_code, ignore.case = TRUE) ~ "Sangre", # removed dengue
-      grepl("hisnaso", pathogen_code, ignore.case = TRUE) ~ "Naso/orofaríngeo",
-      TRUE ~ NA_character_)) %>%
-    dplyr::select(-c("count_sangre_total", "count_nasof_total"))
+             `Patógeno` = pathogen_names[as.character(pathogen_code)],
+             `Todas pruebas de sangre` = count_sangre_total,
+             `Todas pruebas naso/orofaríngeo` = count_nasof_total,
+             `Tipo de Muestra` = case_when(
+               grepl("sangre", pathogen_code, ignore.case = TRUE) ~ "Sangre", # removed dengue
+               grepl("hisnaso", pathogen_code, ignore.case = TRUE) ~ "Naso/orofaríngeo",
+               TRUE ~ NA_character_)) %>%
+      dplyr::select(-c("count_sangre_total", "count_nasof_total"))
     
     namru_biofire_filtered_df <- namru_long_data %>%
       group_by(Patógeno)%>%
@@ -1266,7 +1286,7 @@ server <- function(input, output) {
     biofire_total_counts_sangre <- sum(namru_biofire_summary_counts_filtered$count_sangre_total,
                                        na.rm=TRUE)
     biofire_total_counts_nasof <- sum(namru_biofire_summary_counts_filtered$count_nasof_total,
-                                       na.rm=TRUE)
+                                      na.rm=TRUE)
     
     namru_biofire_filtered_df$`Todas Personas Probadas` <- ifelse(
       namru_biofire_filtered_df$`Tipo de Muestra`=="Sangre",
@@ -1275,614 +1295,733 @@ server <- function(input, output) {
         namru_biofire_filtered_df$`Tipo de Muestra`=="Naso/orofaríngeo",
         biofire_total_counts_nasof, NA))
     
-  namru_biofire_filtered_df
+    namru_biofire_filtered_df
   })
-
-# Render the table using reactable
-output$table_tab3 <- renderReactable({
-  reactable(filtered_biofire_data())
-})
+  
+  # Render the table using reactable
+  output$table_tab3 <- renderReactable({
+    reactable(filtered_biofire_data())
+  })
   
   # Create graphs ----------------------------------------------------------------
-
-# Prepare Sample Count Data -----------------------------------------
-# Define reactive expression to filter and transform data
-filtered_biofire_plot_df <- reactive({
-  # Filter data based on selected date range
-  namru_biofire_summary_counts_filtered <- subset(namru_biofire_summary_counts,
-                                                  epiweek_recoleccion >= input$date_range_input_tab3[1] &
-                                                    epiweek_recoleccion <= input$date_range_input_tab3[2])
   
-  # Perform data transformation as needed
-  namru_long_data <- namru_biofire_summary_counts_filtered %>%
-    tidyr::pivot_longer(cols = c(colnames_namru_counts_wtotals, count_Negativo_sangre, count_Negativo_hisnaso), 
-                 names_to = "pathogen_code", 
-                 values_to = "count",
-                 values_drop_na = TRUE) %>%
-    mutate(pathogen_code = recode(pathogen_code, !!!setNames(names(pathogen_names), paste0("count_", names(pathogen_names)))),
-           `Patógeno` = pathogen_names[as.character(pathogen_code)],
-           `Todas pruebas de sangre` = count_sangre_total,
-           `Todas pruebas naso/orofaríngeo` = count_nasof_total,
-           `Tipo de Muestra` = case_when(
-             grepl("sangre", pathogen_code, ignore.case = TRUE) ~ "Sangre", # removed dengue
-             grepl("hisnaso", pathogen_code, ignore.case = TRUE) ~ "Naso/orofaríngeo",
-             TRUE ~ NA_character_)) %>%
-    dplyr::select(-c("count_sangre_total", "count_nasof_total"))
+  # Prepare Sample Count Data -----------------------------------------
+  # Define reactive expression to filter and transform data
+  filtered_biofire_plot_df <- reactive({
+    # Filter data based on selected date range
+    namru_biofire_summary_counts_filtered <- subset(namru_biofire_summary_counts,
+                                                    epiweek_recoleccion >= input$date_range_input_tab3[1] &
+                                                      epiweek_recoleccion <= input$date_range_input_tab3[2])
+    
+    # Perform data transformation as needed
+    namru_long_data <- namru_biofire_summary_counts_filtered %>%
+      tidyr::pivot_longer(cols = c(colnames_namru_counts_wtotals, count_Negativo_sangre, count_Negativo_hisnaso), 
+                          names_to = "pathogen_code", 
+                          values_to = "count",
+                          values_drop_na = TRUE) %>%
+      mutate(pathogen_code = recode(pathogen_code, !!!setNames(names(pathogen_names), paste0("count_", names(pathogen_names)))),
+             `Patógeno` = pathogen_names[as.character(pathogen_code)],
+             `Todas pruebas de sangre` = count_sangre_total,
+             `Todas pruebas naso/orofaríngeo` = count_nasof_total,
+             `Tipo de Muestra` = case_when(
+               grepl("sangre", pathogen_code, ignore.case = TRUE) ~ "Sangre", # removed dengue
+               grepl("hisnaso", pathogen_code, ignore.case = TRUE) ~ "Naso/orofaríngeo",
+               TRUE ~ NA_character_)) %>%
+      dplyr::select(-c("count_sangre_total", "count_nasof_total"))
+    
+    namru_long_data
+  })
   
-  namru_long_data
-})
-
-# Create overall count ----------------------------
-filtered_biofire_totals_plot_df <- reactive({
+  # Create overall count ----------------------------
+  filtered_biofire_totals_plot_df <- reactive({
+    
+    # Filter data based on selected date range
+    biofire_total_tested_filtered <- subset(biofire_total_tested,
+                                            epiweek_recoleccion >= input$date_range_input_tab3[1] &
+                                              epiweek_recoleccion <= input$date_range_input_tab3[2])
+    
+    biofire_total_tested_filtered
+  })
   
-  # Filter data based on selected date range
-  biofire_total_tested_filtered <- subset(biofire_total_tested,
-                                          epiweek_recoleccion >= input$date_range_input_tab3[1] &
-                                            epiweek_recoleccion <= input$date_range_input_tab3[2])
-  
-  biofire_total_tested_filtered
-})
-
-# Create plot -------------------------------------
-# Render plot based on filtered data
-output$combined_plot_tab3 <- renderPlot({
-  
-  # Plot total number of tests
-  # Get filtered totals data
-  biofire_total_tested_filtered <- filtered_biofire_totals_plot_df()
-  
-  # Plot for total tests
-  total_biofire_test_plot <- biofire_total_tested_filtered %>%
-    mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion))%>%
-    ggplot() +
-    geom_bar(aes(x = epiweek_recoleccion, y = count_nasof_total),
-             stat = "identity",  fill = "royalblue", alpha=0.6, color="black", size = 0.3) +
-    geom_bar(aes(x = epiweek_recoleccion, y = count_sangre_total),
-             fill = "red", stat = "identity", alpha=0.6, color="black", size = 0.3) +
-    theme_classic() +
-    labs(
-      title = "\n
+  # Create plot -------------------------------------
+  # Render plot based on filtered data
+  output$combined_plot_tab3 <- renderPlot({
+    
+    # Plot total number of tests
+    # Get filtered totals data
+    biofire_total_tested_filtered <- filtered_biofire_totals_plot_df()
+    
+    # Plot for total tests
+    total_biofire_test_plot <- biofire_total_tested_filtered %>%
+      mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion))%>%
+      ggplot() +
+      geom_bar(aes(x = epiweek_recoleccion, y = count_nasof_total),
+               stat = "identity",  fill = "royalblue", alpha=0.6, color="black", size = 0.3) +
+      geom_bar(aes(x = epiweek_recoleccion, y = count_sangre_total),
+               fill = "red", stat = "identity", alpha=0.6, color="black", size = 0.3) +
+      theme_classic() +
+      labs(
+        title = "\n
       \n
       \n
       Número de personas probadas por semana",
-      x = "",
-      y = ""
-    ) +
-    scale_y_continuous(breaks = seq(0, max(
-      max(biofire_total_tested_filtered$count_nasof_total, na.rm = TRUE),
-      max(biofire_total_tested_filtered$count_sangre_total, na.rm = TRUE)
-    ),
-    by = 1)) +
-    theme(axis.line = element_blank(), 
-          plot.title = element_text(size = 12, face = "bold", hjust=0.5),  # Adjust title size and style
-          axis.title.y = element_text(angle = 0, vjust = 0.5,face = "bold", margin = margin(r = -30)),
-          axis.text.x = element_text(size = 12),
-          axis.text.y = element_text(size = 12, angle = 0, hjust = 1)  # Adjusted y-axis text size
-          #axis.text.x = element_blank(),
-          #axis.ticks.x = element_blank()
-    )+
-    scale_x_date(
-      labels = format_date_spanish,
-      limits = as.Date(c(input$date_range_input_tab3[1], input$date_range_input_tab3[2])),
-      expand = c(0, 0)  # Remove extra space at ends
-    )  
-  
-  # Get filtered data for both Sangre and Naso/orofaríngeo
-  filtered_data <- filtered_biofire_plot_df() %>%
-    mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion))
-  
-  # Define colors for each Tipo de Muestra
-  color_palette <- c("Naso/orofaríngeo (7)" = "#1e214e",
-                     "Naso/orofaríngeo (5)" = "#271c8a",
-                     "Naso/orofaríngeo (4)" = "#3706c0",
-                     "Naso/orofaríngeo (3)" = "#5339d1",
-                     "Naso/orofaríngeo (2)" = "#7599eb",
-                     "Naso/orofaríngeo (1)" = "lightblue",
-                     "Naso/orofaríngeo (0)" = "white",
-                     "Sangre (0)" = "white",
-                     "Sangre (1)" = "#fe8181",
-                     "Sangre (2)" = "#fe5757",
-                     "Sangre (3)" = "#fe2e2e",
-                     "Sangre (4)" = "#cb2424",
-                     "Sangre (5)" = "#b62020")
-  
-  # Convert color_palette to a dataframe
-  color_palette_df <- data.frame(
-    category = names(color_palette),
-    color = as.character(color_palette),
-    stringsAsFactors = FALSE
-  )
-  
-  filtered_data$forColor <-
-    factor(paste0(filtered_data$`Tipo de Muestra`, " (", filtered_data$count , ")"))
-  
-  # Create a single ggplot object
-  tile_plot <- filtered_data %>%
-    arrange(`Tipo de Muestra`) %>%
-    ggplot(aes(x = epiweek_recoleccion, y = forcats::fct_relevel(`Patógeno`, "Negativo"))) +
-    geom_tile(aes(fill = forColor), color='black') +
-    facet_wrap(~ `Tipo de Muestra`, ncol = 1, scales = "free_y") +  # Facet by Tipo de Muestra
-    labs(
-      title="Número de personas con un dado resultado",
-      x = "Semana",
-      y = "",
-      fill= ""
-    ) +
-    theme_classic() +
-    scale_x_date(
-      labels = format_date_spanish,
-      limits = as.Date(c(input$date_range_input_tab3[1], input$date_range_input_tab3[2])),
-      expand = c(0, 0)  # Remove extra space at ends
-    ) +
-    #scale_fill_gradient(low = "#FFFFFF", high = "#FF0000")+
-    theme(
-      legend.position = "right",
-      plot.title = element_text(size = 12, face = "bold", hjust=0.5),  # Adjust title size and style
-      plot.margin = margin(0, 0, 0, 0),
-      panel.background = element_rect(fill = 'white'),
-      axis.line = element_blank(), 
-      axis.text.x = element_text(size = 12),
-      plot.background = element_rect(fill = 'white'),
-      strip.text = element_text(size = 14, face = "bold"),
-      axis.title.y = element_text(angle = 0, vjust = 0.5, face = "bold", margin = margin(r = -10)),
-      axis.text.y = element_text(size = 12, angle = 0, hjust = 1)  # Adjusted y-axis text size and color
-    )+
-    scale_fill_manual(values = color_palette_df$color, breaks = color_palette_df$category)
-  
-  # Add the total count to the top of the chart
-  combined_plot <- total_biofire_test_plot / tile_plot + plot_layout(heights = c(1, 3), widths = c(1, 1))
-  
-  # Display the combined plot with specified width and height
-  combined_plot
-}, height = 900, width = 875) 
-
-# Create OTHER ARBOVIRUS table -------------------------------------
-output$arbovirus_table_tab3 <- renderReactable({
-  req(input$date_range_input_tab3)
-  
-  arbo <- namru_biofire_summary %>%
-    filter(epiweek_recoleccion >= input$date_range_input_tab3[1],
-           epiweek_recoleccion <= input$date_range_input_tab3[2])
-  
-  arbovirus_summary <- tibble(
-    Patógeno = c("Oropouche", "Otros Arboviruses (FLAV/GRCV/GROV/ALPHA)"),
-    `# Personas Positivas` = c(
-      sum(arbo$r_oropouche == 1, na.rm = TRUE),
-      sum(arbo$r_arbovirus == 1, na.rm = TRUE)
-    ),
-    `Todas Personas Probadas` = c(
-      sum(!is.na(arbo$r_oropouche)),
-      sum(!is.na(arbo$r_arbovirus))
-    )
-  )
-  
-  reactable(arbovirus_summary, bordered = TRUE, striped = TRUE, highlight = TRUE)
-})
-
-# Create DENGUE PCR graph -------------------------------------
-output$dengue_pcr_plot_tab3 <- renderPlot({
-  req(input$date_range_input_tab3)
-  
-  dengue_pcr <- namru_biofire_summary %>%
-    filter(!is.na(r_dengue)) %>%
-    mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion)) %>%
-    filter(epiweek_recoleccion >= input$date_range_input_tab3[1],
-           epiweek_recoleccion <= input$date_range_input_tab3[2])
-  
-  df_plot <- dengue_pcr %>%
-    mutate(
-      resultado = case_when(
-        r_dengue == 2 ~ "Negativo",
-        r_dengue == 4 ~ "DENV-1",
-        r_dengue == 5 ~ "DENV-2",
-        r_dengue == 6 ~ "DENV-3",
-        TRUE ~ "Otro/Desconocido"
-      )
-    ) %>%
-    count(epiweek_recoleccion, resultado) %>%
-    tidyr::complete(epiweek_recoleccion, resultado, fill = list(n = 0))
-  
-  ggplot(df_plot, aes(x = epiweek_recoleccion, y = n, fill = resultado)) +
-    geom_bar(stat = "identity") +
-    scale_fill_manual(values = c(
-      "Negativo" = "#999999",
-      "DENV-1" = "#E41A1C",
-      "DENV-2" = "#377EB8",
-      "DENV-3" = "#4DAF4A",
-      "Otro/Desconocido" = "#CCCCCC"
-    )) +
-    scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
-    labs(x = "Semana Epidemiológica", y = "Número de Casos", fill = "Resultado PCR") +
-    theme_minimal() +
-    theme(
-      legend.position = "bottom",
-      axis.text.x = element_text(angle = 45, hjust = 1)
-    )
-})
-
-
-# Create DENGUE table -------------------------------------
-output$dengue_table_tab3 <- renderReactable({
-  req(input$date_range_input_tab3)
-  
-  start_date <- input$date_range_input_tab3[1]
-  end_date <- input$date_range_input_tab3[2]
-  
-  filtered_data <- namru_biofire_summary %>%
-    filter(epiweek_recoleccion >= start_date & epiweek_recoleccion <= end_date)
-  
-  dengue_summary <- tibble::tibble(
-    `Tipo de Prueba` = c("Dengue NS1", "Dengue IgG", "Dengue IgM"),
-    `# Personas Positivas` = c(
-      sum(filtered_data$res_dengue == 1, na.rm = TRUE),
-      sum(filtered_data$dengue_igg == 1, na.rm = TRUE),
-      sum(filtered_data$dengue_igm == 1, na.rm = TRUE)
-    ),
-    `Todas Personas Probadas` = c(
-      sum(!is.na(filtered_data$res_dengue)),
-      sum(!is.na(filtered_data$dengue_igg)),
-      sum(!is.na(filtered_data$dengue_igm))
-    )
-  )
-  
-  reactable::reactable(
-    dengue_summary,
-    bordered = TRUE,
-    striped = TRUE,
-    highlight = TRUE,
-    pagination = FALSE,
-    minRows = nrow(dengue_summary)
-  )
-})
-
-# Create DENGUE plot -------------------------------------
-output$dengue_plot_tab3 <- renderPlot({
-  start_date <- input$date_range_input_tab3[1]
-  end_date <- input$date_range_input_tab3[2]
-  test_type <- input$dengue_test_type  # Get selected test type
-  
-  # Map test type to column name and plot label
-  test_column <- dplyr::case_when(
-    test_type == "NS1" ~ "res_dengue",
-    test_type == "IgG" ~ "dengue_igg",
-    test_type == "IgM" ~ "dengue_igm"
-  )
-  
-  # Filter and prepare data
-  filtered_data <- namru_biofire_summary %>%
-    mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion)) %>%
-    filter(epiweek_recoleccion >= as.Date(start_date),
-           epiweek_recoleccion <= as.Date(end_date))
-  
-  if (nrow(filtered_data) == 0 || sum(!is.na(filtered_data[[test_column]])) == 0) {
-    plot.new()
-    grid::grid.text("No hay datos disponibles para esta selección / No data available for this selection", 
-                    x = 0.5, y = 0.5, 
-                    gp = grid::gpar(fontsize = 16))
-  } else {
-    dengue_summary <- filtered_data %>%
-      group_by(epiweek_recoleccion) %>%
-      summarise(
-        total_tested = sum(!is.na(.data[[test_column]])),
-        total_pos_dengue = sum(.data[[test_column]] == 1, na.rm = TRUE),
-        .groups = "drop"
-      )
-    
-    ggplot(dengue_summary, aes(x = epiweek_recoleccion)) +
-      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +
-      geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
-      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
-      scale_x_date(labels = format_date_spanish,
-                   limits = as.Date(c(start_date, end_date)),
-                   expand = c(0, 0)) +
-      scale_y_continuous(
-        breaks = seq(0, ceiling(max(c(dengue_summary$total_tested, dengue_summary$total_pos_dengue))), by = 1),
-        labels = scales::comma,
-        limits = c(0, NA)
+        x = "",
+        y = ""
       ) +
-      labs(x = "Epiweek", y = "# Muestreados", fill = NULL) +
+      scale_y_continuous(breaks = seq(0, max(
+        max(biofire_total_tested_filtered$count_nasof_total, na.rm = TRUE),
+        max(biofire_total_tested_filtered$count_sangre_total, na.rm = TRUE)
+      ),
+      by = 1)) +
+      theme(axis.line = element_blank(), 
+            plot.title = element_text(size = 12, face = "bold", hjust=0.5),  # Adjust title size and style
+            axis.title.y = element_text(angle = 0, vjust = 0.5,face = "bold", margin = margin(r = -30)),
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 12, angle = 0, hjust = 1)  # Adjusted y-axis text size
+            #axis.text.x = element_blank(),
+            #axis.ticks.x = element_blank()
+      )+
+      scale_x_date(
+        labels = format_date_spanish,
+        limits = as.Date(c(input$date_range_input_tab3[1], input$date_range_input_tab3[2])),
+        expand = c(0, 0)  # Remove extra space at ends
+      )  
+    
+    # Get filtered data for both Sangre and Naso/orofaríngeo
+    filtered_data <- filtered_biofire_plot_df() %>%
+      mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion))
+    
+    # Define colors for each Tipo de Muestra
+    color_palette <- c("Naso/orofaríngeo (7)" = "#1e214e",
+                       "Naso/orofaríngeo (5)" = "#271c8a",
+                       "Naso/orofaríngeo (4)" = "#3706c0",
+                       "Naso/orofaríngeo (3)" = "#5339d1",
+                       "Naso/orofaríngeo (2)" = "#7599eb",
+                       "Naso/orofaríngeo (1)" = "lightblue",
+                       "Naso/orofaríngeo (0)" = "white",
+                       "Sangre (0)" = "white",
+                       "Sangre (1)" = "#fe8181",
+                       "Sangre (2)" = "#fe5757",
+                       "Sangre (3)" = "#fe2e2e",
+                       "Sangre (4)" = "#cb2424",
+                       "Sangre (5)" = "#b62020")
+    
+    # Convert color_palette to a dataframe
+    color_palette_df <- data.frame(
+      category = names(color_palette),
+      color = as.character(color_palette),
+      stringsAsFactors = FALSE
+    )
+    
+    filtered_data$forColor <-
+      factor(paste0(filtered_data$`Tipo de Muestra`, " (", filtered_data$count , ")"))
+    
+    # Create a single ggplot object
+    tile_plot <- filtered_data %>%
+      arrange(`Tipo de Muestra`) %>%
+      ggplot(aes(x = epiweek_recoleccion, y = forcats::fct_relevel(`Patógeno`, "Negativo"))) +
+      geom_tile(aes(fill = forColor), color='black') +
+      facet_wrap(~ `Tipo de Muestra`, ncol = 1, scales = "free_y") +  # Facet by Tipo de Muestra
+      labs(
+        title="Número de personas con un dado resultado",
+        x = "Semana",
+        y = "",
+        fill= ""
+      ) +
+      theme_classic() +
+      scale_x_date(
+        labels = format_date_spanish,
+        limits = as.Date(c(input$date_range_input_tab3[1], input$date_range_input_tab3[2])),
+        expand = c(0, 0)  # Remove extra space at ends
+      ) +
+      #scale_fill_gradient(low = "#FFFFFF", high = "#FF0000")+
+      theme(
+        legend.position = "right",
+        plot.title = element_text(size = 12, face = "bold", hjust=0.5),  # Adjust title size and style
+        plot.margin = margin(0, 0, 0, 0),
+        panel.background = element_rect(fill = 'white'),
+        axis.line = element_blank(), 
+        axis.text.x = element_text(size = 12),
+        plot.background = element_rect(fill = 'white'),
+        strip.text = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(angle = 0, vjust = 0.5, face = "bold", margin = margin(r = -10)),
+        axis.text.y = element_text(size = 12, angle = 0, hjust = 1)  # Adjusted y-axis text size and color
+      )+
+      scale_fill_manual(values = color_palette_df$color, breaks = color_palette_df$category)
+    
+    # Add the total count to the top of the chart
+    combined_plot <- total_biofire_test_plot / tile_plot + plot_layout(heights = c(1, 3), widths = c(1, 1))
+    
+    # Display the combined plot with specified width and height
+    combined_plot
+  }, height = 900, width = 875) 
+  
+  # Create OTHER ARBOVIRUS table -------------------------------------
+  output$arbovirus_table_tab3 <- renderReactable({
+    req(input$date_range_input_tab3)
+    
+    arbo <- namru_biofire_summary %>%
+      filter(epiweek_recoleccion >= input$date_range_input_tab3[1],
+             epiweek_recoleccion <= input$date_range_input_tab3[2])
+    
+    arbovirus_summary <- tibble(
+      Patógeno = c("Oropouche", "Otros Arboviruses (FLAV/GRCV/GROV/ALPHA)"),
+      `# Personas Positivas` = c(
+        sum(arbo$r_oropouche == 1, na.rm = TRUE),
+        sum(arbo$r_arbovirus == 1, na.rm = TRUE)
+      ),
+      `Todas Personas Probadas` = c(
+        sum(!is.na(arbo$r_oropouche)),
+        sum(!is.na(arbo$r_arbovirus))
+      )
+    )
+    
+    reactable(arbovirus_summary, bordered = TRUE, striped = TRUE, highlight = TRUE)
+  })
+  
+  # Create DENGUE PCR graph -------------------------------------
+  output$dengue_pcr_plot_tab3 <- renderPlot({
+    req(input$date_range_input_tab3)
+    
+    dengue_pcr <- namru_biofire_summary %>%
+      filter(!is.na(r_dengue)) %>%
+      mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion)) %>%
+      filter(epiweek_recoleccion >= input$date_range_input_tab3[1],
+             epiweek_recoleccion <= input$date_range_input_tab3[2])
+    
+    df_plot <- dengue_pcr %>%
+      mutate(
+        resultado = case_when(
+          r_dengue == 2 ~ "Negativo",
+          r_dengue == 4 ~ "DENV-1",
+          r_dengue == 5 ~ "DENV-2",
+          r_dengue == 6 ~ "DENV-3",
+          TRUE ~ "Otro/Desconocido"
+        )
+      ) %>%
+      count(epiweek_recoleccion, resultado) %>%
+      tidyr::complete(epiweek_recoleccion, resultado, fill = list(n = 0))
+    
+    ggplot(df_plot, aes(x = epiweek_recoleccion, y = n, fill = resultado)) +
+      geom_bar(stat = "identity") +
+      scale_fill_manual(values = c(
+        "Negativo" = "#999999",
+        "DENV-1" = "#E41A1C",
+        "DENV-2" = "#377EB8",
+        "DENV-3" = "#4DAF4A",
+        "Otro/Desconocido" = "#CCCCCC"
+      )) +
+      scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
+      labs(x = "Semana Epidemiológica", y = "Número de Casos", fill = "Resultado PCR") +
       theme_minimal() +
       theme(
-        legend.position = "top",
-        legend.title = element_blank(),
-        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 45, hjust = 1)
+      )
+  })
+  
+  
+  # Create DENGUE table -------------------------------------
+  output$dengue_table_tab3 <- renderReactable({
+    req(input$date_range_input_tab3)
+    
+    start_date <- input$date_range_input_tab3[1]
+    end_date <- input$date_range_input_tab3[2]
+    
+    filtered_data <- namru_biofire_summary %>%
+      filter(epiweek_recoleccion >= start_date & epiweek_recoleccion <= end_date)
+    
+    dengue_summary <- tibble::tibble(
+      `Tipo de Prueba` = c("Dengue NS1", "Dengue IgG", "Dengue IgM"),
+      `# Personas Positivas` = c(
+        sum(filtered_data$res_dengue == 1, na.rm = TRUE),
+        sum(filtered_data$dengue_igg == 1, na.rm = TRUE),
+        sum(filtered_data$dengue_igm == 1, na.rm = TRUE)
+      ),
+      `Todas Personas Probadas` = c(
+        sum(!is.na(filtered_data$res_dengue)),
+        sum(!is.na(filtered_data$dengue_igg)),
+        sum(!is.na(filtered_data$dengue_igm))
+      )
+    )
+    
+    reactable::reactable(
+      dengue_summary,
+      bordered = TRUE,
+      striped = TRUE,
+      highlight = TRUE,
+      pagination = FALSE,
+      minRows = nrow(dengue_summary)
+    )
+  })
+  
+  # Create DENGUE plot -------------------------------------
+  output$dengue_plot_tab3 <- renderPlot({
+    start_date <- input$date_range_input_tab3[1]
+    end_date <- input$date_range_input_tab3[2]
+    test_type <- input$dengue_test_type  # Get selected test type
+    
+    # Map test type to column name and plot label
+    test_column <- dplyr::case_when(
+      test_type == "NS1" ~ "res_dengue",
+      test_type == "IgG" ~ "dengue_igg",
+      test_type == "IgM" ~ "dengue_igm"
+    )
+    
+    # Filter and prepare data
+    filtered_data <- namru_biofire_summary %>%
+      mutate(epiweek_recoleccion = as.Date(epiweek_recoleccion)) %>%
+      filter(epiweek_recoleccion >= as.Date(start_date),
+             epiweek_recoleccion <= as.Date(end_date))
+    
+    if (nrow(filtered_data) == 0 || sum(!is.na(filtered_data[[test_column]])) == 0) {
+      plot.new()
+      grid::grid.text("No hay datos disponibles para esta selección / No data available for this selection", 
+                      x = 0.5, y = 0.5, 
+                      gp = grid::gpar(fontsize = 16))
+    } else {
+      dengue_summary <- filtered_data %>%
+        group_by(epiweek_recoleccion) %>%
+        summarise(
+          total_tested = sum(!is.na(.data[[test_column]])),
+          total_pos_dengue = sum(.data[[test_column]] == 1, na.rm = TRUE),
+          .groups = "drop"
+        )
+      
+      ggplot(dengue_summary, aes(x = epiweek_recoleccion)) +
+        geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +
+        geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
+        scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+        scale_x_date(labels = format_date_spanish,
+                     limits = as.Date(c(start_date, end_date)),
+                     expand = c(0, 0)) +
+        scale_y_continuous(
+          breaks = seq(0, ceiling(max(c(dengue_summary$total_tested, dengue_summary$total_pos_dengue))), by = 1),
+          labels = scales::comma,
+          limits = c(0, NA)
+        ) +
+        labs(x = "Epiweek", y = "# Muestreados", fill = NULL) +
+        theme_minimal() +
+        theme(
+          legend.position = "top",
+          legend.title = element_blank(),
+          legend.text = element_text(size = 10),
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.minor.y = element_blank()
+        )
+    }
+  })
+  
+  
+  # --------------------------------------------------------------------------
+  #                             GIHSN
+  # --------------------------------------------------------------------------
+  
+  # Reactive text output for study information
+  output$info_gihsn_text <- renderUI({
+    if (input$language_gihsn == "es") {
+      HTML(Info_GIHSN)  # Spanish version
+    } else {
+      HTML(Info_GIHSN_eng)  # English version
+    }
+  })
+  
+  
+  ####### This is the table
+  # Reactive expression for the filtered data based on date range and selected hospital
+  # Filter data based on date range and hospital selection
+  filtered_data_gihsn <- reactive({
+    date_range <- input$date_range_input_tab4
+    hospital_filter <- input$hospital
+    
+    # Convert the date range into epiweeks and years
+    start_date <- as.Date(date_range[1])
+    end_date <- as.Date(date_range[2])
+    
+    start_epiweek <- epiweek(start_date)  
+    end_epiweek <- epiweek(end_date)
+    start_year <- year(start_date)       
+    end_year <- year(end_date)           
+    
+    # Ungroup the data if it has any grouping variables
+    gihsn_summary_ungrouped <- gihsn_summary %>% ungroup()
+    
+    # If "Ambos Hospitales" is selected, combine both hospitals
+    if (hospital_filter == "Ambos Hospitales") {
+      filtered <- gihsn_summary_ungrouped %>%
+        filter(
+          (year == start_year & epiweek >= start_epiweek) |
+            (year == end_year & epiweek <= end_epiweek) |
+            (year > start_year & year < end_year)
+        )
+    } else {
+      filtered <- gihsn_summary_ungrouped %>%
+        filter(hospital == hospital_filter) %>%
+        filter(
+          (year == start_year & epiweek >= start_epiweek) |
+            (year == end_year & epiweek <= end_epiweek) |
+            (year > start_year & year < end_year)
+        )
+    }
+    
+    return(filtered)
+  })
+  
+  output$summary_table_tab4 <- renderDT({
+    filtered_data <- filtered_data_gihsn()
+    
+    if (is.null(filtered_data) || nrow(filtered_data) == 0) {
+      return(datatable(data.frame(Message = "No hay datos disponibles para esta selección / No data available for this selection")))
+    }
+    
+    datatable(filtered_data %>%
+                select(year, epiweek, total_tested, total_pos, sars_cov2_pos, inf_a_pos, inf_b_pos, vsr_pos) %>%
+                rename(
+                  Año = year,
+                  Epiweek = epiweek,
+                  `Total Muestreados` = total_tested,
+                  `Total Positivos` = total_pos,
+                  `Positivo Sars-CoV-2` = sars_cov2_pos,
+                  `Positivo Influenza A` = inf_a_pos,
+                  `Positivo Influenza B` = inf_b_pos,
+                  `Positivo VSR` = vsr_pos
+                ), options = list(searching = FALSE), rownames = FALSE)
+  })
+  
+  ####### Now for the Graph
+  output$disease_plot_tab4 <- renderPlot({
+    # Get filtered data based on user selections
+    filtered_data <- filtered_data_gihsn()
+    
+    # If there's no data after filtering, return an empty plot
+    if (nrow(filtered_data) == 0) {
+      return(ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection"))
+    }
+    
+    # Determine which variable to use for "Total Positivos"
+    filtered_data <- filtered_data %>%
+      mutate(
+        total_pos_dynamic = case_when(
+          input$virus == "Influenza A" ~ inf_a_pos,
+          input$virus == "Influenza B" ~ inf_b_pos,
+          input$virus == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
+          input$virus == "SARS-CoV-2" ~ sars_cov2_pos,
+          input$virus == "VSR" ~ vsr_pos,
+          TRUE ~ total_pos  # Default: all positives
+        ),
+        epiweek_label = paste(year, epiweek, sep = "-")
+      )
+    
+    # Filter to label every other week on the x-axis
+    x_labels <- unique(filtered_data$epiweek_label)
+    x_labels <- x_labels[seq(1, length(x_labels), by = 2)]
+    
+    # Generate the plot
+    ggplot(filtered_data, aes(x = factor(epiweek_label))) +
+      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +
+      geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
+      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "skyblue")) +
+      scale_y_continuous(
+        breaks = seq(0, max(filtered_data$total_tested, na.rm = TRUE), by = 5)
+      ) +
+      scale_x_discrete(breaks = x_labels) +
+      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
         panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         panel.grid.minor.y = element_blank()
       )
-  }
-})
-
-
-# --------------------------------------------------------------------------
-#                             GIHSN
-# --------------------------------------------------------------------------
-
-# Reactive text output for study information
-output$info_gihsn_text <- renderUI({
-  if (input$language_gihsn == "es") {
-    HTML(Info_GIHSN)  # Spanish version
-  } else {
-    HTML(Info_GIHSN_eng)  # English version
-  }
-})
-
-
-####### This is the table
-# Reactive expression for the filtered data based on date range and selected hospital
-# Filter data based on date range and hospital selection
-filtered_data_gihsn <- reactive({
-  date_range <- input$date_range_input_tab4
-  hospital_filter <- input$hospital
+  })
   
-  # Convert the date range into epiweeks and years
-  start_date <- as.Date(date_range[1])
-  end_date <- as.Date(date_range[2])
+  output$influenza_a_subtypes_plot <- renderPlot({
+    data <- filtered_data_gihsn()
+    
+    if (nrow(data) == 0) {
+      return(ggplot() + labs(title = "No hay datos disponibles para Influenza A"))
+    }
+    
+    # Convert epiweek & year into a proper date
+    data <- data %>%
+      mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
+    
+    # Pivot data for Influenza A subtypes
+    subtype_data <- data %>%
+      select(epiweek, year, inf_a_h1n1, inf_a_h3n2, inf_a_nosub) %>%
+      pivot_longer(cols = c(inf_a_h1n1, inf_a_h3n2, inf_a_nosub), 
+                   names_to = "Subtype", values_to = "Count") %>%
+      mutate(
+        Subtype = recode(Subtype,
+                         inf_a_h1n1 = "A(H1N1)",
+                         inf_a_h3n2 = "A(H3N2)",
+                         inf_a_nosub = "Sin subtipificar")
+      )
+    
+    ggplot(subtype_data, aes(x = factor(paste(year, epiweek, sep = "-")), y = Count, fill = Subtype)) +
+      geom_bar(stat = "identity") +
+      scale_fill_manual(values = c("A(H1N1)" = "#1b9e77", 
+                                   "A(H3N2)" = "#d95f02", 
+                                   "Sin subtipificar" = "#7570b3")) +
+      labs(x = "Semana epidemiológica", y = "Casos positivos",
+           fill = "Subtipo", title = "Subtipos de Influenza A") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  })
+  # --------------------------------------------------------------------------
+  #                             VIGICASA
+  # --------------------------------------------------------------------------
+  output$info_VCasa_text <- renderText({
+    if (input$language_VCasa == "es") {
+      Info_VCasa  # Spanish version
+    } else {
+      Info_VCasa_eng  # English version
+    }
+  })
   
-  start_epiweek <- epiweek(start_date)  
-  end_epiweek <- epiweek(end_date)
-  start_year <- year(start_date)       
-  end_year <- year(end_date)           
+  output$dynamic_plot_title <- renderUI({
+    title_text <- if (input$virus == "Dengue") {
+      "Incidencia de Dengue"
+    } else {
+      "Incidencia de Enfermedades Respiratorias"
+    }
+    tags$h2(title_text,
+            style = "color: black; font-weight: bold; font-size: 24px; text-align: center; margin-bottom: 20px;")
+  })
   
-  # Ungroup the data if it has any grouping variables
-  gihsn_summary_ungrouped <- gihsn_summary %>% ungroup()
-  
-  # If "Ambos Hospitales" is selected, combine both hospitals
-  if (hospital_filter == "Ambos Hospitales") {
-    filtered <- gihsn_summary_ungrouped %>%
+  filtered_data_vigicasa <- reactive({
+    vigicasa_summary %>%
       filter(
-        (year == start_year & epiweek >= start_epiweek) |
-          (year == end_year & epiweek <= end_epiweek) |
-          (year > start_year & year < end_year)
+        source == "Resp",
+        epiweek_date >= input$date_range_input_tab5[1],
+        epiweek_date <= input$date_range_input_tab5[2]
       )
-  } else {
-    filtered <- gihsn_summary_ungrouped %>%
-      filter(hospital == hospital_filter) %>%
+  })
+  
+  output$resp_plot_tab5 <- renderPlot({
+    filtered_data <- vigicasa_summary %>%
       filter(
-        (year == start_year & epiweek >= start_epiweek) |
-          (year == end_year & epiweek <= end_epiweek) |
-          (year > start_year & year < end_year)
+        source == "Resp",
+        epiweek_date >= input$date_range_input_tab5[1],
+        epiweek_date <= input$date_range_input_tab5[2]
       )
-  }
-  
-  return(filtered)
-})
-
-output$summary_table_tab4 <- renderDT({
-  filtered_data <- filtered_data_gihsn()
-  
-  if (is.null(filtered_data) || nrow(filtered_data) == 0) {
-    return(datatable(data.frame(Message = "No hay datos disponibles para esta selección / No data available for this selection")))
-  }
-  
-  datatable(filtered_data %>%
-              select(year, epiweek, total_tested, total_pos, sars_cov2_pos, inf_a_pos, inf_b_pos, vsr_pos) %>%
-              rename(
-                Año = year,
-                Epiweek = epiweek,
-                `Total Muestreados` = total_tested,
-                `Total Positivos` = total_pos,
-                `Positivo Sars-CoV-2` = sars_cov2_pos,
-                `Positivo Influenza A` = inf_a_pos,
-                `Positivo Influenza B` = inf_b_pos,
-                `Positivo VSR` = vsr_pos
-              ), options = list(searching = FALSE), rownames = FALSE)
-})
-
-####### Now for the Graph
-output$disease_plot_tab4 <- renderPlot({
-  # Get filtered data based on user selections
-  filtered_data <- filtered_data_gihsn()
-  
-  # If there's no data after filtering, return an empty plot
-  if (nrow(filtered_data) == 0) {
-    return(ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection"))
-  }
-  
-  # Determine which variable to use for "Total Positivos"
-  filtered_data <- filtered_data %>%
-    mutate(
-      total_pos_dynamic = case_when(
-        input$virus == "Influenza A" ~ inf_a_pos,
-        input$virus == "Influenza B" ~ inf_b_pos,
-        input$virus == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
-        input$virus == "SARS-CoV-2" ~ sars_cov2_pos,
-        input$virus == "VSR" ~ vsr_pos,
-        TRUE ~ total_pos  # Default: all positives
+    
+    if (nrow(filtered_data) == 0) {
+      return(
+        ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
       )
+    }
+    
+    filtered_data <- filtered_data %>%
+      mutate(
+        total_pos_dynamic = case_when(
+          input$virus == "Influenza A" ~ inf_a_pos,
+          input$virus == "Influenza B" ~ inf_b_pos,
+          input$virus == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
+          input$virus == "SARS-CoV-2" ~ sars_cov2_pos,
+          input$virus == "VSR" ~ vsr_pos,
+          TRUE ~ total_pos
+        ),
+        total_tested_dynamic = case_when(
+          input$virus == "Influenza A" ~ inf_a_pos + inf_a_neg,
+          input$virus == "Influenza B" ~ inf_b_pos + inf_b_neg,
+          input$virus == "Influenza A y B" ~ inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg,
+          input$virus == "SARS-CoV-2" ~ sars_cov2_pos + sars_cov2_neg,
+          input$virus == "VSR" ~ vsr_pos + vsr_neg,
+          TRUE ~ total_tested
+        ),
+        epiweek_label = factor(paste(year, epiweek, sep = "-"))
+      )
+    
+    ggplot(filtered_data, aes(x = epiweek_label)) +
+      geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
+      geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
+      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()
+      )
+  })
+  
+  
+  output$dengue_plot_tab5 <- renderPlot({
+    print(paste("Selected dengue test type:", input$dengue_test_type_tab5))
+    filtered_data <- vigicasa_summary %>%
+      filter(
+        source == "Deng",
+        epiweek_date >= input$date_range_input_tab5[1],
+        epiweek_date <= input$date_range_input_tab5[2]
+      )
+    
+    test_column <- case_when(
+      input$dengue_test_type_tab5 == "NS1" ~ "ns1_pos",
+      input$dengue_test_type_tab5 == "IgM" ~ "igm_pos",
+      input$dengue_test_type_tab5 == "IgG" ~ "igg_pos"
     )
+    
+    if (nrow(filtered_data) == 0) {
+      return(
+        ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
+      )
+    }
+    
+    filtered_data <- filtered_data %>%
+      mutate(
+        total_pos_dengue = .data[[test_column]],
+        epiweek_label = factor(paste(year, epiweek, sep = "-"))
+      )
+    
+    ggplot(filtered_data, aes(x = epiweek_label)) +
+      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
+      geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
+      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()
+      )
+  })
   
-  # Convert epiweek & year into a proper date for x-axis
-  filtered_data <- filtered_data %>%
-    mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
-
   
-  # Generate the plot
-  ggplot(filtered_data, aes(x = factor(paste(year, epiweek, sep = "-")))) +
-    geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +
-    geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
-    scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "skyblue")) +
-    scale_y_continuous(
-      breaks = function(x) seq(0, ceiling(max(x)), by = 1)
-    ) +
-    labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      panel.grid.major.x = element_blank(),       # remove vertical major grid lines
-      panel.grid.minor.x = element_blank(),       # remove vertical minor grid lines
-      panel.grid.minor.y = element_blank()        # remove horizontal minor grid lines
+  # --------------------------------------------------------------------------
+  #                             VIGIFINCA
+  # --------------------------------------------------------------------------
+  output$info_VFinca_text <- renderText({
+    if (input$language_VFinca == "es") {
+      Info_VFinca  # Spanish version
+    } else {
+      Info_VFinca_eng  # English version
+    }
+  })
+  
+  output$dynamic_plot_title_tab6 <- renderUI({
+    title_text <- if (input$virus_tab6 == "Dengue") {
+      "Incidencia de Dengue"
+    } else {
+      "Incidencia de Enfermedades Respiratorias"
+    }
+    tags$h2(title_text,
+            style = "color: black; font-weight: bold; font-size: 24px; text-align: center; margin-bottom: 20px;")
+  })
+  
+  filtered_data_vigifinca <- reactive({
+    data <- vigifinca_summary %>%
+      filter(
+        source == "Resp",
+        epiweek_date >= input$date_range_input_tab6[1],
+        epiweek_date <= input$date_range_input_tab6[2]
+      )
+    
+    # Filter by lugar
+    data <- data %>%
+      filter(
+        case_when(
+          input$lugar == "Fincas de Banasa - Trifinio" ~ lugar == "Banasa",
+          input$lugar == "Fincas de Pantaleon - Escuintla" ~ lugar == "Pantaleon",
+          input$lugar == "Ambos Sitios" ~ TRUE,
+          TRUE ~ FALSE  # fallback safety
+        )
+      )
+    
+    return(data)
+  })
+  
+  output$resp_plot_tab6 <- renderPlot({
+    filtered_data <- filtered_data_vigifinca()
+    
+    if (nrow(filtered_data) == 0) {
+      return(
+        ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
+      )
+    }
+    
+    filtered_data <- filtered_data %>%
+      mutate(
+        total_pos_dynamic = case_when(
+          input$virus_tab6 == "Influenza A" ~ inf_a_pos,
+          input$virus_tab6 == "Influenza B" ~ inf_b_pos,
+          input$virus_tab6 == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
+          input$virus_tab6 == "SARS-CoV-2" ~ sars_cov2_pos,
+          input$virus_tab6 == "VSR" ~ vsr_pos,
+          TRUE ~ total_pos
+        ),
+        total_tested_dynamic = case_when(
+          input$virus_tab6 == "Influenza A" ~ inf_a_pos + inf_a_neg,
+          input$virus_tab6 == "Influenza B" ~ inf_b_pos + inf_b_neg,
+          input$virus_tab6 == "Influenza A y B" ~ inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg,
+          input$virus_tab6 == "SARS-CoV-2" ~ sars_cov2_pos + sars_cov2_neg,
+          input$virus_tab6 == "VSR" ~ vsr_pos + vsr_neg,
+          TRUE ~ total_tested
+        ),
+        epiweek_label = factor(paste(year, epiweek, sep = "-"))
+      )
+    
+    ggplot(filtered_data, aes(x = epiweek_label)) +
+      geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
+      geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
+      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+      scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +  # integer-like tick spacing
+      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()
+      )
+  })
+  
+  output$dengue_plot_tab6 <- renderPlot({
+    filtered_data <- vigifinca_summary %>%
+      filter(
+        source == "Deng",
+        epiweek_date >= input$date_range_input_tab6[1],
+        epiweek_date <= input$date_range_input_tab6[2]
+      )
+    
+    test_column <- case_when(
+      input$dengue_test_type_tab6 == "NS1" ~ "ns1_pos",
+      input$dengue_test_type_tab6 == "IgM" ~ "igm_pos",
+      input$dengue_test_type_tab6 == "IgG" ~ "igg_pos"
     )
-})
-
-output$influenza_a_subtypes_plot <- renderPlot({
-  data <- filtered_data_gihsn()
+    
+    if (nrow(filtered_data) == 0) {
+      return(
+        ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
+      )
+    }
+    
+    filtered_data <- filtered_data %>%
+      mutate(
+        total_pos_dengue = .data[[test_column]],
+        epiweek_label = factor(paste(year, epiweek, sep = "-"))
+      )
+    
+    ggplot(filtered_data, aes(x = epiweek_label)) +
+      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
+      geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
+      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+      scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +  # integer-like tick spacing 
+      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()
+      )
+  })
   
-  if (nrow(data) == 0) {
-    return(ggplot() + labs(title = "No hay datos disponibles para Influenza A"))
-  }
   
-  # Convert epiweek & year into a proper date
-  data <- data %>%
-    mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
   
-  # Pivot data for Influenza A subtypes
-  subtype_data <- data %>%
-    select(epiweek, year, inf_a_h1n1, inf_a_h3n2, inf_a_nosub) %>%
-    pivot_longer(cols = c(inf_a_h1n1, inf_a_h3n2, inf_a_nosub), 
-                 names_to = "Subtype", values_to = "Count") %>%
-    mutate(
-      Subtype = recode(Subtype,
-                       inf_a_h1n1 = "A(H1N1)",
-                       inf_a_h3n2 = "A(H3N2)",
-                       inf_a_nosub = "Sin subtipificar")
-    )
-  
-  ggplot(subtype_data, aes(x = factor(paste(year, epiweek, sep = "-")), y = Count, fill = Subtype)) +
-    geom_bar(stat = "identity") +
-    scale_fill_manual(values = c("A(H1N1)" = "#1b9e77", 
-                                 "A(H3N2)" = "#d95f02", 
-                                 "Sin subtipificar" = "#7570b3")) +
-    labs(x = "Semana epidemiológica", y = "Casos positivos",
-         fill = "Subtipo", title = "Subtipos de Influenza A") +
-    theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-})
-# --------------------------------------------------------------------------
-#                             VIGICASA
-# --------------------------------------------------------------------------
-output$info_VCasa_text <- renderText({
-  if (input$language_VCasa == "es") {
-    Info_VCasa  # Spanish version
-  } else {
-    Info_VCasa_eng  # English version
-  }
-})
-
-output$dynamic_plot_title <- renderUI({
-  title_text <- if (input$virus == "Dengue") {
-    "Incidencia de Dengue"
-  } else {
-    "Incidencia de Enfermedades Respiratorias"
-  }
-  tags$h2(title_text,
-          style = "color: black; font-weight: bold; font-size: 24px; text-align: center; margin-bottom: 20px;")
-})
-
-filtered_data_vigicasa <- reactive({
-  vigicasa_summary %>%
-    filter(
-      source == "Resp",
-      epiweek_date >= input$date_range_input_tab5[1],
-      epiweek_date <= input$date_range_input_tab5[2]
-    )
-})
-
-output$resp_plot_tab5 <- renderPlot({
-  filtered_data <- vigicasa_summary %>%
-    filter(
-      source == "Resp",
-      epiweek_date >= input$date_range_input_tab5[1],
-      epiweek_date <= input$date_range_input_tab5[2]
-    )
-  
-  if (nrow(filtered_data) == 0) {
-    return(
-      ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
-    )
-  }
-  
-  filtered_data <- filtered_data %>%
-    mutate(
-      total_pos_dynamic = case_when(
-        input$virus == "Influenza A" ~ inf_a_pos,
-        input$virus == "Influenza B" ~ inf_b_pos,
-        input$virus == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
-        input$virus == "SARS-CoV-2" ~ sars_cov2_pos,
-        input$virus == "VSR" ~ vsr_pos,
-        TRUE ~ total_pos
-      ),
-      total_tested_dynamic = case_when(
-        input$virus == "Influenza A" ~ inf_a_pos + inf_a_neg,
-        input$virus == "Influenza B" ~ inf_b_pos + inf_b_neg,
-        input$virus == "Influenza A y B" ~ inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg,
-        input$virus == "SARS-CoV-2" ~ sars_cov2_pos + sars_cov2_neg,
-        input$virus == "VSR" ~ vsr_pos + vsr_neg,
-        TRUE ~ total_tested
-      ),
-      epiweek_label = factor(paste(year, epiweek, sep = "-"))
-    )
-  
-  ggplot(filtered_data, aes(x = epiweek_label)) +
-    geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
-    geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
-    scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
-    labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor.x = element_blank(),
-      panel.grid.minor.y = element_blank()
-    )
-})
-
-
-output$dengue_plot_tab5 <- renderPlot({
-  print(paste("Selected dengue test type:", input$dengue_test_type_tab5))
-  filtered_data <- vigicasa_summary %>%
-    filter(
-      source == "Deng",
-      epiweek_date >= input$date_range_input_tab5[1],
-      epiweek_date <= input$date_range_input_tab5[2]
-    )
-  
-  test_column <- case_when(
-    input$dengue_test_type_tab5 == "NS1" ~ "ns1_pos",
-    input$dengue_test_type_tab5 == "IgM" ~ "igm_pos",
-    input$dengue_test_type_tab5 == "IgG" ~ "igg_pos"
-  )
-  
-  if (nrow(filtered_data) == 0) {
-    return(
-      ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
-    )
-  }
-  
-  filtered_data <- filtered_data %>%
-    mutate(
-      total_pos_dengue = .data[[test_column]],
-      epiweek_label = factor(paste(year, epiweek, sep = "-"))
-    )
-  
-  ggplot(filtered_data, aes(x = epiweek_label)) +
-    geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
-    geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
-    scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
-    labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor.x = element_blank(),
-      panel.grid.minor.y = element_blank()
-    )
-})
-
-
-# --------------------------------------------------------------------------
-#                             VIGIFINCA
-# --------------------------------------------------------------------------
-output$info_VFinca_text <- renderText({
-  if (input$language_VFinca == "es") {
-    Info_VFinca  # Spanish version
-  } else {
-    Info_VFinca_eng  # English version
-  }
-})
-
-
-
 }
 
 shinyApp(ui, server)
