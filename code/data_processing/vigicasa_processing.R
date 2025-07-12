@@ -40,10 +40,11 @@ resp_results <- vigicasa %>%
     year = year(f_muestra),
     age = floor(interval(start = f_nacimiento, end = f_muestra) / years(1)),
     distrito = toupper(distrito),
+    department = toupper(area_salud),
     sex = sexo_paciente,
     fecha_muestra = f_muestra
   ) %>%
-  group_by(record_id, epiweek, year, age, sex, distrito, fecha_muestra) %>%
+  group_by(record_id, epiweek, year, age, sex, distrito, department, fecha_muestra) %>%
   summarize(
     total_tested = n_distinct(record_id),
     total_pos = n_distinct(record_id[virus_detectado___1 == 0], na.rm = TRUE),
@@ -82,10 +83,11 @@ dengue_results <- vigicasa %>%
     year = year(fech_tom),
     age = floor(interval(start = fech_nacim, end = fech_tom) / years(1)),
     distrito = toupper(distrito_d),
+    department = toupper(area_salud_d),
     sex = sexo_2,
-    fecha_muestra = fech_tom
+    fecha_muestra = fech_tom,
   ) %>%
-  group_by(record_id, epiweek, year, age, sex, distrito, fecha_muestra) %>%
+  group_by(record_id, epiweek, year, age, sex, distrito, department, fecha_muestra) %>%
   summarize(
     total_tested = n_distinct(record_id),
     ns1_pos = sum(p_ns1 == 1, na.rm = TRUE),

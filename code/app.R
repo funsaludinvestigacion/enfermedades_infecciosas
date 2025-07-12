@@ -10,6 +10,8 @@ library(patchwork)
 library(DT)
 library(stringr)
 library(lubridate)
+library(sf)
+library(leaflet)
 
 # Load dataframes -----------------------------------------------------------------------
 influenza_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/influenza_summary_updated.csv")
@@ -20,6 +22,9 @@ namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinv
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
+
+# load map object
+vigifinca_joined <- readRDS("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_joined.rds")
 
 # Information about each study ------------------------
 Header_Agri <- "Estudio Agri: Síntomas de enfermedades respiratorias en trabajadores agrícolas"
@@ -571,6 +576,23 @@ ui_tab5 <- function() {
 # Define UI for Tab 6 (VIGIFINCA)
 ui_tab6 <- function() { 
   fluidPage(
+    tags$style(HTML("
+      .sidebar {
+        position: fixed;
+        top: 120px;
+        left: 15px;
+        width: 300px;
+        z-index: 1000;
+        overflow-y: auto;
+        max-height: calc(100vh - 100px);
+        background: #f0f0f0;
+        padding-right: 15px;
+        padding-left: 15px;
+      }
+      .content {
+        margin-left: 330px;
+      }
+    ")),
     titlePanel(""),
     sidebarLayout(
       sidebarPanel(
@@ -590,7 +612,7 @@ ui_tab6 <- function() {
         ),
         
         # Dropdown menu for selecting virus
-        selectInput("virus_tab6",   # changed inputId to virus_tab6 to keep it independent
+        selectInput("virus_tab6",
                     "Selecciona Virus(es) / Select Virus(es):",
                     choices = c("Todos Virus Respiratorios", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "VSR", "Dengue")),
         
@@ -600,7 +622,8 @@ ui_tab6 <- function() {
           radioButtons("dengue_test_type_tab6", "Selecciona tipo de prueba Dengue / Select Dengue test:",
                        choices = c("NS1", "IgM", "IgG"),
                        selected = "NS1")
-        )
+        ),
+        class = "sidebar"
       ),
       
       mainPanel(
@@ -617,11 +640,18 @@ ui_tab6 <- function() {
         conditionalPanel(
           condition = "input.virus_tab6 == 'Dengue'",
           plotOutput("dengue_plot_tab6")
-        )
+        ),
+        br(),
+        br(),
+        leafletOutput("map_tab6", height = "800px"),
+        br(),
+        br(),
+        class = "content"
       )
     )
   )
 }
+
 
 
 # Define UI for application
@@ -2023,6 +2053,148 @@ server <- function(input, output) {
         panel.grid.minor.x = element_blank(),
         panel.grid.minor.y = element_blank()
       )
+  })
+
+  ########## MAP MAP MAP  
+  # Reactive: filter & summarize based on inputs
+  filtered_data <- reactive({
+    df <- vigifinca_joined %>%
+      filter(
+        fecha_muestra >= input$date_range_input_tab6[1],
+        fecha_muestra <= input$date_range_input_tab6[2]
+      )
+    
+    # Filter by lugar
+    if (input$lugar == "Fincas de Banasa - Trifinio") {
+      df <- df %>% filter(lugar == "Banasa")
+    } else if (input$lugar == "Fincas de Pantaleon - Escuintla") {
+      df <- df %>% filter(lugar == "Pantaleon")
+    } 
+    # "Ambos Sitios" = no filter
+    
+    # Filter by source depending on virus selection
+    if (input$virus_tab6 == "Dengue") {
+      df <- df %>% filter(source == "Deng")
+    } else {
+      df <- df %>% filter(source == "Resp")
+    }
+    
+    # Calculate incidence columns depending on virus input
+    df <- df %>%
+      group_by(municipio, geometry) %>%
+      summarise(
+        total_tested = sum(total_tested, na.rm = TRUE),
+        total_pos = sum(total_pos, na.rm = TRUE),
+        sars_cov2_pos = sum(sars_cov2_pos, na.rm = TRUE),
+        sars_cov2_neg = sum(sars_cov2_neg, na.rm = TRUE),
+        inf_a_pos = sum(inf_a_pos, na.rm = TRUE),
+        inf_a_neg = sum(inf_a_neg, na.rm = TRUE),
+        inf_b_pos = sum(inf_b_pos, na.rm = TRUE),
+        inf_b_neg = sum(inf_b_neg, na.rm = TRUE),
+        vsr_pos = sum(vsr_pos, na.rm = TRUE),
+        vsr_neg = sum(vsr_neg, na.rm = TRUE),
+        ns1_pos = sum(ns1_pos, na.rm = TRUE),
+        ns1_neg = sum(ns1_neg, na.rm = TRUE),
+        igm_pos = sum(igm_pos, na.rm = TRUE),
+        igm_neg = sum(igm_neg, na.rm = TRUE),
+        igg_pos = sum(igg_pos, na.rm = TRUE),
+        igg_neg = sum(igg_neg, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      mutate(
+        incidence = case_when(
+          input$virus_tab6 == "Todos Virus Respiratorios" ~ total_pos / total_tested,
+          input$virus_tab6 == "SARS-CoV-2" ~ sars_cov2_pos / (sars_cov2_pos + sars_cov2_neg),
+          input$virus_tab6 == "Influenza A y B" ~ (inf_a_pos + inf_b_pos) / (inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg),
+          input$virus_tab6 == "Influenza A" ~ inf_a_pos / (inf_a_pos + inf_a_neg),
+          input$virus_tab6 == "Influenza B" ~ inf_b_pos / (inf_b_pos + inf_b_neg),
+          input$virus_tab6 == "VSR" ~ vsr_pos / (vsr_pos + vsr_neg),
+          input$virus_tab6 == "Dengue" ~ case_when(
+            input$dengue_test_type_tab6 == "NS1" ~ ns1_pos / (ns1_pos + ns1_neg),
+            input$dengue_test_type_tab6 == "IgM" ~ igm_pos / (igm_pos + igm_neg),
+            input$dengue_test_type_tab6 == "IgG" ~ igg_pos / (igg_pos + igg_neg),
+            TRUE ~ NA_real_
+          ),
+          TRUE ~ NA_real_
+        ),
+        incidence = ifelse(is.nan(incidence) | is.infinite(incidence), 0, incidence)
+      )
+    
+    df
+  })
+  
+  # Reactive color palette based on incidence
+  pal <- reactive({
+    colorNumeric(
+      palette = "YlOrRd",
+      domain = filtered_data()$incidence,
+      na.color = "transparent"
+    )
+  })
+  
+  # Reactive labels for tooltip
+  labels <- reactive({
+    sprintf(
+      "<strong>%s</strong><br/>Muestreados: %d<br/>Positivos: %d<br/>Incidencia: %.2f%%",
+      toupper(filtered_data()$municipio),
+      filtered_data()$total_tested,
+      filtered_data()$total_pos,
+      100 * filtered_data()$incidence
+    ) %>% lapply(htmltools::HTML)
+  })
+  
+  output$map_tab6 <- renderLeaflet({
+    
+    leaflet() %>%
+      # No addTiles(), so no basemap tiles loaded
+      
+      # Base layer: all municipalities outlines, no fill
+      addPolygons(
+        data = guate_json,
+        fillColor = "transparent",
+        color = "black",
+        weight = 1,
+        opacity = 1,
+        label = ~toupper(municipio),  # simple label showing municipio name
+        labelOptions = labelOptions(
+          style = list("font-weight" = "bold", padding = "3px 8px"),
+          textsize = "15px",
+          direction = "auto"
+        )
+      ) %>%
+      
+      # Data layer: filtered municipalities with incidence fill
+      addPolygons(
+        data = filtered_data(),
+        fillColor = ~pal()(incidence),
+        weight = 1,
+        opacity = 1,
+        color = "black",
+        fillOpacity = 0.7,
+        highlightOptions = highlightOptions(
+          weight = 3,
+          color = "#666",
+          fillOpacity = 0.9,
+          bringToFront = TRUE
+        ),
+        label = labels(),
+        labelOptions = labelOptions(
+          style = list("font-weight" = "normal", padding = "3px 8px"),
+          textsize = "15px",
+          direction = "auto"
+        )
+      ) %>%
+      
+      addLegend(
+        pal = pal(),
+        values = filtered_data()$incidence,
+        opacity = 0.7,
+        title = "Incidence Rate",
+        position = "bottomright",
+        labFormat = labelFormat(suffix = "%", transform = function(x) 100 * x)
+      ) %>%
+      
+      setView(lng = -87.0, lat = 15.9, zoom = 7.5)
   })
   
   
