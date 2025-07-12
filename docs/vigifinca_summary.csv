@@ -1,6 +1,6 @@
 "record_id","epiweek","year","age","sex","distrito","fecha_muestra","lugar","total_tested","total_pos","total_neg","sars_cov2_pos","sars_cov2_neg","inf_a_pos","inf_a_neg","inf_b_pos","inf_b_neg","vsr_pos","vsr_neg","source","ns1_pos","ns1_neg","igm_pos","igm_neg","igg_pos","igg_neg","epiweek_date"
-"B050001",25,2025,42,1,"QUETZALTENANGO",2025-06-19,"Banasa",1,1,0,0,1,1,0,0,1,0,1,"Resp",NA,NA,NA,NA,NA,NA,2025-06-22
-"B050002",25,2025,24,1,"QUETZALTENANGO",2025-06-19,"Banasa",1,1,0,0,1,1,0,0,1,0,1,"Resp",NA,NA,NA,NA,NA,NA,2025-06-22
+"B050001",25,2025,42,1,"COATEPEQUE",2025-06-19,"Banasa",1,1,0,0,1,1,0,0,1,0,1,"Resp",NA,NA,NA,NA,NA,NA,2025-06-22
+"B050002",25,2025,24,1,"COATEPEQUE",2025-06-19,"Banasa",1,1,0,0,1,1,0,0,1,0,1,"Resp",NA,NA,NA,NA,NA,NA,2025-06-22
 "B060001",25,2025,31,2,"COATEPEQUE",2025-06-18,"Banasa",1,0,1,0,1,0,1,0,1,0,1,"Resp",NA,NA,NA,NA,NA,NA,2025-06-22
 "B060002",25,2025,35,2,"COATEPEQUE",2025-06-18,"Banasa",1,0,1,0,1,0,1,0,1,0,1,"Resp",NA,NA,NA,NA,NA,NA,2025-06-22
 "B060003",25,2025,27,1,"COATEPEQUE",2025-06-20,"Banasa",1,0,1,0,1,0,1,0,1,0,1,"Resp",NA,NA,NA,NA,NA,NA,2025-06-22
