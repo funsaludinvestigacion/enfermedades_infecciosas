@@ -30,6 +30,8 @@ jobs:
           new_biofire: ${{ secrets.NEW_BIOFIRE }}
           gihsn_token: ${{ secrets.GIHSN_TOKEN }}
           vigicasa_token: ${{ secrets.VIGICASA_TOKEN }}
+          vigi_banasa_token: ${{ secrets.VIGI_BANASA_TOKEN }}
+          vigi_panta_token: ${{ secrets.VIGI_PANTA_TOKEN }}
         run: |
           # Rscript code/code_dependency_download.R
           Rscript code/data_processing/agri_casa_data_processing.R
@@ -37,6 +39,7 @@ jobs:
           Rscript code/data_processing/namru_biofire_data_processing.R
           Rscript code/data_processing/gihsn_data_processing.R
           Rscript code/data_processing/vigicasa_processing.R
+          Rscript code/data_processing/vigifinca_processing.R
 
       - name: Commit updated data to repository
         run: |
@@ -47,7 +50,8 @@ jobs:
              && git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv \
              && git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv \
              && git diff --quiet --exit-code docs/gihsn_summary.csv \
-             && git diff --quiet --exit-code docs/vigicasa_summary.csv; then
+             && git diff --quiet --exit-code docs/vigicasa_summary.csv \
+             && git diff --quiet --exit-code docs/vigifinca_summary.csv; then
             echo "No changes in CSV files. Skipping commit and push."
           else
             git config --local user.name "GitHub Actions"
@@ -76,6 +80,9 @@ jobs:
             fi
             if ! git diff --quiet --exit-code docs/vigicasa_summary.csv; then
               git add docs/vigicasa_summary.csv
+            fi
+            if ! git diff --quiet --exit-code docs/vigifinca_summary.csv; then
+              git add docs/vigifinca_summary.csv
             fi
             
             git commit -m "Update CSV files"
