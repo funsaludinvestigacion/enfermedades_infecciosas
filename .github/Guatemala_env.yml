@@ -25,7 +25,7 @@ dependencies:
   - r-patchwork=1.2.0
   - r-DT=0.33
   - r-stringr=1.5.1
-  - r-sf=1.0-21
+  - r-sf=1.0.21
   - r-leaflet=2.2.2
   - r-stringi=1.8.4
   - r-fuzzyjoin=0.1.6
