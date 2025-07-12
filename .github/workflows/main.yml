@@ -36,7 +36,7 @@ jobs:
           Rscript code/data_processing/influenza_data_processing.R
           Rscript code/data_processing/namru_biofire_data_processing.R
           Rscript code/data_processing/gihsn_data_processing.R
-          Rscript code/data_processing/vigicasa_data_processing.R
+          Rscript code/data_processing/vigicasa_processing.R
 
       - name: Commit updated data to repository
         run: |
