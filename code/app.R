@@ -1984,7 +1984,12 @@ server <- function(input, output) {
       filter(
         source == "Deng",
         epiweek_date >= input$date_range_input_tab6[1],
-        epiweek_date <= input$date_range_input_tab6[2]
+        epiweek_date <= input$date_range_input_tab6[2],
+        case_when(
+          input$lugar == "Fincas de Banasa - Trifinio" ~ lugar == "Banasa",
+          input$lugar == "Fincas de Pantaleon - Escuintla" ~ lugar == "Pantaleon",
+          input$lugar == "Ambos Sitios" ~ TRUE
+        )
       )
     
     test_column <- case_when(
