@@ -40,6 +40,7 @@ jobs:
           Rscript code/data_processing/gihsn_data_processing.R
           Rscript code/data_processing/vigicasa_processing.R
           Rscript code/data_processing/vigifinca_processing.R
+          Rscript code/data_processing/geoprocessing.R
 
       - name: Commit updated data to repository
         run: |
@@ -51,7 +52,8 @@ jobs:
              && git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv \
              && git diff --quiet --exit-code docs/gihsn_summary.csv \
              && git diff --quiet --exit-code docs/vigicasa_summary.csv \
-             && git diff --quiet --exit-code docs/vigifinca_summary.csv; then
+             && git diff --quiet --exit-code docs/vigifinca_summary.csv \
+             && git diff --quiet --exit-code docs/vigifinca_joined.rds; then
             echo "No changes in CSV files. Skipping commit and push."
           else
             git config --local user.name "GitHub Actions"
@@ -83,6 +85,9 @@ jobs:
             fi
             if ! git diff --quiet --exit-code docs/vigifinca_summary.csv; then
               git add docs/vigifinca_summary.csv
+            fi
+            if ! git diff --quiet --exit-code docs/vigifinca_joined.rds; then
+              git add docs/vigifinca_joined.rds
             fi
             
             git commit -m "Update CSV files"
