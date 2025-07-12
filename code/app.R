@@ -17,7 +17,10 @@ influenza_symptom_summary <- read.csv("https://raw.githubusercontent.com/funsalu
 agri_casa_symptom_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/agri_casa_summary_updated.csv")
 agri_casa_incidence_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/agri_casa_incidence_summary_updated.csv")
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
-gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
+#gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
+gihsn_summary <- gihsn_results
+#vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
+vigicasa_summary <- vigicasa_results
 
 # Information about each study ------------------------
 Header_Agri <- "Estudio Agri: Síntomas de enfermedades respiratorias en trabajadores agrícolas"
@@ -36,6 +39,7 @@ between 8-15 agricultural workers are contacted by phone to answer questions abo
 the research nursing team from FUNSALUD collects a nasal swab. After conducting PCR tests, the team follows up with symptomatic individuals for a month, making visits on days 7 and 28 after sample collection. 
 The goal is to understand which symptoms are associated with specific respiratory infections and their clinical and economic burdens."
 
+##
 Header_AgriCasa <- "Estudio AgriCasa: síntomas y número de personas con resultados positivos por semana"
   
 Header_AgriCasa_eng <- "AgriCasa study: symptoms and number of people with positive tests per week"
@@ -49,6 +53,7 @@ Info_AgriCasa_eng <- "One hundred and fifty households are enrolled in this stud
 if they are feeling well. If any member reports having symptoms, they are tested for SARS-CoV-2, RSV, and Influenza A/B. If any family member tests positive, the entire household 
 will receive two intensive visits each week to understand the transmission of these respiratory diseases within the home, between the home and the farm, and vice versa."
 
+##
 Header_Biofire <- "Estudio Biofire: Pruebas de Enfermedades Infecciosas y Febriles"
   
 Header_Biofire_eng <- "Biofire Study: Respiratory and Febrile Illness Tests"
@@ -62,6 +67,7 @@ Info_Biofire_eng <- "At the National Hospital of Coatepeque, patients who experi
 the Dengue NS1 antigen. Depending on the availability of tests, subjects who test negative for Dengue in the screening test have their sample tested on the Biofire febrile panel. Biofire panels are 
 PCR tests for a wide range of possible infectious disease outcomes. The cumulative results of the Biofire and Dengue NS1 tests are shared here, organized by epidemiological week."
 
+##
 Header_GIHSN <- "Red Mundial de Vigilancia de Influenza en Hospitales"
   
 Header_GIHSN_eng <- "Global Influenza Hospital Surveillance Network"
@@ -74,6 +80,30 @@ vacunales de Influenza anual y respuesta a viruses respiratorios."
 Info_GIHSN_eng <- "We are a site that is part of the Global Influenza Surveillance Network (<a href='https://gihsn.org' target='_blank'>GIHSN</a>). At the National Hospital of Coatepeque and the Hospital of Chimaltenango, 
 patients who experience symptoms of fever and/or cough are part of this surveillance. They are tested for Sars-CoV-2, Influenza A/B, and VSR, and the positive results are sequenced. All data is shared with the global network to 
 improve surveillance capacity, annual influenza vaccination decisions, and response to respiratory viruses."
+
+##
+Header_VCasa <- "Vigilancia de enfermedades respiratorias y Dengue en casas del Trifinio"
+
+Header_VCasa_eng <- "Respiratory and Dengue Illness Surveillance in Trifinio Houses"
+
+Info_VCasa <- "Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades como dengue. 
+Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, 
+y se realizan pruebas de laboratorio."
+
+Info_VCasa_eng <- "We are conducting active surveillance in houses in the Trifinio communities for respiratory illnesses and dengue-like illnesses. Household members are screened 
+twice a week for symptoms and if either or both case definitions are met, a nasal swab and/or blood sample is taken and lab tests are run."
+
+##
+Header_VFinca <- "Vigilancia de enfermedades respiratorias y dengue en fincas del sur centro de Guatemala."
+
+Header_VFinca_eng <- "Respiratory and Dengue Illness Surveillance in South-Central Guatemalan Farms"
+
+Info_VFinca <- "Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades similares al dengue. 
+Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, 
+y se realizan pruebas de laboratorio."
+
+Info_VFinca_eng <- "We are conducting active surveillance in banana farmworkers in the Trifinio region and sugarcane farmworkers central Guatemala. Farmworkers reporting symptoms that
+meet the case definition(s) will be tested for Flu A/B/Sars-CoV-2/RSV by nasal swab and/or Dengue by blood sample."
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish
@@ -277,7 +307,7 @@ ui_tab1 <- function() {
                      selected = "es"),
         
         # Date range input
-        dateRangeInput("date_range_input_tab1", "Eligir el período del tiempo:",
+        dateRangeInput("date_range_input_tab1", "Período del tiempo / Time period:",
                        start = "2020-06-29", end = "2024-09-30", separator = " a "),
         # Dropdown menu for selecting disease
         radioButtons("virus", "Virus:",
@@ -322,7 +352,7 @@ ui_tab2 <- function() {
         
         dateRangeInput(
           "date_range_input_tab2",
-          "Eligir el período del tiempo:",
+          "Período del tiempo / Time period:",
           start = "2023-10-02",
           end = "2024-07-31",
           separator = " a "
@@ -372,7 +402,7 @@ ui_tab3 <- function() {
         textOutput("info_biofire_text"),
         br(),
         # Date range input
-        dateRangeInput("date_range_input_tab3", "Eligir el período del tiempo:",
+        dateRangeInput("date_range_input_tab3", "Período del tiempo / Time period:",
                        start = "2020-06-29", end = Sys.Date(), separator = " a "),
         
         # Title and table centered
@@ -454,7 +484,7 @@ ui_tab4 <- function() {
                      choices = c("Español" = "es", "English" = "en"), 
                      selected = "es"),
         # Date range input
-        dateRangeInput("date_range_input_tab4", "Eligir el período del tiempo:",
+        dateRangeInput("date_range_input_tab4", "Período del tiempo / Time period:",
                        start = "2025-03-04", end = Sys.Date(), separator = " a "),
         
         # Dropdown menu for selecting hospital
@@ -466,7 +496,7 @@ ui_tab4 <- function() {
         
         # Dropdown menu for selecting virus
         selectInput("virus", 
-                    "Selecciona Virus:",
+                    "Selecciona Virus(es) / Select Virus(es):",
                     choices = c("Todos Virus", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "VSR"))
       ),
       
@@ -493,34 +523,87 @@ ui_tab4 <- function() {
 }
 
 # Define UI for Tab 5 (VIGICASA)
-#ui_tab5 <- function() { 
- # fluidPage(
-  #  titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en casas"),
-   # mainPanel(
-    #  h2("Viene pronto!", style = "color: orange; text-align: center;")
-    #)
-  #)
-#}
+ui_tab5 <- function() { 
+  fluidPage(
+    titlePanel(""),
+    sidebarLayout(
+      sidebarPanel(
+        # Language selection
+        radioButtons("language_VCasa", "Idioma / Language:", 
+                     choices = c("Español" = "es", "English" = "en"), 
+                     selected = "es"),
+        # Date range input
+        dateRangeInput("date_range_input_tab5", "Período del tiempo / Time period:",
+                       start = "2025-06-16", end = Sys.Date(), separator = " a "),
+        
+        
+        # Dropdown menu for selecting virus
+        selectInput("virus", 
+                    "Selecciona Virus(es) / Select Virus(es):",
+                    choices = c("Todos Virus Respiratorios", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "VSR", "Dengue")),
+        # Conditionally show dengue test type radio buttons only when Dengue is selected
+        conditionalPanel(
+          condition = "input.virus == 'Dengue'",
+          radioButtons("dengue_test_type_tab5", "Selecciona tipo de prueba Dengue / Select Dengue test:",
+                       choices = c("NS1", "IgM", "IgG"),
+                       selected = "NS1")
+        )
+      ),
+      
+      mainPanel(
+        # Add information about the study
+        h2(textOutput("header_VCasa_text"), style = "color: orange;"),
+        uiOutput("info_VCasa_text"),
+        br(),
+        uiOutput("dynamic_plot_title"),
+        conditionalPanel(
+          condition = "input.virus != 'Dengue'",
+          plotOutput("resp_plot_tab5")
+        ),
+        conditionalPanel(
+          condition = "input.virus == 'Dengue'",
+          plotOutput("dengue_plot_tab5")
+        )
+      )
+    )
+  )
+}
 
-# Define UI for Tab 6 (VIGIFINCA - BANASA)
-#ui_tab6 <- function() { 
- # fluidPage(
-  #  titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Banasa"),
-   # mainPanel(
-    #  h2("Viene pronto!", style = "color: orange; text-align: center;")
-    #)
-  #)
-#}
-
-# Define UI for Tab 7 (VIGIFINCA - PANTALEON)
-#ui_tab7 <- function() { 
- # fluidPage(
-  #  titlePanel("Vigilancia de enfermedades respiratorias y enfermedades como Dengue en fincas de Pantaleon"),
-   # mainPanel(
-    #  h2("Viene pronto!", style = "color: orange; text-align: center;")
-    #)
-  #)
-#}
+# Define UI for Tab 6 (VIGIFINCA)
+ui_tab6 <- function() { 
+  fluidPage(
+    titlePanel(""),
+    sidebarLayout(
+      sidebarPanel(
+        # Language selection
+        radioButtons("language_VFinca", "Idioma / Language:", 
+                     choices = c("Español" = "es", "English" = "en"), 
+                     selected = "es"),
+        # Date range input
+        dateRangeInput("date_range_input_tab6", "Período del tiempo / Time period:",
+                       start = "2025-06-16", end = Sys.Date(), separator = " a "),
+        
+        # Dropdown menu for selecting farm
+        radioButtons("lugar", "Lugar:",
+                     choices = c("Fincas de Banasa - Trifinio", 
+                                 "Fincas de Pantaleon - Escuintla",
+                                 "Ambos Sitios")
+        ),
+        
+        # Dropdown menu for selecting virus
+        selectInput("virus", 
+                    "Selecciona Virus(es) / Select Virus(es):",
+                    choices = c("Todos Virus Respiratorios", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "VSR", "Dengue"))
+      ),
+      
+      mainPanel(
+        # Add information about the study
+        h2(textOutput("header_VFinca_text"), style = "color: orange;"),
+        uiOutput("info_VFinca_text"),
+      )
+    )
+  )
+}
 
 
 # Define UI for application
@@ -540,9 +623,8 @@ ui <- fluidPage(
     tabPanel("Estudio AGRI-CASA", ui_tab2()),
     tabPanel("Estudio Biofire", ui_tab3()),
     tabPanel("Vigilancia GIHSN", ui_tab4()),
-    #tabPanel("VIGICASA", ui_tab5()),
-    #tabPanel("VIGIFINCA - BANASA", ui_tab6()),
-    #tabPanel("VIGIFINCA - PANTALEON", ui_tab7())
+    tabPanel("VIGICASA", ui_tab5()),
+    tabPanel("VIGIFINCA", ui_tab6()),
     )
   )
 
@@ -642,6 +724,22 @@ server <- function(input, output) {
       Header_GIHSN
     } else {
       Header_GIHSN_eng
+    }
+  })
+  
+  output$header_VCasa_text <- renderText({
+    if (input$language_VCasa == "es") {
+      Header_VCasa
+    } else {
+      Header_VCasa_eng
+    }
+  })
+  
+  output$header_VFinca_text <- renderText({
+    if (input$language_VFinca == "es") {
+      Header_VFinca
+    } else {
+      Header_VFinca_eng
     }
   })
   
@@ -1653,8 +1751,138 @@ output$influenza_a_subtypes_plot <- renderPlot({
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 })
 # --------------------------------------------------------------------------
-#                             VIGILANCIA
+#                             VIGICASA
 # --------------------------------------------------------------------------
+output$info_VCasa_text <- renderText({
+  if (input$language_VCasa == "es") {
+    Info_VCasa  # Spanish version
+  } else {
+    Info_VCasa_eng  # English version
+  }
+})
+
+output$dynamic_plot_title <- renderUI({
+  title_text <- if (input$virus == "Dengue") {
+    "Incidencia de Dengue"
+  } else {
+    "Incidencia de Enfermedades Respiratorias"
+  }
+  tags$h2(title_text,
+          style = "color: black; font-weight: bold; font-size: 24px; text-align: center; margin-bottom: 20px;")
+})
+
+filtered_data_vigicasa <- reactive({
+  vigicasa_summary %>%
+    filter(
+      source == "Resp",
+      epiweek_date >= input$date_range_input_tab5[1],
+      epiweek_date <= input$date_range_input_tab5[2]
+    )
+})
+
+output$resp_plot_tab5 <- renderPlot({
+  filtered_data <- vigicasa_summary %>%
+    filter(
+      source == "Resp",
+      epiweek_date >= input$date_range_input_tab5[1],
+      epiweek_date <= input$date_range_input_tab5[2]
+    )
+  
+  if (nrow(filtered_data) == 0) {
+    return(
+      ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
+    )
+  }
+  
+  filtered_data <- filtered_data %>%
+    mutate(
+      total_pos_dynamic = case_when(
+        input$virus == "Influenza A" ~ inf_a_pos,
+        input$virus == "Influenza B" ~ inf_b_pos,
+        input$virus == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
+        input$virus == "SARS-CoV-2" ~ sars_cov2_pos,
+        input$virus == "VSR" ~ vsr_pos,
+        TRUE ~ total_pos
+      ),
+      total_tested_dynamic = case_when(
+        input$virus == "Influenza A" ~ inf_a_pos + inf_a_neg,
+        input$virus == "Influenza B" ~ inf_b_pos + inf_b_neg,
+        input$virus == "Influenza A y B" ~ inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg,
+        input$virus == "SARS-CoV-2" ~ sars_cov2_pos + sars_cov2_neg,
+        input$virus == "VSR" ~ vsr_pos + vsr_neg,
+        TRUE ~ total_tested
+      ),
+      epiweek_label = factor(paste(year, epiweek, sep = "-"))
+    )
+  
+  ggplot(filtered_data, aes(x = epiweek_label)) +
+    geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
+    geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
+    scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+    labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.minor.y = element_blank()
+    )
+})
+
+
+output$dengue_plot_tab5 <- renderPlot({
+  print(paste("Selected dengue test type:", input$dengue_test_type_tab5))
+  filtered_data <- vigicasa_summary %>%
+    filter(
+      source == "Deng",
+      epiweek_date >= input$date_range_input_tab5[1],
+      epiweek_date <= input$date_range_input_tab5[2]
+    )
+  
+  test_column <- case_when(
+    input$dengue_test_type_tab5 == "NS1" ~ "ns1_pos",
+    input$dengue_test_type_tab5 == "IgM" ~ "igm_pos",
+    input$dengue_test_type_tab5 == "IgG" ~ "igg_pos"
+  )
+  
+  if (nrow(filtered_data) == 0) {
+    return(
+      ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
+    )
+  }
+  
+  filtered_data <- filtered_data %>%
+    mutate(
+      total_pos_dengue = .data[[test_column]],
+      epiweek_label = factor(paste(year, epiweek, sep = "-"))
+    )
+  
+  ggplot(filtered_data, aes(x = epiweek_label)) +
+    geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
+    geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
+    scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+    labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.minor.y = element_blank()
+    )
+})
+
+
+# --------------------------------------------------------------------------
+#                             VIGIFINCA
+# --------------------------------------------------------------------------
+output$info_VFinca_text <- renderText({
+  if (input$language_VFinca == "es") {
+    Info_VFinca  # Spanish version
+  } else {
+    Info_VFinca_eng  # English version
+  }
+})
+
 
 
 }
