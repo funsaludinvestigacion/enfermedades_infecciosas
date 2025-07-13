@@ -2190,7 +2190,7 @@ server <- function(input, output) {
         pal = pal(),
         values = filtered_data()$incidence,
         opacity = 0.7,
-        title = "Incidence Rate",
+        title = "Tasa de Positividad",
         position = "bottomright",
         labFormat = labelFormat(suffix = "%", transform = function(x) 100 * x)
       ) %>%
