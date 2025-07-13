@@ -1813,9 +1813,9 @@ server <- function(input, output) {
   
   output$dynamic_plot_title <- renderUI({
     title_text <- if (input$virus == "Dengue") {
-      "Incidencia de Dengue"
+      "Tasa de Positividad de Dengue"
     } else {
-      "Incidencia de Enfermedades Respiratorias"
+      "Tasa de Positividad de Enfermedades Respiratorias"
     }
     tags$h2(title_text,
             style = "color: black; font-weight: bold; font-size: 24px; text-align: center; margin-bottom: 20px;")
@@ -1935,9 +1935,9 @@ server <- function(input, output) {
   
   output$dynamic_plot_title_tab6 <- renderUI({
     title_text <- if (input$virus_tab6 == "Dengue") {
-      "Incidencia de Dengue"
+      "Tasa de Positividad de Dengue"
     } else {
-      "Incidencia de Enfermedades Respiratorias"
+      "Tasa de Positividad de Enfermedades Respiratorias"
     }
     tags$h2(title_text,
             style = "color: black; font-weight: bold; font-size: 24px; text-align: center; margin-bottom: 20px;")
@@ -2136,7 +2136,7 @@ server <- function(input, output) {
   # Reactive labels for tooltip
   labels <- reactive({
     sprintf(
-      "<strong>%s</strong><br/>Muestreados: %d<br/>Positivos: %d<br/>Incidencia: %.2f%%",
+      "<strong>%s</strong><br/>Muestreados: %d<br/>Positivos: %d<br/>Tasa de Positividad: %.2f%%",
       toupper(filtered_data()$municipio),
       filtered_data()$total_tested,
       filtered_data()$total_pos,
