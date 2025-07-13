@@ -53,7 +53,7 @@ jobs:
              && git diff --quiet --exit-code docs/gihsn_summary.csv \
              && git diff --quiet --exit-code docs/vigicasa_summary.csv \
              && git diff --quiet --exit-code docs/vigifinca_summary.csv \
-             && git diff --quiet --exit-code docs/vigifinca_joined.rds; then
+             && git diff --quiet --exit-code code/vigifinca_joined.rds; then
             echo "No changes in CSV files. Skipping commit and push."
           else
             git config --local user.name "GitHub Actions"
