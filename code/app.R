@@ -23,8 +23,9 @@ gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigaci
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 
-# load map object
+# load map objects
 vigifinca_joined <- readRDS("vigifinca_joined.rds")
+guate_json <- readRDS("guate_json.rds")
 
 # Information about each study ------------------------
 Header_Agri <- "Estudio Agri: Síntomas de enfermedades respiratorias en trabajadores agrícolas"

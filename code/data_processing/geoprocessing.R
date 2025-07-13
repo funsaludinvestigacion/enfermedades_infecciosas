@@ -81,8 +81,9 @@ vigifinca_joined <- stringdist_left_join(
   # Convert to sf object using cleaned geometry
   st_as_sf()
 
-### write it out
+### write it out and write out the json as is because we will need that for the base layer
 saveRDS(vigifinca_joined, "code/vigifinca_joined.rds")
+saveRDS(guate_json, "code/guate_json.rds")
 
 
 ###### IN CASE THE JSON DOESN'T READ IN WELL FOR ANYONE ELSE
