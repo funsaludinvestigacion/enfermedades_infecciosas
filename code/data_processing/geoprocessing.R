@@ -82,7 +82,7 @@ vigifinca_joined <- stringdist_left_join(
   st_as_sf()
 
 ### write it out
-saveRDS(vigifinca_joined, "docs/vigifinca_joined.rds")
+saveRDS(vigifinca_joined, "code/vigifinca_joined.rds")
 
 
 ###### IN CASE THE JSON DOESN'T READ IN WELL FOR ANYONE ELSE
