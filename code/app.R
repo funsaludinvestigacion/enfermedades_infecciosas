@@ -24,7 +24,7 @@ vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestig
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 
 # load map object
-vigifinca_joined <- readRDS("code/vigifinca_joined.rds")
+vigifinca_joined <- readRDS("vigifinca_joined.rds")
 
 # Information about each study ------------------------
 Header_Agri <- "Estudio Agri: Síntomas de enfermedades respiratorias en trabajadores agrícolas"
@@ -2194,7 +2194,7 @@ server <- function(input, output) {
         labFormat = labelFormat(suffix = "%", transform = function(x) 100 * x)
       ) %>%
       
-      setView(lng = -87.0, lat = 15.9, zoom = 7.5)
+      setView(lng = -86.7, lat = 15.8, zoom = 7.5)
   })
   
   
