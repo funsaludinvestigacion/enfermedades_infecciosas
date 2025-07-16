@@ -96,3 +96,21 @@ gihsn_results <- gihsn_results %>%
 # Save the summary dataframe------------------------------------
 gihsn_csv_file <- "docs/gihsn_summary.csv"
 write.csv(gihsn_results, file = gihsn_csv_file, row.names = FALSE)
+
+#####################################################################################
+#Intentando hacer la gráfica de las edades
+gihsn <- gihsn %>%
+  mutate(grupoetario=case_when(both_age_unit==2~ "<5",
+                               both_age_unit==1&both_age<5 ~ "<5",
+                               both_age_unit==3~ "<5",
+                               both_age_unit==1&both_age>4&both_age<50~"5-49",
+                               both_age_unit==1&both_age>49&both_age<65~"50-64",
+                               both_age_unit==1&both_age>64 ~ ">64"))
+df <- gihsn %>%
+  filter(inf_a_final!="")%>% 
+  filter(inf_a_final=="1")%>%
+  count(grupoetario, inf_a_final)%>%
+  complete(grupoetario, fill = list(n = 0)) %>%
+  mutate(grupoetario = factor(grupoetario, levels = c("<5", "5-49", "50-64", ">64")))
+gihsn_csv_file2 <- "docs/gihsn_ages.csv"
+write.csv(df, file = gihsn_csv_file2, row.names = FALSE)
