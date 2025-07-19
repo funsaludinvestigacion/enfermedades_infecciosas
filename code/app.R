@@ -870,7 +870,13 @@ server <- function(input, output) {
   
   # Render the plot based on filtered data (case counts based on PCR)
   output$disease_plot_tab1 <- renderPlot({
+    
     filtered <- filtered_data()
+    
+    # Debug: print column names
+    print("DEBUG: columns in filtered data:")
+    print(colnames(filtered))
+    
     influenza_symptoms_df <- influenza_symptoms_data()
     
     count_all_column_name <- paste0("count_all_", input$virus)
@@ -1859,7 +1865,35 @@ server <- function(input, output) {
       )
     }
     
+    # Create full range of year and epiweeks in selected date range
+    full_weeks <- vigicasa_summary %>%
+      filter(
+        source == "Resp",
+        epiweek_date >= input$date_range_input_tab5[1],
+        epiweek_date <= input$date_range_input_tab5[2]
+      ) %>%
+      distinct(year, epiweek, epiweek_date) %>%
+      complete(nesting(year), epiweek = full_seq(epiweek, 1)) %>%
+      mutate(epiweek_label = factor(paste(year, epiweek, sep = "-")))
+    
+    # Join to filtered data
+    filtered_data <- full_weeks %>%
+      left_join(filtered_data, by = c("year", "epiweek", "epiweek_date"))
+    
+    # Recalculate dynamic columns and handle NAs
     filtered_data <- filtered_data %>%
+      mutate(
+        inf_a_pos = replace_na(inf_a_pos, 0),
+        inf_a_neg = replace_na(inf_a_neg, 0),
+        inf_b_pos = replace_na(inf_b_pos, 0),
+        inf_b_neg = replace_na(inf_b_neg, 0),
+        sars_cov2_pos = replace_na(sars_cov2_pos, 0),
+        sars_cov2_neg = replace_na(sars_cov2_neg, 0),
+        vsr_pos = replace_na(vsr_pos, 0),
+        vsr_neg = replace_na(vsr_neg, 0),
+        total_pos = replace_na(total_pos, 0),
+        total_tested = replace_na(total_tested, 0)
+      ) %>%
       mutate(
         total_pos_dynamic = case_when(
           input$virus == "Influenza A" ~ inf_a_pos,
@@ -1877,13 +1911,17 @@ server <- function(input, output) {
           input$virus == "VSR" ~ vsr_pos + vsr_neg,
           TRUE ~ total_tested
         ),
-        epiweek_label = factor(paste(year, epiweek, sep = "-"))
+        epiweek_label = factor(paste(year, epiweek, sep = "-"), levels = paste(full_weeks$year, full_weeks$epiweek, sep = "-"))
       )
     
     ggplot(filtered_data, aes(x = epiweek_label)) +
       geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
       geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
       scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+      scale_y_continuous(
+        breaks = scales::pretty_breaks(n = 10),
+        labels = function(x) floor(x)
+      ) +
       labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
       theme_minimal() +
       theme(
@@ -1894,9 +1932,20 @@ server <- function(input, output) {
       )
   })
   
-  
   output$dengue_plot_tab5 <- renderPlot({
-    print(paste("Selected dengue test type:", input$dengue_test_type_tab5))
+    
+    # 1. Create full sequence of epiweeks in date range
+    full_weeks <- vigicasa_summary %>%
+      filter(source == "Deng") %>%
+      distinct(epiweek_date, epiweek, year) %>%
+      arrange(epiweek_date) %>%
+      filter(
+        epiweek_date >= input$date_range_input_tab5[1],
+        epiweek_date <= input$date_range_input_tab5[2]
+      ) %>%
+      mutate(epiweek_label = factor(paste(year, epiweek, sep = "-")))
+    
+    # 2. Filter actual data in the range
     filtered_data <- vigicasa_summary %>%
       filter(
         source == "Deng",
@@ -1904,28 +1953,42 @@ server <- function(input, output) {
         epiweek_date <= input$date_range_input_tab5[2]
       )
     
+    # 3. Determine which dengue test pos column to use
     test_column <- case_when(
       input$dengue_test_type_tab5 == "NS1" ~ "ns1_pos",
       input$dengue_test_type_tab5 == "IgM" ~ "igm_pos",
       input$dengue_test_type_tab5 == "IgG" ~ "igg_pos"
     )
     
-    if (nrow(filtered_data) == 0) {
+    # 4. Handle no data case for full_weeks (important for x-axis)
+    if (nrow(full_weeks) == 0) {
       return(
         ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
       )
     }
     
+    # 5. Prepare filtered_data with pos counts and epiweek labels
     filtered_data <- filtered_data %>%
       mutate(
-        total_pos_dengue = .data[[test_column]],
-        epiweek_label = factor(paste(year, epiweek, sep = "-"))
+        total_pos_dengue = .data[[test_column]]
+      ) %>%
+      select(epiweek_date, epiweek, year, total_pos_dengue, total_tested)
+    
+    # 6. Left join with full_weeks to ensure all epiweeks appear
+    full_data <- full_weeks %>%
+      left_join(filtered_data, by = c("epiweek_date", "epiweek", "year")) %>%
+      mutate(
+        total_pos_dengue = replace_na(total_pos_dengue, 0),
+        total_tested = replace_na(total_tested, 0),
+        epiweek_label = factor(paste(year, epiweek, sep = "-"), levels = full_weeks$epiweek_label)
       )
     
-    ggplot(filtered_data, aes(x = epiweek_label)) +
+    # 7. Plot with complete epiweek axis
+    ggplot(full_data, aes(x = epiweek_label)) +
       geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
       geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
       scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
+      scale_y_continuous(breaks = scales::pretty_breaks(n = 10), labels = scales::label_number(accuracy = 1)) +
       labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
       theme_minimal() +
       theme(
@@ -1989,7 +2052,34 @@ server <- function(input, output) {
       )
     }
     
+    # Create full range of year and epiweeks in selected date range
+    full_weeks <- vigifinca_summary %>%
+      filter(
+        epiweek_date >= input$date_range_input_tab6[1],
+        epiweek_date <= input$date_range_input_tab6[2]
+      ) %>%
+      distinct(year, epiweek, epiweek_date) %>%
+      complete(nesting(year), epiweek = full_seq(epiweek, 1)) %>%
+      mutate(epiweek_label = factor(paste(year, epiweek, sep = "-")))
+    
+    # Join to filtered data
+    filtered_data <- full_weeks %>%
+      left_join(filtered_data, by = c("year", "epiweek", "epiweek_date"))
+    
+    # Replace NAs with 0 for all relevant count columns
     filtered_data <- filtered_data %>%
+      mutate(
+        inf_a_pos = replace_na(inf_a_pos, 0),
+        inf_a_neg = replace_na(inf_a_neg, 0),
+        inf_b_pos = replace_na(inf_b_pos, 0),
+        inf_b_neg = replace_na(inf_b_neg, 0),
+        sars_cov2_pos = replace_na(sars_cov2_pos, 0),
+        sars_cov2_neg = replace_na(sars_cov2_neg, 0),
+        vsr_pos = replace_na(vsr_pos, 0),
+        vsr_neg = replace_na(vsr_neg, 0),
+        total_pos = replace_na(total_pos, 0),
+        total_tested = replace_na(total_tested, 0)
+      ) %>%
       mutate(
         total_pos_dynamic = case_when(
           input$virus_tab6 == "Influenza A" ~ inf_a_pos,
@@ -2007,14 +2097,17 @@ server <- function(input, output) {
           input$virus_tab6 == "VSR" ~ vsr_pos + vsr_neg,
           TRUE ~ total_tested
         ),
-        epiweek_label = factor(paste(year, epiweek, sep = "-"))
+        epiweek_label = factor(paste(year, epiweek, sep = "-"), levels = paste(full_weeks$year, full_weeks$epiweek, sep = "-"))
       )
     
     ggplot(filtered_data, aes(x = epiweek_label)) +
       geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
       geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
       scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
-      scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +  # integer-like tick spacing
+      scale_y_continuous(
+        breaks = scales::pretty_breaks(n = 10),
+        labels = function(x) floor(x)
+      ) +
       labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
       theme_minimal() +
       theme(
@@ -2024,6 +2117,7 @@ server <- function(input, output) {
         panel.grid.minor.y = element_blank()
       )
   })
+  
   
   output$dengue_plot_tab6 <- renderPlot({
     filtered_data <- vigifinca_summary %>%
@@ -2073,7 +2167,7 @@ server <- function(input, output) {
 
   ########## MAP MAP MAP  
   # Reactive: filter & summarize based on inputs
-  filtered_data <- reactive({
+  filtered_data_tab5_map <- reactive({
     df <- vigifinca_joined %>%
       filter(
         fecha_muestra >= input$date_range_input_tab6[1],
@@ -2143,7 +2237,7 @@ server <- function(input, output) {
   pal <- reactive({
     colorNumeric(
       palette = "YlOrRd",
-      domain = filtered_data()$incidence,
+      domain = filtered_data_tab5_map()$incidence,
       na.color = "transparent"
     )
   })
@@ -2152,10 +2246,10 @@ server <- function(input, output) {
   labels <- reactive({
     sprintf(
       "<strong>%s</strong><br/>Muestreados: %d<br/>Positivos: %d<br/>Tasa de Positividad: %.2f%%",
-      toupper(filtered_data()$municipio),
-      filtered_data()$total_tested,
-      filtered_data()$total_pos,
-      100 * filtered_data()$incidence
+      toupper(filtered_data_tab5_map()$municipio),
+      filtered_data_tab5_map()$total_tested,
+      filtered_data_tab5_map()$total_pos,
+      100 * filtered_data_tab5_map()$incidence
     ) %>% lapply(htmltools::HTML)
   })
   
@@ -2181,7 +2275,7 @@ server <- function(input, output) {
       
       # Data layer: filtered municipalities with incidence fill
       addPolygons(
-        data = filtered_data(),
+        data = filtered_data_tab5_map(),
         fillColor = ~pal()(incidence),
         weight = 1,
         opacity = 1,
@@ -2203,7 +2297,7 @@ server <- function(input, output) {
       
       addLegend(
         pal = pal(),
-        values = filtered_data()$incidence,
+        values = filtered_data_tab5_map()$incidence,
         opacity = 0.7,
         title = "Tasa de Positividad",
         position = "bottomright",
