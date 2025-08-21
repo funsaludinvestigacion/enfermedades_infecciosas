@@ -30,29 +30,28 @@ guate_json <- guate_json %>%
 
 # Read vigifinca summary data
 vigifinca_summary <- read.csv("docs/vigifinca_summary.csv", stringsAsFactors = FALSE) %>%
-  rename(municipio = distrito) %>%
+  #rename(municipio = municipio_force) %>%
   mutate(
     municipio = municipio %>%
       tolower() %>%
       stri_trans_general("Latin-ASCII") %>%
-      trimws(),
-    
-    department = department %>%
-      tolower() %>%
-      stri_trans_general("Latin-ASCII") %>%
       trimws()
+    #,
+    
+    #department = department %>%
+     # tolower() %>%
+      #stri_trans_general("Latin-ASCII") %>%
+      #trimws()
   )
 
 # adjust a few manually that don't have a match
-vigifinca_summary$municipio <- ifelse(vigifinca_summary$municipio == "san carlos", "nuevo san carlos",
-                              ifelse(vigifinca_summary$municipio == "caballo blanco", "retalhuleu", vigifinca_summary$municipio))
+vigifinca_summary$municipio <- ifelse(vigifinca_summary$municipio == "ciudad de guatemala", "guatemala", vigifinca_summary$municipio)
 
-
-# fuzzy join by municipios
+# fuzzy join by municipios only
 vigifinca_joined <- stringdist_left_join(
   vigifinca_summary,
   guate_json,
-  by = c("municipio", "department"),
+  by = "municipio",
   method = "jw",
   max_dist = 0.15,
   distance_col = "dist"
@@ -64,17 +63,16 @@ vigifinca_joined <- stringdist_left_join(
   # Clean up fuzzy join artifacts
   rename(
     municipio_original = municipio.x,
-    municipio_clean = municipio.y,
-    department = department.x
+    municipio_clean = municipio.y
   ) %>%
   mutate(
     municipio = coalesce(municipio_clean, municipio_original)
   ) %>%
   select(
     -row_id, -municipio_original, -municipio_clean,
-    -dist, -department.y,
+    -dist,
     -ends_with(".x"),
-    any_of(c("department.dist", "municipio.dist"))
+    any_of(c("municipio.dist"))
   ) %>%
   rename_with(~ gsub("\\.y$", "", .), ends_with(".y")) %>%
   

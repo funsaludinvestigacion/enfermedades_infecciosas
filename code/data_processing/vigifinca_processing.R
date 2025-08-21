@@ -38,6 +38,67 @@ banasa <- banasa %>%
 panta <- panta %>%
   filter(!(is.na(f_muestra) & is.na(fech_tom)))
 
+##### fix the mismatch of districts and municipalities between the two databases
+# ---- BANASA ----
+banasa <- banasa %>%
+  mutate(
+    municipio_force = case_when(
+      # RESP (personal/household)
+      !is.na(direccion_3) & direccion_3 == 1 ~ municipio_p,
+      !is.na(direccion_3) & direccion_3 == 0 ~ municipio_p_2,
+      
+      # DENG (household/dengue)
+      !is.na(departamento_d_3) & departamento_d_3 == 1 ~ municipio_d,
+      !is.na(departamento_d_3) & departamento_d_3 == 0 ~ municipio_d_2
+    ),
+    municipio_force = case_when(
+      municipio_force == 1 ~ "Coatepeque",
+      municipio_force == 2 ~ "Colomba",
+      municipio_force == 3 ~ "El Asintal",
+      municipio_force == 4 ~ "La Blanca",
+      municipio_force == 5 ~ "La Reforma",
+      municipio_force == 6 ~ "Pajapita",
+      municipio_force == 7 ~ "Nuevo San Carlos",
+      municipio_force == 8 ~ "San Sebastián",
+      municipio_force == 9 ~ "El Quetzal",
+      municipio_force == 10 ~ "Retalhuleu",
+      municipio_force == 11 ~ "Malacatán",
+      municipio_force == 12 ~ "Génova",
+      municipio_force == 13 ~ "Flores"
+    )
+  )
+
+# ---- PANTA ----
+panta <- panta %>%
+  mutate(
+    municipio_force = case_when(
+      # RESP
+      !is.na(municipio_p) ~ municipio_p,
+      
+      # DENG
+      !is.na(municipio_d) ~ municipio_d
+    ),
+    municipio_force = case_when(
+      municipio_force == 1  ~ "Santa Lucía Cotzumalguapa",
+      municipio_force == 2  ~ "Ciudad de Guatemala",
+      municipio_force == 3  ~ "El Rodeo",
+      municipio_force == 4  ~ "Escuintla",
+      municipio_force == 5  ~ "La Democracia",
+      municipio_force == 6  ~ "La Gomera",
+      municipio_force == 7  ~ "Puerto San José",
+      municipio_force == 8  ~ "San Andrés Osuna",
+      municipio_force == 9  ~ "San Cristóbal",
+      municipio_force == 10 ~ "San Pedro Yepocapa",
+      municipio_force == 11 ~ "Santa Bárbara",
+      municipio_force == 12 ~ "Siquinala",
+      municipio_force == 13 ~ "Mixco",
+      municipio_force == 14 ~ "San Miguel Chicaj",
+      municipio_force == 15 ~ "San Pedro Sacatepéquez",
+      municipio_force == 16 ~ "San Pedro Sacatepéquez"  # for completeness
+    )
+  )
+
+
 ##### bind banasa and panta together with their respective farm label
 # Find common columns
 common_cols <- intersect(names(panta), names(banasa))
@@ -84,12 +145,11 @@ resp_results <- vigifinca %>%
     epiweek = epiweek(f_muestra),
     year = year(f_muestra),
     age = floor(interval(start = f_nacimiento, end = f_muestra) / years(1)),
-    distrito = toupper(distrito),
-    department = toupper(area_salud),
+    municipio = toupper(municipio_force),
     sex = sexo_paciente,
     fecha_muestra = f_muestra
   ) %>%
-  group_by(record_id, epiweek, year, age, sex, distrito, department, fecha_muestra, lugar) %>%
+  group_by(record_id, epiweek, year, age, sex, municipio, fecha_muestra, lugar) %>%
   summarize(
     total_tested = n_distinct(record_id),
     total_pos = n_distinct(record_id[virus_detectado___1 == 0], na.rm = TRUE),
@@ -127,12 +187,11 @@ dengue_results <- vigifinca %>%
     epiweek = epiweek(fech_tom),
     year = year(fech_tom),
     age = floor(interval(start = fech_nacim, end = fech_tom) / years(1)),
-    distrito = toupper(distrito_d),
-    department = toupper(area_salud_d),
+    municipio = toupper(municipio_force),
     sex = sexo_2,
     fecha_muestra = fech_tom
   ) %>%
-  group_by(record_id, epiweek, year, age, sex, distrito, department, fecha_muestra, lugar) %>%
+  group_by(record_id, epiweek, year, age, sex, municipio, fecha_muestra, lugar) %>%
   summarize(
     total_tested = n_distinct(record_id),
     ns1_pos = sum(p_ns1 == 1, na.rm = TRUE),
