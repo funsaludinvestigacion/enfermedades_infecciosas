@@ -652,6 +652,7 @@ ui_tab6 <- function() {
         leafletOutput("map_tab6", height = "800px"),
         br(),
         br(),
+        uiOutput("map_container"),
         class = "content"
       )
     )
@@ -678,7 +679,7 @@ ui <- fluidPage(
     tabPanel("Estudio Biofire", ui_tab3()),
     tabPanel("Vigilancia GIHSN", ui_tab4()),
     tabPanel("VIGICASA", ui_tab5()),
-    tabPanel("VIGIFINCA", ui_tab6()),
+    tabPanel("VIGIFINCA", ui_tab6())
   )
 )
 
@@ -794,6 +795,30 @@ server <- function(input, output) {
       Header_VFinca
     } else {
       Header_VFinca_eng
+    }
+  })
+  
+  # ----------------------------------------------------------------------------
+  #                               PHONE VS COMPUTER WARNING
+  #----------------------------------------------------------------------------
+  # Detect if user is on a mobile device
+  is_mobile <- reactive({
+    grepl("Mobile|Android|iPhone|iPad|iPod", session$clientData$http_user_agent)
+  })
+  
+  # Conditional UI for map
+  output$map_container <- renderUI({
+    if (is_mobile()) {
+      # Show a warning for mobile users
+      tagList(
+        div(
+          style = "color: red; font-weight: bold; padding: 20px;",
+          "⚠️ Sorry, this map may not render properly on mobile devices. Please use a desktop browser."
+        )
+      )
+    } else {
+      # Show the map for non-mobile users
+      leafletOutput("map_tab6", height = "800px")
     }
   })
   
@@ -2189,7 +2214,7 @@ server <- function(input, output) {
       df <- df %>% filter(source == "Resp")
     }
     
-    # Calculate incidence columns depending on virus input
+    # Calculate virus-specific tested/pos/positivity
     df <- df %>%
       group_by(municipio, geometry) %>%
       summarise(
@@ -2212,26 +2237,37 @@ server <- function(input, output) {
         .groups = "drop"
       ) %>%
       mutate(
-        incidence = case_when(
-          input$virus_tab6 == "Todos Virus Respiratorios" ~ total_pos / total_tested,
-          input$virus_tab6 == "SARS-CoV-2" ~ sars_cov2_pos / (sars_cov2_pos + sars_cov2_neg),
-          input$virus_tab6 == "Influenza A y B" ~ (inf_a_pos + inf_b_pos) / (inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg),
-          input$virus_tab6 == "Influenza A" ~ inf_a_pos / (inf_a_pos + inf_a_neg),
-          input$virus_tab6 == "Influenza B" ~ inf_b_pos / (inf_b_pos + inf_b_neg),
-          input$virus_tab6 == "VSR" ~ vsr_pos / (vsr_pos + vsr_neg),
-          input$virus_tab6 == "Dengue" ~ case_when(
-            input$dengue_test_type_tab6 == "NS1" ~ ns1_pos / (ns1_pos + ns1_neg),
-            input$dengue_test_type_tab6 == "IgM" ~ igm_pos / (igm_pos + igm_neg),
-            input$dengue_test_type_tab6 == "IgG" ~ igg_pos / (igg_pos + igg_neg),
-            TRUE ~ NA_real_
-          ),
+        pos = case_when(
+          input$virus_tab6 == "Todos Virus Respiratorios" ~ total_pos,
+          input$virus_tab6 == "SARS-CoV-2" ~ sars_cov2_pos,
+          input$virus_tab6 == "Influenza A y B" ~ (inf_a_pos + inf_b_pos),
+          input$virus_tab6 == "Influenza A" ~ inf_a_pos,
+          input$virus_tab6 == "Influenza B" ~ inf_b_pos,
+          input$virus_tab6 == "VSR" ~ vsr_pos,
+          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "NS1" ~ ns1_pos,
+          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "IgM" ~ igm_pos,
+          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "IgG" ~ igg_pos,
           TRUE ~ NA_real_
         ),
+        tested = case_when(
+          input$virus_tab6 == "Todos Virus Respiratorios" ~ total_tested,
+          input$virus_tab6 == "SARS-CoV-2" ~ (sars_cov2_pos + sars_cov2_neg),
+          input$virus_tab6 == "Influenza A y B" ~ (inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg),
+          input$virus_tab6 == "Influenza A" ~ (inf_a_pos + inf_a_neg),
+          input$virus_tab6 == "Influenza B" ~ (inf_b_pos + inf_b_neg),
+          input$virus_tab6 == "VSR" ~ (vsr_pos + vsr_neg),
+          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "NS1" ~ (ns1_pos + ns1_neg),
+          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "IgM" ~ (igm_pos + igm_neg),
+          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "IgG" ~ (igg_pos + igg_neg),
+          TRUE ~ NA_real_
+        ),
+        incidence = pos / tested,
         incidence = ifelse(is.nan(incidence) | is.infinite(incidence), 0, incidence)
       )
     
     df
   })
+  
   
   # Reactive color palette based on incidence
   pal <- reactive({
@@ -2247,8 +2283,8 @@ server <- function(input, output) {
     sprintf(
       "<strong>%s</strong><br/>Muestreados: %d<br/>Positivos: %d<br/>Tasa de Positividad: %.2f%%",
       toupper(filtered_data_tab5_map()$municipio),
-      filtered_data_tab5_map()$total_tested,
-      filtered_data_tab5_map()$total_pos,
+      filtered_data_tab5_map()$tested,
+      filtered_data_tab5_map()$pos,
       100 * filtered_data_tab5_map()$incidence
     ) %>% lapply(htmltools::HTML)
   })

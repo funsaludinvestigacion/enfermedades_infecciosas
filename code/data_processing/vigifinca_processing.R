@@ -134,7 +134,8 @@ vigifinca <- bind_rows(panta, banasa)
 ############################ RESPIRATORY RESULTS
 # Set this to TRUE to exclude post-June 23 samples without flu or RSV testing
 exclude_flu_rsv_after_cutoff <- TRUE
-cutoff_date <- as.Date("2025-06-23")
+cutoff_start <- as.Date("2025-06-23")
+cutoff_end   <- as.Date("2025-07-16")
 
 resp_results <- vigifinca %>%
   filter(
@@ -167,13 +168,13 @@ resp_results <- vigifinca %>%
   mutate(
     source = "Resp",
     
-    # Zero out flu and RSV results after cutoff if enabled
-    inf_a_pos = ifelse(exclude_flu_rsv_after_cutoff & fecha_muestra > cutoff_date & lugar == "Banasa", 0, inf_a_pos),
-    inf_a_neg = ifelse(exclude_flu_rsv_after_cutoff & fecha_muestra > cutoff_date & lugar == "Banasa", 0, inf_a_neg),
-    inf_b_pos = ifelse(exclude_flu_rsv_after_cutoff & fecha_muestra > cutoff_date & lugar == "Banasa", 0, inf_b_pos),
-    inf_b_neg = ifelse(exclude_flu_rsv_after_cutoff & fecha_muestra > cutoff_date & lugar == "Banasa", 0, inf_b_neg),
-    vsr_pos   = ifelse(exclude_flu_rsv_after_cutoff & fecha_muestra > cutoff_date & lugar == "Banasa", 0, vsr_pos),
-    vsr_neg   = ifelse(exclude_flu_rsv_after_cutoff & fecha_muestra > cutoff_date & lugar == "Banasa", 0, vsr_neg)
+    # Zero out flu and RSV results if within the cutoff range and enabled
+    inf_a_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_pos),
+    inf_a_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_neg),
+    inf_b_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_pos),
+    inf_b_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_neg),
+    vsr_pos   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_pos),
+    vsr_neg   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_neg)
   )
 
 ############################ DENGUE RESULTS
