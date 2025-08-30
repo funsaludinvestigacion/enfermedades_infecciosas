@@ -652,7 +652,6 @@ ui_tab6 <- function() {
         leafletOutput("map_tab6", height = "800px"),
         br(),
         br(),
-        uiOutput("map_container"),
         class = "content"
       )
     )
@@ -685,40 +684,7 @@ ui <- fluidPage(
 
 
 # Define server logic ----
-server <- function(input, output, session) {
-  
-  # ----------------------------------------------------------------------------
-  #                               PHONE VS COMPUTER WARNING
-  #----------------------------------------------------------------------------
-  # Detect if user is on a mobile device
-  # Detect if user is on a mobile device
-  is_mobile <- reactive({
-    ua <- session$clientData$http_user_agent
-    
-    # If user agent is missing, assume FALSE
-    if (is.null(ua) || length(ua) == 0) {
-      return(FALSE)
-    }
-    
-    # Coerce to character and check for mobile keywords
-    grepl("Mobile|Android|iPhone|iPad|iPod", as.character(ua))
-  })
-  
-  # Conditional UI for map
-  output$map_container <- renderUI({
-    if (is_mobile()) {
-      # Show a warning for mobile users
-      tagList(
-        div(
-          style = "color: red; font-weight: bold; padding: 20px;",
-          "⚠️ Sorry, this map may not render properly on mobile devices. Please use a desktop browser."
-        )
-      )
-    } else {
-      # Show the map for non-mobile users
-      leafletOutput("map_tab6", height = "800px")
-    }
-  })
+server <- function(input, output) {
   
   # ----------------------------------------------------------------------------
   #                               SUMMARY/INTRODUCCIÓN
