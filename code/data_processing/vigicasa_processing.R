@@ -64,12 +64,12 @@ resp_results <- vigicasa %>%
     source = "Resp",
     
     # Zero out flu and RSV results after cutoff if enabled
-    inf_a_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_pos),
-    inf_a_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_neg),
-    inf_b_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_pos),
-    inf_b_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_neg),
-    vsr_pos   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_pos),
-    vsr_neg   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_neg)
+    inf_a_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end, 0, inf_a_pos),
+    inf_a_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end, 0, inf_a_neg),
+    inf_b_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end, 0, inf_b_pos),
+    inf_b_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end, 0, inf_b_neg),
+    vsr_pos   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end, 0, vsr_pos),
+    vsr_neg   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end, 0, vsr_neg)
     
   )
 
