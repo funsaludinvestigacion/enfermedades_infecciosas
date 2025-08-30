@@ -133,7 +133,7 @@ vigifinca <- bind_rows(panta, banasa)
 
 ############################ RESPIRATORY RESULTS
 # Set this to TRUE to exclude post-June 23 samples without flu or RSV testing
-exclude_flu_rsv_after_cutoff <- TRUE
+exclude_flu_rsv_in_range <- TRUE
 cutoff_start <- as.Date("2025-06-23")
 cutoff_end   <- as.Date("2025-07-16")
 
