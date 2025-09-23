@@ -98,7 +98,7 @@ gihsn_csv_file <- "docs/gihsn_summary.csv"
 write.csv(gihsn_results, file = gihsn_csv_file, row.names = FALSE)
 
 #####################################################################################
-#Intentando hacer la gráfica de las edades
+#Intentando hacer la gráfica de las edades para influenza A
 gihsn <- gihsn %>%
   mutate(grupoetario=case_when(both_age_unit==2~ "<5",
                                both_age_unit==1&both_age<5 ~ "<5",
@@ -114,3 +114,13 @@ df <- gihsn %>%
   mutate(grupoetario = factor(grupoetario, levels = c("<5", "5-49", "50-64", ">64")))
 gihsn_csv_file2 <- "docs/gihsn_ages.csv"
 write.csv(df, file = gihsn_csv_file2, row.names = FALSE)
+
+#Ahora para VSR
+df2 <- gihsn %>%
+  filter(vsr_final=="1")%>%
+  count(grupoetario, vsr_final)%>%
+  complete(grupoetario, fill = list(n = 0)) %>%
+  mutate(grupoetario = factor(grupoetario, levels = c("<5", "5-49", "50-64", ">64")))
+gihsn_csv_file3 <- "docs/gihsn_ages_vsr.csv"
+write.csv(df2, file = gihsn_csv_file3, row.names = FALSE)
+

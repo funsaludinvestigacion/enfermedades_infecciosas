@@ -23,7 +23,7 @@ gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigaci
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
-
+gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
 # load map objects
 vigifinca_joined <- readRDS("vigifinca_joined.rds")
 guate_json <- readRDS("guate_json.rds")
@@ -526,7 +526,19 @@ ui_tab4 <- function() {
           condition = "input.virus == 'Influenza A'",
           br(),
           h4("Distribución grupo de edad de individuos positivos por influenza A", style = "color: steelblue;"),
-          plotOutput("influenza_a_ages"))
+          plotOutput("influenza_a_ages")),
+        plotOutput("disease_plot_tab4"),
+        conditionalPanel(
+          condition = "input.virus == 'Influenza A'",
+          br(),
+          h4("Distribución de Subtipos de Influenza A", style = "color: steelblue;"),
+          plotOutput("influenza_a_subtypes_plot")),
+        #grafica vsr
+        conditionalPanel(
+          condition = "input.virus == 'VSR'",
+          br(),
+          h4("Distribución grupo de edad de individuos positivos por VSR", style = "color: steelblue;"),
+          plotOutput("vsr_ages"))
       )
     )
   )
@@ -1819,6 +1831,17 @@ server <- function(input, output) {
       theme_bw()+ theme(legend.position = "none")+
       scale_y_discrete(drop=FALSE)+
       labs(x = "Número de resultados positivos a virus de la influenza tipo A", y="Grupo de edad")
+    
+  })
+  
+  output$vsr_ages <- renderPlot({
+    data <- gihsn_ages_vsr
+    ggplot(data, aes(n, grupoetario, fill=vsr_final))+
+      geom_col(color="black")+
+      theme_bw()+ theme(legend.position = "none")+
+      scale_y_discrete(drop=FALSE)+
+      labs(x = "Número de resultados positivos a VSR", y="Grupo de edad")
+    
   })
   
   # --------------------------------------------------------------------------
