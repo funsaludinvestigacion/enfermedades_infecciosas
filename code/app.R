@@ -513,7 +513,7 @@ ui_tab4 <- function() {
         br(),
         br(),
         # Table output for the data summary
-        DTOutput("summary_table_tab4"),
+        DTOutput("summary_table_tab4", height="125px"),
         
         # Plot output for the graph
         plotOutput("disease_plot_tab4"),
