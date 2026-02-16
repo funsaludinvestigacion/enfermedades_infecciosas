@@ -22,8 +22,8 @@ namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinv
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
-gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
-gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
+gihsn_ages <- read.csv("C:/Users/julio/OneDrive/Documents/enfermedades_infecciosas_feb26/docs/gihsn_ages.csv")
+gihsn_ages_vsr <- read.csv("C:/Users/julio/OneDrive/Documents/enfermedades_infecciosas_feb26/docs/gihsn_ages_vsr.csv")
 # load map objects
 vigifinca_joined <- readRDS("vigifinca_joined.rds")
 guate_json <- readRDS("guate_json.rds")
@@ -538,7 +538,13 @@ ui_tab4 <- function() {
           condition = "input.virus == 'VSR'",
           br(),
           h4("Distribución grupo de edad de individuos positivos por VSR", style = "color: steelblue;"),
-          plotOutput("vsr_ages"))
+          plotOutput("vsr_ages")),
+        conditionalPanel(
+          condition = "input.virus == 'VSR'",
+          br(),
+          h4("Distribución de VSR por subgrupo", style = "color: steelblue;"),
+          plotOutput("vsr_subgroups"))
+        
       )
     )
   )
@@ -1826,6 +1832,7 @@ server <- function(input, output) {
   
   output$influenza_a_ages <- renderPlot({
     data <- gihsn_ages
+    data$grupoetario <- factor(data$grupoetario, levels=c("<5", "5-49", "50-64", ">64"))
     ggplot(data, aes(n, grupoetario, fill=inf_a_final))+
       geom_col(color="black")+
       theme_bw()+ theme(legend.position = "none")+
@@ -1835,11 +1842,11 @@ server <- function(input, output) {
   })
   
   output$vsr_ages <- renderPlot({
-    data <- gihsn_ages_vsr
-    ggplot(data, aes(n, grupoetario, fill=vsr_final))+
-      geom_col(color="black")+
+    data2 <- gihsn_ages_vsr
+    data2$grupoetario <- factor(data2$grupoetario, levels=c("<5", "5-49", "50-64", ">64"))
+    ggplot(data2, aes(n, grupoetario))+
+      geom_col(color="black", fill="skyblue")+
       theme_bw()+ theme(legend.position = "none")+
-      scale_y_discrete(drop=FALSE)+
       labs(x = "Número de resultados positivos a VSR", y="Grupo de edad")
     
   })
