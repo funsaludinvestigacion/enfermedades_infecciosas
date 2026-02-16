@@ -22,8 +22,8 @@ namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinv
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
-gihsn_ages <- read.csv("C:/Users/julio/OneDrive/Documents/enfermedades_infecciosas_feb26/docs/gihsn_ages.csv")
-gihsn_ages_vsr <- read.csv("C:/Users/julio/OneDrive/Documents/enfermedades_infecciosas_feb26/docs/gihsn_ages_vsr.csv")
+gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
+gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
 # load map objects
 vigifinca_joined <- readRDS("vigifinca_joined.rds")
 guate_json <- readRDS("guate_json.rds")
