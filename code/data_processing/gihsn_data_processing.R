@@ -78,7 +78,11 @@ gihsn_results <- gihsn %>%
     inf_a_h1n1 = sum(subtipo_infa == "H1N1", na.rm = TRUE),
     inf_a_h3n2 = sum(subtipo_infa == "H3N2", na.rm = TRUE),
     inf_a_nosub = sum(inf_a_final == 1 & is.na(subtipo_infa), na.rm = TRUE)+
-      sum(inf_a_abi == 1 & is.na(subtipo_infa), na.rm = TRUE)
+      sum(inf_a_abi == 1 & is.na(subtipo_infa), na.rm = TRUE),
+    vsr_a = sum(resultados_vsra==1, na.rm=TRUE),
+    vsr_b = sum(resultados_vsrb==1, na.rm=TRUE),
+    vsr_nosub = sum((vsr_final==1 & is.na(resultados_vsra)&is.na(resultados_vsrb))|
+                      (vsr_final==1 & resultados_vsra==2&resultados_vsrb==2), na.rm=TRUE)
   ) %>%
   arrange(year, epiweek)  # Optionally, sort by year and epiweek
 

@@ -1851,6 +1851,36 @@ server <- function(input, output) {
     
   })
   
+  output$vsr_subgroups <- renderPlot({
+    data <- filtered_data_gihsn()
+
+    # Convert epiweek & year into a proper date
+    data <- data %>%
+      mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
+    
+    # Pivot data for Influenza A subtypes
+    subgroup_data <- data %>%
+      select(epiweek, year, vsr_a, vsr_b, vsr_nosub) %>%
+      pivot_longer(cols = c(vsr_a, vsr_b, vsr_nosub), 
+                   names_to = "Subgroup", values_to = "Count") %>%
+      mutate(
+        Subgroup = recode(Subgroup,
+                          vsr_a = "RSV A",
+                          vsr_b = "RSV B",
+                          vsr_nosub = "RSV sin subagrupar")
+      )
+    
+    ggplot(subgroup_data, aes(x = factor(paste(year, epiweek, sep = "-")), y = Count, fill = Subgroup)) +
+      geom_bar(stat = "identity") +
+      scale_fill_manual(values = c("RSV A" = "#1b9e77", 
+                                   "RSV B" = "#d95f02", 
+                                   "RSV sin subagrupar" = "#7570b3")) +
+      labs(x = "Semana epidemiológica", y = "Casos positivos",
+           fill = "Subgrupo", title = "Subgrupos de RSV") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  })
+  
   # --------------------------------------------------------------------------
   #                             VIGICASA
   # --------------------------------------------------------------------------
