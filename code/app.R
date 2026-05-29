@@ -543,8 +543,9 @@ ui_tab4 <- function() {
           condition = "input.virus == 'VSR'",
           br(),
           h4("Distribución de VSR por subgrupo", style = "color: steelblue;"),
-          plotOutput("vsr_subgroups"))
+          plotOutput("vsr_subgroups")),
         
+        downloadButton("download_vsr_subgroups", "Download plot")
       )
     )
   )
@@ -1830,6 +1831,8 @@ server <- function(input, output) {
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   })
   
+  
+  
   output$influenza_a_ages <- renderPlot({
     data <- gihsn_ages
     data$grupoetario <- factor(data$grupoetario, levels=c("<5", "5-49", "50-64", ">64"))
@@ -1851,35 +1854,82 @@ server <- function(input, output) {
     
   })
   
-  output$vsr_subgroups <- renderPlot({
+  vsr_subgroups_plot <- reactive({
+    
     data <- filtered_data_gihsn()
-
-    # Convert epiweek & year into a proper date
+    
     data <- data %>%
       mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
     
-    # Pivot data for Influenza A subtypes
     subgroup_data <- data %>%
       select(epiweek, year, vsr_a, vsr_b, vsr_nosub) %>%
-      pivot_longer(cols = c(vsr_a, vsr_b, vsr_nosub), 
-                   names_to = "Subgroup", values_to = "Count") %>%
+      pivot_longer(
+        cols = c(vsr_a, vsr_b, vsr_nosub),
+        names_to = "Subgroup",
+        values_to = "Count"
+      ) %>%
       mutate(
-        Subgroup = recode(Subgroup,
-                          vsr_a = "RSV A",
-                          vsr_b = "RSV B",
-                          vsr_nosub = "RSV sin subagrupar")
+        Subgroup = recode(
+          Subgroup,
+          vsr_a = "RSV A",
+          vsr_b = "RSV B",
+          vsr_nosub = "RSV without subgroup \ninformation"
+        )
+      ) %>%
+      arrange(year, epiweek) %>%
+      mutate(
+        week_label = paste(year, epiweek, sep = "-"),
+        week_label = factor(week_label, levels = unique(week_label))
       )
     
-    ggplot(subgroup_data, aes(x = factor(paste(year, epiweek, sep = "-")), y = Count, fill = Subgroup)) +
+    ggplot(
+      subgroup_data,
+      aes(x = week_label, y = Count, fill = Subgroup)
+    ) +
       geom_bar(stat = "identity") +
-      scale_fill_manual(values = c("RSV A" = "#1b9e77", 
-                                   "RSV B" = "#d95f02", 
-                                   "RSV sin subagrupar" = "#7570b3")) +
-      labs(x = "Semana epidemiológica", y = "Casos positivos",
-           fill = "Subgrupo", title = "Subgrupos de RSV") +
+      scale_fill_manual(values = c(
+        "RSV A" = "#1b9e77",
+        "RSV B" = "#d95f02",
+        "RSV without subgroup \ninformation" = "#7570b3"
+      )) +
+      xlab("Epidemiological week")+
+      scale_x_discrete(
+        breaks = levels(subgroup_data$week_label)[seq(1, length(levels(subgroup_data$week_label)), by = 4)]
+      )+
+      ggtitle("Distribution of RSV cases by subgroup")+
       theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      theme(
+        axis.text.x = element_text(angle = 45, size = 23, hjust = 1),
+        legend.text = element_text(size = 23),
+        legend.title = element_text(size = 25),
+        plot.title = element_text(
+          size = 25,
+          face = "bold",
+          hjust = 0.5
+        ),
+        axis.title.x = element_text(size = 21),
+        axis.title.y = element_text(size = 21)
+      )
   })
+  
+  output$vsr_subgroups <- renderPlot({
+    vsr_subgroups_plot()
+  })
+  
+  output$download_vsr_subgroups <- downloadHandler(
+    filename = function() {
+      paste0("RSV_subgroups_", Sys.Date(), ".png")
+    },
+    content = function(file) {
+      ggsave(
+        filename = file,
+        plot = vsr_subgroups_plot(),
+        width = 12,
+        height = 6,
+        dpi = 300
+      )
+    }
+  )
   
   # --------------------------------------------------------------------------
   #                             VIGICASA
