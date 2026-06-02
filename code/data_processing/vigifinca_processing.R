@@ -137,73 +137,73 @@ exclude_flu_rsv_in_range <- TRUE
 cutoff_start <- as.Date("2025-06-23")
 cutoff_end   <- as.Date("2025-07-16")
 
-resp_results <- vigifinca %>%
-  filter(
-    !is.na(f_muestra) &
-      if_any(starts_with("virus_detectado___"), ~ .x %in% 1)
-  ) %>%
-  mutate(
-    epiweek = epiweek(f_muestra),
-    year = year(f_muestra),
-    age = floor(interval(start = f_nacimiento, end = f_muestra) / years(1)),
-    municipio = toupper(municipio_force),
-    sex = sexo_paciente,
-    fecha_muestra = f_muestra
-  ) %>%
-  group_by(record_id, epiweek, year, age, sex, municipio, fecha_muestra, lugar) %>%
-  summarize(
-    total_tested = n_distinct(record_id),
-    total_pos = n_distinct(record_id[virus_detectado___1 == 0], na.rm = TRUE),
-    total_neg = n_distinct(record_id[virus_detectado___1 == 1], na.rm = TRUE),
-    sars_cov2_pos = sum(virus_detectado___4 == 1, na.rm = TRUE),
-    sars_cov2_neg = sum(virus_detectado___4 == 0, na.rm = TRUE),
-    inf_a_pos = sum(virus_detectado___2 == 1, na.rm = TRUE),
-    inf_a_neg = sum(virus_detectado___2 == 0, na.rm = TRUE),
-    inf_b_pos = sum(virus_detectado___3 == 1, na.rm = TRUE),
-    inf_b_neg = sum(virus_detectado___3 == 0, na.rm = TRUE),
-    vsr_pos = sum(virus_detectado___5 == 1, na.rm = TRUE),
-    vsr_neg = sum(virus_detectado___5 == 0, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    source = "Resp",
+#resp_results <- vigifinca %>%
+#  filter(
+#    !is.na(f_muestra) &
+#      if_any(starts_with("virus_detectado___"), ~ .x %in% 1)
+#  ) %>%
+#  mutate(
+#    epiweek = epiweek(f_muestra),
+ #   year = year(f_muestra),
+ #   age = floor(interval(start = f_nacimiento, end = f_muestra) / years(1)),
+#    municipio = toupper(municipio_force),
+ #   sex = sexo_paciente,
+#    fecha_muestra = f_muestra
+ # ) %>%
+#  group_by(record_id, epiweek, year, age, sex, municipio, fecha_muestra, lugar) %>%
+#  summarize(
+#    total_tested = n_distinct(record_id),
+ #   total_pos = n_distinct(record_id[virus_detectado___1 == 0], na.rm = TRUE),
+ #   total_neg = n_distinct(record_id[virus_detectado___1 == 1], na.rm = TRUE),
+ #   sars_cov2_pos = sum(virus_detectado___4 == 1, na.rm = TRUE),
+ #   sars_cov2_neg = sum(virus_detectado___4 == 0, na.rm = TRUE),
+  #  inf_a_pos = sum(virus_detectado___2 == 1, na.rm = TRUE),
+ #   inf_a_neg = sum(virus_detectado___2 == 0, na.rm = TRUE),
+  #  inf_b_pos = sum(virus_detectado___3 == 1, na.rm = TRUE),
+  #  inf_b_neg = sum(virus_detectado___3 == 0, na.rm = TRUE),
+  #  vsr_pos = sum(virus_detectado___5 == 1, na.rm = TRUE),
+ #   vsr_neg = sum(virus_detectado___5 == 0, na.rm = TRUE),
+ #   .groups = "drop"
+ # ) %>%
+ # mutate(
+  #  source = "Resp",
     
     # Zero out flu and RSV results if within the cutoff range and enabled
-    inf_a_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_pos),
-    inf_a_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_neg),
-    inf_b_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_pos),
-    inf_b_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_neg),
-    vsr_pos   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_pos),
-    vsr_neg   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_neg)
-  )
+ #   inf_a_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_pos),
+ #   inf_a_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_neg),
+  #  inf_b_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_pos),
+  #  inf_b_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_neg),
+   # vsr_pos   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_pos),
+ #   vsr_neg   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_neg)
+ # )
 
 ############################ DENGUE RESULTS
-dengue_results <- vigifinca %>%
-  filter(
-    is.na(f_muestra) & 
-      !is.na(fech_tom) & 
-      if_any(c(p_ns1, p_igm, p_igg), ~ !is.na(.x))
-  ) %>%  # Only dengue, exclude anyone with f_muestra
-  mutate(
-    epiweek = epiweek(fech_tom),
-    year = year(fech_tom),
-    age = floor(interval(start = fech_nacim, end = fech_tom) / years(1)),
-    municipio = toupper(municipio_force),
-    sex = sexo_2,
-    fecha_muestra = fech_tom
-  ) %>%
-  group_by(record_id, epiweek, year, age, sex, municipio, fecha_muestra, lugar) %>%
-  summarize(
-    total_tested = n_distinct(record_id),
-    ns1_pos = sum(p_ns1 == 1, na.rm = TRUE),
-    ns1_neg = sum(p_ns1 == 2, na.rm = TRUE),
-    igm_pos = sum(p_igm == 1, na.rm = TRUE),
-    igm_neg = sum(p_igm == 2, na.rm = TRUE),
-    igg_pos = sum(p_igg == 1, na.rm = TRUE),
-    igg_neg = sum(p_igg == 2, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(source = "Deng")
+#dengue_results <- vigifinca %>%
+ # filter(
+ #   is.na(f_muestra) & 
+ #     !is.na(fech_tom) & 
+  #    if_any(c(p_ns1, p_igm, p_igg), ~ !is.na(.x))
+ # ) %>%  # Only dengue, exclude anyone with f_muestra
+ # mutate(
+ #   epiweek = epiweek(fech_tom),
+ #   year = year(fech_tom),
+  #  age = floor(interval(start = fech_nacim, end = fech_tom) / years(1)),
+  #  municipio = toupper(municipio_force),
+  #  sex = sexo_2,
+ #   fecha_muestra = fech_tom
+ # ) %>%
+ # group_by(record_id, epiweek, year, age, sex, municipio, fecha_muestra, lugar) %>%
+ # summarize(
+ #   total_tested = n_distinct(record_id),
+ #   ns1_pos = sum(p_ns1 == 1, na.rm = TRUE),
+ #   ns1_neg = sum(p_ns1 == 2, na.rm = TRUE),
+  #  igm_pos = sum(p_igm == 1, na.rm = TRUE),
+ #   igm_neg = sum(p_igm == 2, na.rm = TRUE),
+ #   igg_pos = sum(p_igg == 1, na.rm = TRUE),
+ #   igg_neg = sum(p_igg == 2, na.rm = TRUE),
+ #   .groups = "drop"
+ # ) %>%
+#  mutate(source = "Deng")
 
 # Combine both into one unified results table 
 vigifinca_results <- bind_rows(resp_results, dengue_results) %>%
