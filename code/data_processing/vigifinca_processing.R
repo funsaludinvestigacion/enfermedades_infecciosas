@@ -40,63 +40,63 @@ panta <- panta %>%
 
 ##### fix the mismatch of districts and municipalities between the two databases
 # ---- BANASA ----
-banasa <- banasa %>%
-  mutate(
-    municipio_force = case_when(
+#banasa <- banasa %>%
+#  mutate(
+ #   municipio_force = case_when(
       # RESP (personal/household)
-      !is.na(direccion_3) & direccion_3 == 1 ~ municipio_p,
-      !is.na(direccion_3) & direccion_3 == 0 ~ municipio_p_2,
+ #     !is.na(direccion_3) & direccion_3 == 1 ~ municipio_p,
+  #    !is.na(direccion_3) & direccion_3 == 0 ~ municipio_p_2,
       
       # DENG (household/dengue)
-      !is.na(departamento_d_3) & departamento_d_3 == 1 ~ municipio_d,
-      !is.na(departamento_d_3) & departamento_d_3 == 0 ~ municipio_d_2
-    ),
-    municipio_force = case_when(
-      municipio_force == 1 ~ "Coatepeque",
-      municipio_force == 2 ~ "Colomba",
-      municipio_force == 3 ~ "El Asintal",
-      municipio_force == 4 ~ "La Blanca",
-      municipio_force == 5 ~ "La Reforma",
-      municipio_force == 6 ~ "Pajapita",
-      municipio_force == 7 ~ "Nuevo San Carlos",
-      municipio_force == 8 ~ "San Sebastián",
-      municipio_force == 9 ~ "El Quetzal",
-      municipio_force == 10 ~ "Retalhuleu",
-      municipio_force == 11 ~ "Malacatán",
-      municipio_force == 12 ~ "Génova",
-      municipio_force == 13 ~ "Flores"
-    )
-  )
+   #   !is.na(departamento_d_3) & departamento_d_3 == 1 ~ municipio_d,
+   #   !is.na(departamento_d_3) & departamento_d_3 == 0 ~ municipio_d_2
+ #   ),
+  #  municipio_force = case_when(
+  #    municipio_force == 1 ~ "Coatepeque",
+  #    municipio_force == 2 ~ "Colomba",
+  #    municipio_force == 3 ~ "El Asintal",
+  #    municipio_force == 4 ~ "La Blanca",
+   #   municipio_force == 5 ~ "La Reforma",
+  #    municipio_force == 6 ~ "Pajapita",
+  #    municipio_force == 7 ~ "Nuevo San Carlos",
+  #    municipio_force == 8 ~ "San Sebastián",
+  #    municipio_force == 9 ~ "El Quetzal",
+  #    municipio_force == 10 ~ "Retalhuleu",
+  #    municipio_force == 11 ~ "Malacatán",
+  #    municipio_force == 12 ~ "Génova",
+   #   municipio_force == 13 ~ "Flores"
+ #   )
+#  )
 
 # ---- PANTA ----
-panta <- panta %>%
-  mutate(
-    municipio_force = case_when(
-      # RESP
-      !is.na(municipio_p) ~ municipio_p,
+#panta <- panta %>%
+#  mutate(
+#    municipio_force = case_when(
+ #     # RESP
+  #    !is.na(municipio_p) ~ municipio_p,
       
       # DENG
-      !is.na(municipio_d) ~ municipio_d
-    ),
-    municipio_force = case_when(
-      municipio_force == 1  ~ "Santa Lucía Cotzumalguapa",
-      municipio_force == 2  ~ "Ciudad de Guatemala",
-      municipio_force == 3  ~ "El Rodeo",
-      municipio_force == 4  ~ "Escuintla",
-      municipio_force == 5  ~ "La Democracia",
-      municipio_force == 6  ~ "La Gomera",
-      municipio_force == 7  ~ "Puerto San José",
-      municipio_force == 8  ~ "San Andrés Osuna",
-      municipio_force == 9  ~ "San Cristóbal",
-      municipio_force == 10 ~ "San Pedro Yepocapa",
-      municipio_force == 11 ~ "Santa Bárbara",
-      municipio_force == 12 ~ "Siquinala",
-      municipio_force == 13 ~ "Mixco",
-      municipio_force == 14 ~ "San Miguel Chicaj",
-      municipio_force == 15 ~ "San Pedro Sacatepéquez",
-      municipio_force == 16 ~ "San Pedro Sacatepéquez"  # for completeness
-    )
-  )
+##      !is.na(municipio_d) ~ municipio_d
+  #  ),
+   # municipio_force = case_when(
+    #  municipio_force == 1  ~ "Santa Lucía Cotzumalguapa",
+     # municipio_force == 2  ~ "Ciudad de Guatemala",
+      #municipio_force == 3  ~ "El Rodeo",
+      #municipio_force == 4  ~ "Escuintla",
+#      municipio_force == 5  ~ "La Democracia",
+#      municipio_force == 6  ~ "La Gomera",
+#      municipio_force == 7  ~ "Puerto San José",
+ #     municipio_force == 8  ~ "San Andrés Osuna",
+ #     municipio_force == 9  ~ "San Cristóbal",
+  #    municipio_force == 10 ~ "San Pedro Yepocapa",
+  #    municipio_force == 11 ~ "Santa Bárbara",
+  #    municipio_force == 12 ~ "Siquinala",
+  #    municipio_force == 13 ~ "Mixco",
+  #    municipio_force == 14 ~ "San Miguel Chicaj",
+  #    municipio_force == 15 ~ "San Pedro Sacatepéquez",
+  #    municipio_force == 16 ~ "San Pedro Sacatepéquez"  # for completeness
+ #   )
+#  )
 
 
 ##### bind banasa and panta together with their respective farm label
