@@ -1873,7 +1873,7 @@ server <- function(input, output) {
           Subgroup,
           vsr_a = "RSV A",
           vsr_b = "RSV B",
-          vsr_nosub = "RSV without subgroup \ninformation"
+          vsr_nosub = "No subgroup"
         )
       ) %>%
       arrange(year, epiweek) %>%
@@ -1890,7 +1890,7 @@ server <- function(input, output) {
       scale_fill_manual(values = c(
         "RSV A" = "#1b9e77",
         "RSV B" = "#d95f02",
-        "RSV without subgroup \ninformation" = "#7570b3"
+        "No subgroup" = "#7570b3"
       )) +
       xlab("Epidemiological week")+
       scale_x_discrete(
@@ -1908,7 +1908,8 @@ server <- function(input, output) {
           hjust = 0.5
         ),
         axis.title.x = element_text(size = 21),
-        axis.title.y = element_text(size = 21)
+        axis.title.y = element_text(size = 21),
+        axis.text.y = element_text(size = 23)
       )
   })
   
