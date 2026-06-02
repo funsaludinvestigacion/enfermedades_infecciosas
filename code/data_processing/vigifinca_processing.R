@@ -150,7 +150,7 @@ resp_results <- vigifinca %>%
     sex = sexo_paciente,
     fecha_muestra = f_muestra
   ) %>%
-  group_by(record_id, epiweek, year, age, sex, municipio, fecha_muestra, lugar) %>%
+  group_by(record_id, epiweek, year, age, sex, fecha_muestra, lugar) %>%
   summarize(
     total_tested = n_distinct(record_id),
     total_pos = n_distinct(record_id[virus_detectado___1 == 0], na.rm = TRUE),
