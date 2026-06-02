@@ -207,7 +207,7 @@ cutoff_end   <- as.Date("2025-07-16")
 
 # Combine both into one unified results table 
 #vigifinca_results <- bind_rows(resp_results, dengue_results) %>%
-  arrange(year, epiweek)
+ # arrange(year, epiweek)
 
 # convert epiweek/year to date
 #vigifinca_results <- vigifinca_results %>%
