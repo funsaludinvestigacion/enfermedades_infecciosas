@@ -1774,9 +1774,19 @@ server <- function(input, output) {
         epiweek_label = paste(year, epiweek, sep = "-")
       )
     
+    filtered_data <- filtered_data %>%
+      arrange(year, epiweek) %>%
+      mutate(
+        epiweek_label = paste(year, epiweek, sep = "-"),
+        epiweek_label = factor(
+          epiweek_label,
+          levels = unique(epiweek_label)
+        )
+      )
+    
     # Filter to label every other week on the x-axis
     x_labels <- unique(filtered_data$epiweek_label)
-    x_labels <- x_labels[seq(1, length(x_labels), by = 2)]
+    x_labels <- x_labels[seq(1, length(x_labels), by = 4)]
     
     # Generate the plot
     ggplot(filtered_data, aes(x = factor(epiweek_label))) +
