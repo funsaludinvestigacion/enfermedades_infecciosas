@@ -43,7 +43,7 @@
      # tolower() %>%
       #stri_trans_general("Latin-ASCII") %>%
       #trimws()
-  )
+#  )
 
 # adjust a few manually that don't have a match
 #vigifinca_summary$municipio <- ifelse(vigifinca_summary$municipio == "ciudad de guatemala", "guatemala", vigifinca_summary$municipio)
