@@ -2034,7 +2034,9 @@ server <- function(input, output) {
         ),
         epiweek_label = factor(paste(year, epiweek, sep = "-"), levels = paste(full_weeks$year, full_weeks$epiweek, sep = "-"))
       )
-    
+    week_breaks <- levels(filtered_data$epiweek_label)[
+      seq(1, length(levels(filtered_data$epiweek_label)), by = 4)
+    ]
     ggplot(filtered_data, aes(x = epiweek_label)) +
       geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
       geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
@@ -2044,6 +2046,7 @@ server <- function(input, output) {
         labels = function(x) floor(x)
       ) +
       labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      scale_x_discrete(breaks = week_breaks)+
       theme_minimal() +
       theme(
         axis.text.x = element_text(angle = 45, hjust = 1),
