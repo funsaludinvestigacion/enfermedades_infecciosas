@@ -206,12 +206,12 @@ dengue_results <- vigifinca %>%
   mutate(source = "Deng")
 
 # Combine both into one unified results table 
-#vigifinca_results <- bind_rows(resp_results, dengue_results) %>%
- # arrange(year, epiweek)
+vigifinca_results <- bind_rows(resp_results, dengue_results) %>%
+  arrange(year, epiweek)
 
 # convert epiweek/year to date
-#vigifinca_results <- vigifinca_results %>%
-#  mutate(epiweek_date = as.Date(paste(year, epiweek, 0), format = "%Y %U %w"))
+vigifinca_results <- vigifinca_results %>%
+  mutate(epiweek_date = as.Date(paste(year, epiweek, 0), format = "%Y %U %w"))
 
 ############################ WHEN WE HAVE THE LAB FORM
 # Create epiweek column
