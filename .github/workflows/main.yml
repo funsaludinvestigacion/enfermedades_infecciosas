@@ -1,6 +1,7 @@
 name: Weekly Data Update and Deployment 
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 13 * * 1"
   push:
