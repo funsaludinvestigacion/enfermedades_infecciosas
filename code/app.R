@@ -24,6 +24,10 @@ vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestig
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
 gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
+demo_lab_info <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/todas_las_fichas.csv")
+conteo_criterio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/conteo_por_criterio.csv")
+conteo_individuo <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/conteo_por_individuo.csv")
+conteo_comunidad <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/conteo_por_comunidad.csv")
 # load map objects
 vigifinca_joined <- readRDS("vigifinca_joined.rds")
 guate_json <- readRDS("guate_json.rds")
@@ -268,6 +272,9 @@ columns_sangre <- columns_sangre[columns_sangre != "Negativo_sangre"]
 columns_hisnaso <- columns_of_interest_biofire[grep("hisnaso",
                                                     columns_of_interest_biofire)]
 columns_hisnaso <- columns_hisnaso[columns_hisnaso != "Negativo_hisnaso"]
+
+#for report tab
+demo_lab_info$f_visita_f <- as.Date(demo_lab_info$f_visita_f)
 
 
 # ------------------------------------------------------
@@ -677,6 +684,54 @@ ui_tab6 <- function() {
   )
 }
 
+#UI for tab report (7)
+ui_tab7 <- function() {
+  
+  fluidPage(
+    
+    sidebarLayout(
+      
+      sidebarPanel(
+        
+        dateRangeInput(
+          "cdc_dates",
+          "Periodo",
+          start = Sys.Date() - 30,
+          end = Sys.Date()
+        )
+        
+      ),
+      
+      mainPanel(
+        
+        h3("Enrolamiento"),
+        
+        DTOutput("cdc_tabla_comunidad"),
+        br(),
+        
+        DTOutput("cdc_tabla_participantes"),
+        br(),
+        
+        DTOutput("cdc_tabla_criterios"),
+        
+        hr(),
+        
+        h3("Vigilancia Respiratoria"),
+        
+        DTOutput("cdc_tabla_fichas"),
+        br(),
+        
+        DTOutput("cdc_tabla_lab")
+        
+      )
+      
+    )
+    
+  )
+  
+}
+
+
 
 
 # Define UI for application
@@ -697,7 +752,8 @@ ui <- fluidPage(
     tabPanel("Estudio Biofire", ui_tab3()),
     tabPanel("Vigilancia GIHSN", ui_tab4()),
     tabPanel("VIGICASA", ui_tab5()),
-    tabPanel("VIGIFINCA", ui_tab6())
+    tabPanel("VIGIFINCA", ui_tab6()),
+    tabPanel("CDC Dashboard", ui_tab7())
   )
 )
 
@@ -2447,8 +2503,75 @@ server <- function(input, output) {
       
       setView(lng = -86.7, lat = 15.8, zoom = 7.5)
   })
+
+  cdc_fichas_filtradas <- reactive({
+    
+    demo_lab_info %>%
+      filter(
+        between(
+          f_visita_f,
+          input$cdc_dates[1],
+          input$cdc_dates[2]
+        )
+      )
+    
+  })
   
+  output$cdc_tabla_comunidad <- renderDT({
+    
+    datatable(conteo_comunidad)
+    
+  })
   
+  output$cdc_tabla_participantes <- renderDT({
+    
+    datatable(conteo_individuo)
+    
+  })
+  
+  output$cdc_tabla_criterios <- renderDT({
+    
+    datatable(conteo_criterio)
+    
+  })
+  
+  output$cdc_tabla_fichas <- renderDT({
+    
+    cdc_fichas_filtradas() %>%
+      count(sitio) %>%
+      datatable()
+    
+  })
+  
+  output$cdc_tabla_lab <- renderDT({
+    
+    cdc_fichas_filtradas() %>%
+      
+      pivot_longer(
+        cols = starts_with("virus_detectado"),
+        names_to = "test",
+        values_to = "result"
+      ) %>%
+      
+      filter(result == "1") %>%
+      
+      mutate(
+        test = recode(
+          test,
+          "virus_detectado___1" = "Negativo",
+          "virus_detectado___6" = "Inválido",
+          "virus_detectado___2" = "Influenza A",
+          "virus_detectado___3" = "Influenza B",
+          "virus_detectado___4" = "SARS-CoV-2",
+          "virus_detectado___5" = "VSR"
+        )
+      ) %>%
+      
+      count(test) %>%
+      
+      datatable()
+    
+  })
   
 }
 
