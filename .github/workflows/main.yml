@@ -53,10 +53,6 @@ jobs:
              && git diff --quiet --exit-code docs/gihsn_summary.csv \
              && git diff --quiet --exit-code docs/vigicasa_summary.csv \
              && git diff --quiet --exit-code docs/vigifinca_summary.csv \
-             && git diff --quiet --exit-code docs/todas_las_fichas.csv \
-             && git diff --quiet --exit-code docs/conteo_por_criterio.csv \
-             && git diff --quiet --exit-code docs/conteo_por_individuo.csv \
-             && git diff --quiet --exit-code docs/conteo_por_comunidad.csv \
              && git diff --quiet --exit-code code/vigifinca_joined.rds; then
             echo "No changes in CSV files. Skipping commit and push."
           else
@@ -92,21 +88,6 @@ jobs:
             fi
             if ! git diff --quiet --exit-code cods/vigifinca_joined.rds; then
               git add code/vigifinca_joined.rds
-            fi
-            if ! git diff --quiet --exit-code docs/todas_las_fichas.csv; then
-              git add docs/todas_las_fichas.csv
-            fi
-
-            if ! git diff --quiet --exit-code docs/conteo_por_criterio.csv; then
-              git add docs/conteo_por_criterio.csv
-            fi
-
-            if ! git diff --quiet --exit-code docs/conteo_por_individuo.csv; then
-              git add docs/conteo_por_individuo.csv
-            fi
-
-            if ! git diff --quiet --exit-code docs/conteo_por_comunidad.csv; then
-              git add docs/conteo_por_comunidad.csv
             fi
             
             git commit -m "Update CSV files"
