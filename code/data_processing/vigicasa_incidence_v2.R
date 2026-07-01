@@ -14,7 +14,7 @@ uri <- "https://redcap.ucdenver.edu/api/"
 vigicasa <- 
   REDCapR::redcap_read(
     redcap_uri  = uri, 
-    token = "CF9778D42A54CDB9C9257AC8C99F561B"
+    token = "vigicasa_token"
   )$data
 
 # Processing -----------------------------------------------------------------
@@ -63,9 +63,6 @@ table(enroll$en_que_trabaja___8, useNA =  "always")
 table(enroll$en_que_trabaja___9, useNA =  "always")
 table(enroll$en_que_trabaja___10, useNA =  "always")
 
-table(vigicasa1$municipio_p)
-table(vigicasa$vacuna_influ)
-table(enroll$edad_sujeto)
 
 ##### tested
 
