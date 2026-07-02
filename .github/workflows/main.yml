@@ -1,0 +1,127 @@
+name: Weekly Data Update and Deployment 
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * 1"
+  push:
+    branches: [ main ]
+
+jobs:
+  run_update_data:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up MicroMamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: .github/Guatemala_env.yml
+          environment-name: Guatemala_env
+
+      - name: Run R scripts
+        env:
+          influenza_token: ${{ secrets.INFLUENZA_TOKEN }}
+          namru_biofire_token: ${{ secrets.NAMRU_BIOFIRE_TOKEN }}
+          agri_casa_token: ${{ secrets.AGRI_CASA_TOKEN }}
+          new_biofire: ${{ secrets.NEW_BIOFIRE }}
+          gihsn_token: ${{ secrets.GIHSN_TOKEN }}
+          vigicasa_token: ${{ secrets.VIGICASA_TOKEN }}
+          vigi_banasa_token: ${{ secrets.VIGI_BANASA_TOKEN }}
+          vigi_panta_token: ${{ secrets.VIGI_PANTA_TOKEN }}
+        run: |
+          # Rscript code/code_dependency_download.R
+          Rscript code/data_processing/agri_casa_data_processing.R
+          Rscript code/data_processing/influenza_data_processing.R
+          Rscript code/data_processing/namru_biofire_data_processing.R
+          Rscript code/data_processing/gihsn_data_processing.R
+          Rscript code/data_processing/vigicasa_processing.R
+          Rscript code/data_processing/vigifinca_processing.R
+          Rscript code/data_processing/geoprocessing.R
+
+      - name: Commit updated data to repository
+        run: |
+          # Check if there are changes in the CSV files
+          if git diff --quiet --exit-code docs/agri_casa_incidence_summary_updated.csv \
+             && git diff --quiet --exit-code docs/agri_casa_symptom_summary_updated.csv \
+             && git diff --quiet --exit-code docs/influenza_summary_updated.csv \
+             && git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv \
+             && git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv \
+             && git diff --quiet --exit-code docs/gihsn_summary.csv \
+             && git diff --quiet --exit-code docs/vigicasa_summary.csv \
+             && git diff --quiet --exit-code docs/vigifinca_summary.csv \
+             && git diff --quiet --exit-code docs/todas_las_fichas.csv \
+             && git diff --quiet --exit-code docs/conteo_por_criterio.csv \
+             && git diff --quiet --exit-code docs/conteo_por_individuo.csv \
+             && git diff --quiet --exit-code docs/conteo_por_comunidad.csv \
+             && git diff --quiet --exit-code code/vigifinca_joined.rds; then
+            echo "No changes in CSV files. Skipping commit and push."
+          else
+            git config --local user.name "GitHub Actions"
+            git config --local user.email "actions@github.com"
+            timestamp=$(date +'%Y%m%d%H%M%S')
+            branch_name="update-csv-$timestamp"
+            git checkout -b "$branch_name"
+            
+            if ! git diff --quiet --exit-code docs/agri_casa_incidence_summary_updated.csv; then
+              git add docs/agri_casa_incidence_summary_updated.csv
+            fi
+            if ! git diff --quiet --exit-code docs/agri_casa_symptom_summary_updated.csv; then
+              git add docs/agri_casa_symptom_summary_updated.csv
+            fi
+            if ! git diff --quiet --exit-code docs/influenza_summary_updated.csv; then
+              git add docs/influenza_summary_updated.csv
+            fi
+            if ! git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv; then
+              git add docs/influenza_symptom_summary_updated.csv
+            fi
+            if ! git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv; then
+              git add docs/namru_biofire_summary_updated.csv
+            fi
+            if ! git diff --quiet --exit-code docs/gihsn_summary.csv; then
+              git add docs/gihsn_summary.csv
+            fi
+            if ! git diff --quiet --exit-code docs/vigicasa_summary.csv; then
+              git add docs/vigicasa_summary.csv
+            fi
+            if ! git diff --quiet --exit-code docs/vigifinca_summary.csv; then
+              git add docs/vigifinca_summary.csv
+            fi
+            if ! git diff --quiet --exit-code docs/todas_las_fichas.csv; then
+              git add docs/todas_las_fichas.csv
+            fi
+
+            if ! git diff --quiet --exit-code docs/conteo_por_criterio.csv; then
+              git add docs/conteo_por_criterio.csv
+            fi
+
+            if ! git diff --quiet --exit-code docs/conteo_por_individuo.csv; then
+              git add docs/conteo_por_individuo.csv
+            fi
+
+            if ! git diff --quiet --exit-code docs/conteo_por_comunidad.csv; then
+              git add docs/conteo_por_comunidad.csv
+            fi
+            if ! git diff --quiet --exit-code code/vigifinca_joined.rds; then
+              git add code/vigifinca_joined.rds
+            fi
+            
+            git commit -m "Update CSV files"
+            git push origin "$branch_name"
+            git checkout main
+            git merge --no-ff "$branch_name"
+            git push origin main
+            git branch -d "$branch_name"
+            git push origin --delete "$branch_name"
+          fi
+
+      - name: Deploy applications
+        env:
+          shinyio_secret: ${{ secrets.SHINYIO_SECRET }}
+          shinyio_token: ${{ secrets.SHINYIO_TOKEN }}
+        run: |
+          Rscript code/deploy_app.R
