@@ -308,3 +308,4 @@ resp_incidence_age <- resp_incidence_age %>%
   )
 
 resp_incidence_age <- resp_incidence_age %>% filter(as.Date(week_start) > "2026-01-17")
+write.csv(resp_incidence_w, "docs/resp_incidence_age.csv") 
