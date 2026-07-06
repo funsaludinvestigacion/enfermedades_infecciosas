@@ -2,6 +2,7 @@
 # Using shinyapp.io
 #install.packages("rsconnect", repos = "https://cran.rstudio.com")
 library(rsconnect)
+library(plotly)
 
 # Save secret token for connecting to R shiny account
 shinyio_token <- Sys.getenv("shinyio_token")
