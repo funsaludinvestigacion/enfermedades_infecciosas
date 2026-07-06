@@ -2172,8 +2172,8 @@ server <- function(input, output) {
     data <- vigifinca_summary %>%
       filter(
         source == "Resp",
-        week_start >= input$date_range_input_tab6[1],
-        week_start <= input$date_range_input_tab6[2]
+        epiweek_date >= input$date_range_input_tab6[1],
+        epiweek_date <= input$date_range_input_tab6[2]
       )
     
     # Filter by lugar
@@ -2202,16 +2202,16 @@ server <- function(input, output) {
     # Create full range of year and epiweeks in selected date range
     full_weeks <- vigifinca_summary %>%
       filter(
-        week_start >= input$date_range_input_tab6[1],
-        week_start <= input$date_range_input_tab6[2]
+        epiweek_date >= input$date_range_input_tab6[1],
+        epiweek_date <= input$date_range_input_tab6[2]
       ) %>%
-      distinct(year, epiweek, week_start) %>%
+      distinct(year, epiweek, epiweek_date) %>%
       complete(nesting(year), epiweek = full_seq(epiweek, 1)) %>%
       mutate(epiweek_label = factor(paste(year, epiweek, sep = "-")))
     
     # Join to filtered data
     filtered_data <- full_weeks %>%
-      left_join(filtered_data, by = c("year", "epiweek", "week_start"))
+      left_join(filtered_data, by = c("year", "epiweek", "epiweek_date"))
     
     # Replace NAs with 0 for all relevant count columns
     filtered_data <- filtered_data %>%
@@ -2246,7 +2246,8 @@ server <- function(input, output) {
         ),
         epiweek_label = factor(paste(year, epiweek, sep = "-"), levels = paste(full_weeks$year, full_weeks$epiweek, sep = "-"))
       )
-    
+    week_breaks <- levels(filtered_data$epiweek_label)[
+      seq(1, length(levels(filtered_data$epiweek_label)), by = 4)]
     ggplot(filtered_data, aes(x = epiweek_label)) +
       geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
       geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
@@ -2256,6 +2257,7 @@ server <- function(input, output) {
         labels = function(x) floor(x)
       ) +
       labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      scale_x_discrete(breaks = week_breaks)+
       theme_minimal() +
       theme(
         axis.text.x = element_text(angle = 45, hjust = 1),
@@ -2270,8 +2272,8 @@ server <- function(input, output) {
     filtered_data <- vigifinca_summary %>%
       filter(
         source == "Deng",
-        week_start >= input$date_range_input_tab6[1],
-        week_start <= input$date_range_input_tab6[2],
+        epiweek_date >= input$date_range_input_tab6[1],
+        epiweek_date <= input$date_range_input_tab6[2],
         case_when(
           input$lugar == "Fincas de Banasa - Trifinio" ~ lugar == "Banasa",
           input$lugar == "Fincas de Pantaleon - Escuintla" ~ lugar == "Pantaleon",
@@ -2296,6 +2298,9 @@ server <- function(input, output) {
         total_pos_dengue = .data[[test_column]],
         epiweek_label = factor(paste(year, epiweek, sep = "-"))
       )
+    week_breaks <- levels(filtered_data$epiweek_label)[
+      seq(1, length(levels(filtered_data$epiweek_label)), by = 4)
+    ]
     
     ggplot(filtered_data, aes(x = epiweek_label)) +
       geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
@@ -2303,6 +2308,7 @@ server <- function(input, output) {
       scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
       scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +  # integer-like tick spacing 
       labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      scale_x_discrete(breaks = week_breaks)+
       theme_minimal() +
       theme(
         axis.text.x = element_text(angle = 45, hjust = 1),
