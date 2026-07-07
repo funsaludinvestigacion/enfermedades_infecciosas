@@ -396,7 +396,7 @@ ui_tab5 <- function() {
                      choices = c("Español" = "es", "English" = "en"), 
                      selected = "es"),
         dateRangeInput("date_range_input_tab5", "Período del tiempo / Time period:",
-                       start = "2025-06-16", end = Sys.Date(), separator = " a ")
+                       start = "2026-01-18", end = Sys.Date(), separator = " a ")
       ),
       
       mainPanel(
@@ -434,7 +434,7 @@ ui_tab5b <- function() {
                      choices = c("Español" = "es", "English" = "en"), 
                      selected = "es"),
         dateRangeInput("date_range_tab5b", "Período del tiempo / Time period:",
-                       start = "2025-06-16", end = Sys.Date(), separator = " a "),
+                       start = "2026-01-18", end = Sys.Date(), separator = " a "),
         selectInput("pathogen_tab5b",
                     "Selecciona Patógeno / Select Pathogen:",
                     choices = c(
