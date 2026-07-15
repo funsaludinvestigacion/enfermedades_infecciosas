@@ -14,7 +14,6 @@ library(patchwork)
 library(scales)
 library(htmltools)
 library(tibble)
-library(forcats)
 
 # Load dataframes -----------------------------------------------------------------------
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
