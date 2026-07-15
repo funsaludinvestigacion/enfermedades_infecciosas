@@ -19,7 +19,7 @@ library(plotly)
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
-vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
+#vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
 resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
@@ -443,7 +443,9 @@ ui_tab5b <- function() {
                       "Influenza A&B"  = "flu_gen",
                       "SARS-CoV-2"     = "scv2",
                       "RSV"            = "rsv",
-                      "ARI"            = "ili"
+                      "ARI"            = "ili",
+                      "Dengue"         = "deng",
+                      "ALI"            = "ali"
                     ),
                     selected = "flua")
       ),
@@ -459,6 +461,9 @@ ui_tab5b <- function() {
         br(),
         uiOutput("tab5b_age_incidence_title"),
         plotlyOutput("age_incidence_plot_tab5b", height = "400px"),
+        br(),
+        uiOutput("tab5b_municipio_incidence_title"),
+        plotlyOutput("municipio_incidence_plot_tab5b", height = "400px"),
         br()
       )
     )
@@ -1562,7 +1567,9 @@ server <- function(input, output) {
       "flub_inc_roll"    = "#984EA3",
       "scv2_inc_roll"    = "#377EB8",
       "rsv_inc_roll"     = "#4DAF4A",
-      "ili_inc_roll"     = "#A65628"
+      "ili_inc_roll"     = "#A65628",
+      "deng_inc_roll"    = "#F781BF",   
+      "ali_inc_roll"     = "#999999"   
     )
     
     label_map <- c(
@@ -1571,14 +1578,18 @@ server <- function(input, output) {
       "flub_inc_roll"    = "Influenza B",
       "scv2_inc_roll"    = "SARS-CoV-2",
       "rsv_inc_roll"     = "RSV",
-      "ili_inc_roll"     = "ARI"
+      "ili_inc_roll"     = "ARI",
+      "deng_inc_roll"    = "Dengue",     # new
+      "ali_inc_roll"     = "ALI"         # new
     )
     
     pathogens_to_plot <- c("flu_gen_inc_roll", "flua_inc_roll", "flub_inc_roll",
-                           "scv2_inc_roll", "rsv_inc_roll", "ili_inc_roll")
+                           "scv2_inc_roll", "rsv_inc_roll", "ili_inc_roll",
+                           "deng_inc_roll", "ali_inc_roll")               # added
     
     plot_data <- filtered_data %>%
       select(week_start, surveilled, inf_a_pos, inf_b_pos, sars_cov2_pos, vsr_pos, tested,
+             pcr_pos, igm_pos, ns1_pos, total_tested_deng,                # added
              all_of(pathogens_to_plot)) %>%
       pivot_longer(
         cols      = all_of(pathogens_to_plot),
@@ -1594,7 +1605,13 @@ server <- function(input, output) {
           pathogen == "scv2_inc_roll"    ~ sars_cov2_pos,
           pathogen == "rsv_inc_roll"     ~ vsr_pos,
           pathogen == "ili_inc_roll"     ~ tested,
+          pathogen == "deng_inc_roll"    ~ pcr_pos + igm_pos + ns1_pos,
+          pathogen == "ali_inc_roll"     ~ total_tested_deng,
           TRUE                           ~ NA_real_
+        ),
+        denom_label = case_when(
+          pathogen == "ali_inc_roll" ~ if (es) "ALI (muestreados):" else "ALI (tested): ",
+          TRUE ~ if (es) "ARI (muestreados): " else "ARI (tested):"
         ),
         week_start_chr = as.character(week_start),
         hover_text = paste0(
@@ -1602,7 +1619,7 @@ server <- function(input, output) {
           if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
           if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_value, 2), "<br>",
           if (es) "Pruebas Positivas: " else "Positive Tests: ", pos_count, "<br>",
-          if (es) "ARI (muestreados): " else "ARI (tested): ", tested, "<br>",
+          denom_label, ifelse(pathogen == "ali_inc_roll", total_tested_deng, tested), "<br>",
           if (es) "Vigilados: " else "Surveilled: ", surveilled
         )
       )
@@ -1611,7 +1628,7 @@ server <- function(input, output) {
     
     for (path in pathogens_to_plot) {
       df_path    <- plot_data %>% dplyr::filter(pathogen == path)
-      line_style <- if (path == "ili_inc_roll") "dash" else "solid"
+      line_style <- if (path %in% c("ili_inc_roll", "ali_inc_roll")) "dash" else "solid"  # both dashed
       
       p <- p %>%
         add_trace(
@@ -1652,7 +1669,6 @@ server <- function(input, output) {
         paper_bgcolor = "white"
       )
   })  # closes inc_plot_tab5
-  
   # Tab 5 - stacked plot ------------------------------------------------------
   output$stacked_plot_tab5 <- renderPlotly({
     es <- input$language_VCasa == "es"
@@ -1764,64 +1780,10 @@ server <- function(input, output) {
         paper_bgcolor = "white"
       )
   })  # closes stacked_plot_tab5
-  
-  output$dengue_plot_tab5 <- renderPlot({
-    
-    full_weeks <- vigicasa_summary %>%
-      dplyr::filter(source == "Deng") %>%
-      distinct(week_start, epiweek, year) %>%
-      arrange(week_start) %>%
-      dplyr::filter(
-        week_start >= input$date_range_input_tab5[1],
-        week_start <= input$date_range_input_tab5[2]
-      ) %>%
-      mutate(epiweek_label = factor(paste(year, epiweek, sep = "-")))
-    
-    filtered_data <- vigicasa_summary %>%
-      dplyr::filter(
-        source == "Deng",
-        week_start >= input$date_range_input_tab5[1],
-        week_start <= input$date_range_input_tab5[2]
-      )
-    
-    test_column <- case_when(
-      input$dengue_test_type_tab5 == "NS1" ~ "ns1_pos",
-      input$dengue_test_type_tab5 == "IgM" ~ "igm_pos",
-      input$dengue_test_type_tab5 == "IgG" ~ "igg_pos"
-    )
-    
-    if (nrow(full_weeks) == 0) {
-      return(ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection"))
-    }
-    
-    filtered_data <- filtered_data %>%
-      mutate(total_pos_dengue = .data[[test_column]]) %>%
-      select(week_start, epiweek, year, total_pos_dengue, total_tested)
-    
-    full_data <- full_weeks %>%
-      left_join(filtered_data, by = c("week_start", "epiweek", "year")) %>%
-      mutate(
-        total_pos_dengue = replace_na(total_pos_dengue, 0),
-        total_tested     = replace_na(total_tested, 0),
-        epiweek_label    = factor(paste(year, epiweek, sep = "-"), levels = full_weeks$epiweek_label)
-      )
-    
-    ggplot(full_data, aes(x = epiweek_label)) +
-      geom_bar(aes(y = total_tested,     fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
-      geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"),   stat = "identity") +
-      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
-      scale_y_continuous(breaks = scales::pretty_breaks(n = 10), labels = scales::label_number(accuracy = 1)) +
-      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
-      theme_minimal() +
-      theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank()
-      )
-  })  # closes dengue_plot_tab5
-  
-  
+  # --------------------------------------------------------------------------
+  #                        TAB 5b - PATHOGEN DEEP DIVE
+  # --------------------------------------------------------------------------
+
   # --------------------------------------------------------------------------
   #                        TAB 5b - PATHOGEN DEEP DIVE
   # --------------------------------------------------------------------------
@@ -1833,7 +1795,9 @@ server <- function(input, output) {
            "flu_gen" = NULL,
            "scv2"    = "sars_cov2_pos",
            "rsv"     = "vsr_pos",
-           "ili"     = "tested"
+           "ili"     = "tested",
+           "deng"    = NULL,   # dengue positives are pcr_pos + igm_pos + ns1_pos, no single column
+           "ali"     = NULL    # ALI count comes from total_tested_deng, no single column
     )
   }
   
@@ -1844,7 +1808,9 @@ server <- function(input, output) {
            "flu_gen" = NULL,
            "scv2"    = "sars_cov2_neg",
            "rsv"     = "vsr_neg",
-           "ili"     = NULL
+           "ili"     = NULL,
+           "deng"    = NULL,
+           "ali"     = NULL
     )
   }
   
@@ -1855,7 +1821,9 @@ server <- function(input, output) {
            "flu_gen" = "flu_gen_inc_roll",
            "scv2"    = "scv2_inc_roll",
            "rsv"     = "rsv_inc_roll",
-           "ili"     = "ili_inc_roll"
+           "ili"     = "ili_inc_roll",
+           "deng"    = "deng_inc_roll",
+           "ali"     = "ali_inc_roll"
     )
   }
   
@@ -1866,13 +1834,15 @@ server <- function(input, output) {
            "flu_gen" = "flu_gen_inc",
            "scv2"    = "scv2_inc",
            "rsv"     = "rsv_inc",
-           "ili"     = "ili_inc"
+           "ili"     = "ili_inc",
+           "deng"    = "deng_inc",
+           "ali"     = "ali_inc"
     )
   }
   
   pathogen_label <- function(p, es) {
     labels <- c(flua = "Influenza A", flub = "Influenza B", flu_gen = "Influenza A&B",
-                scv2 = "SARS-CoV-2", rsv = "RSV", ili = "ARI")
+                scv2 = "SARS-CoV-2", rsv = "RSV", ili = "ARI", deng = "Dengue", ali = "ALI")
     labels[[p]]
   }
   
@@ -1882,7 +1852,9 @@ server <- function(input, output) {
     flu_gen = "#E41A1C",
     scv2    = "#377EB8",
     rsv     = "#4DAF4A",
-    ili     = "#A65628"
+    ili     = "#A65628",
+    deng    = "#F781BF",
+    ali     = "#999999"
   )
   
   filtered_tab5b <- reactive({
@@ -1941,9 +1913,12 @@ server <- function(input, output) {
           p_key == "flub"    ~ inf_b_pos,
           p_key == "scv2"    ~ sars_cov2_pos,
           p_key == "rsv"     ~ vsr_pos,
+          p_key == "deng"    ~ pcr_pos + igm_pos + ns1_pos,
+          p_key == "ali"     ~ total_tested_deng,
           TRUE               ~ tested
         ),
-        total_tested_path = tested,   # always use total tested as background bar
+        # Dengue and ALI are tested/counted via a different sample/denominator than the respiratory panel
+        total_tested_path = if (p_key %in% c("deng", "ali")) total_tested_deng else tested,
         hover_tested = paste0(
           "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
           "<b>", if (es) "Total Muestreados:" else "Total Tested:", "</b> ", total_tested_path
@@ -2002,25 +1977,38 @@ server <- function(input, output) {
       return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
     }
     
+    if (!(col_roll %in% names(d))) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- datos aún no disponibles") else paste(label, "- data not yet available")))
+    }
+    
+    has_raw <- col_raw %in% names(d)
+    
     d <- d %>%
       mutate(
         inc_roll   = .data[[col_roll]],
-        inc_raw    = .data[[col_raw]],
         hover_roll = paste0(
           "<b>", label, " — ", if (es) "promedio móvil" else "rolling avg", "</b><br>",
           if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
           if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_roll, 2), "<br>",
           if (es) "Vigilados: " else "Surveilled: ", surveilled
-        ),
-        hover_raw  = paste0(
-          "<b>", label, " — ", if (es) "semanal" else "weekly", "</b><br>",
-          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
-          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_raw, 2), "<br>",
-          if (es) "Vigilados: " else "Surveilled: ", surveilled
         )
       )
     
-    plot_ly(d, x = ~week_start) %>%
+    if (has_raw) {
+      d <- d %>%
+        mutate(
+          inc_raw   = .data[[col_raw]],
+          hover_raw = paste0(
+            "<b>", label, " — ", if (es) "semanal" else "weekly", "</b><br>",
+            if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+            if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_raw, 2), "<br>",
+            if (es) "Vigilados: " else "Surveilled: ", surveilled
+          )
+        )
+    }
+    
+    p <- plot_ly(d, x = ~week_start) %>%
       add_trace(
         y         = ~inc_roll,
         type      = "scatter",
@@ -2030,17 +2018,23 @@ server <- function(input, output) {
         marker    = list(color = color, size = 5),
         text      = ~hover_roll,
         hoverinfo = "text"
-      ) %>%
-      add_trace(
-        y         = ~inc_raw,
-        type      = "scatter",
-        mode      = "lines+markers",
-        name      = if (es) paste(label, "— semanal") else paste(label, "— weekly"),
-        line      = list(color = color, width = 2, dash = "dash"),
-        marker    = list(color = color, size = 5, symbol = "circle-open"),
-        text      = ~hover_raw,
-        hoverinfo = "text"
-      ) %>%
+      )
+    
+    if (has_raw) {
+      p <- p %>%
+        add_trace(
+          y         = ~inc_raw,
+          type      = "scatter",
+          mode      = "lines+markers",
+          name      = if (es) paste(label, "— semanal") else paste(label, "— weekly"),
+          line      = list(color = color, width = 2, dash = "dash"),
+          marker    = list(color = color, size = 5, symbol = "circle-open"),
+          text      = ~hover_raw,
+          hoverinfo = "text"
+        )
+    }
+    
+    p %>%
       layout(
         xaxis         = list(
           title     = if (es) "Semana (inicio domingo)" else "Week (starting Sunday)",
@@ -2080,6 +2074,14 @@ server <- function(input, output) {
     label    <- pathogen_label(p_key, es)
     col_roll <- pathogen_inc_roll_col(p_key)   # reuses your existing helper
     col_raw  <- pathogen_inc_col(p_key)        # reuses your existing helper
+    
+    # Dengue (and any future pathogen) may not have age-stratified data yet.
+    # Once deng_inc_roll / deng_inc columns are added to resp_incidence_age,
+    # this chart will pick them up automatically with no code changes needed.
+    if (!(col_roll %in% names(resp_incidence_age)) || !(col_raw %in% names(resp_incidence_age))) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- datos por edad aún no disponibles") else paste(label, "- age-stratified data not yet available")))
+    }
     
     d <- resp_incidence_age %>%
       filter(
@@ -2147,6 +2149,97 @@ server <- function(input, output) {
     )
   })
   
+  output$tab5b_municipio_incidence_title <- renderUI({
+    es    <- input$language_tab5b == "es"
+    label <- pathogen_label(input$pathogen_tab5b, es)
+    tags$h3(
+      if (es) paste("Incidencia por Municipio —", label)
+      else paste("Incidence by Municipality —",   label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$municipio_incidence_plot_tab5b <- renderPlotly({
+    es       <- input$language_tab5b == "es"
+    p_key    <- input$pathogen_tab5b
+    label    <- pathogen_label(p_key, es)
+    col_roll <- pathogen_inc_roll_col(p_key)
+    
+    # Dengue (and any future pathogen) may not have municipio-stratified data yet.
+    # Once deng_inc_roll is added to resp_incidence_municipio, this chart will
+    # pick it up automatically with no code changes needed.
+    if (!(col_roll %in% names(resp_incidence_municipio))) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- datos por municipio aún no disponibles") else paste(label, "- municipality-stratified data not yet available")))
+    }
+    
+    d <- resp_incidence_municipio %>%
+      filter(
+        week_start >= input$date_range_tab5b[1],
+        week_start <= input$date_range_tab5b[2]
+      ) %>%
+      mutate(
+        inc_roll       = .data[[col_roll]],
+        week_start_chr = as.character(week_start)
+      )
+    
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>%
+               layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    
+    # Colors assigned dynamically so this works regardless of the actual
+    # muni values/count in the data
+    municipio_levels  <- sort(unique(d$muni))
+    municipio_palette <- setNames(
+      c("#1B9E77", "#D95F02", "#7570B3")[seq_along(municipio_levels)],
+      municipio_levels
+    )
+    
+    p <- plot_ly()
+    
+    for (mun in municipio_levels) {
+      d_mun <- filter(d, muni == mun)
+      color <- municipio_palette[[mun]]
+      
+      if (nrow(d_mun) == 0) next
+      
+      p <- p %>%
+        add_trace(
+          data        = d_mun,
+          x           = ~week_start,
+          y           = ~inc_roll,
+          type        = "scatter",
+          mode        = "lines+markers",
+          name        = mun,
+          legendgroup = mun,
+          line        = list(color = color, width = 2, dash = "solid"),
+          marker      = list(color = color, size = 4),
+          text        = ~paste0(
+            "<b>", label, " | ", mun, "</b><br>",
+            if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+            if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ",
+            round(inc_roll, 2), "<br>",
+            if (es) "Vigilados: " else "Surveilled: ", surveilled
+          ),
+          hoverinfo   = "text"
+        )
+    }
+    
+    p %>% layout(
+      xaxis         = list(
+        title     = if (es) "Semana (inicio domingo)" else "Week (starting Sunday)",
+        tickangle = -45,
+        tickfont  = list(size = 10)
+      ),
+      yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
+      legend        = list(orientation = "h", x = 0, y = -0.3),
+      hovermode     = "closest",
+      margin        = list(b = 100),
+      plot_bgcolor  = "white",
+      paper_bgcolor = "white"
+    )
+  })
   # --------------------------------------------------------------------------
   #                             VIGIFINCA
   # --------------------------------------------------------------------------
