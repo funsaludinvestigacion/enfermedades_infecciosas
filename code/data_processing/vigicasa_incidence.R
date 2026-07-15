@@ -49,7 +49,8 @@ table(realizada$departamento)
 realizada_IDs <- unique(realizada$record_id)
 
 
-
+q <- realizada %>% filter(edad > 64) %>% group_by(record_id)%>% summarise(recent = max(fecha_vigilancia))
+table(q$record_id)
 
 ##### tested
 
@@ -202,8 +203,7 @@ surv_age_week <- realizada_age %>%
 # ── 2. Tested & positive counts by week & age group ────────────────────────
 resp_results_age <- vigicasa %>%
   filter(
-    !is.na(f_muestra) &
-      if_any(starts_with("virus_detectado___"), ~ .x %in% 1)
+    !is.na(f_muestra) 
   ) %>%
   mutate(
     week_start  = floor_date(f_muestra, unit = "week", week_start = 7),
@@ -213,8 +213,9 @@ resp_results_age <- vigicasa %>%
     year        = year(f_muestra)
   )
 
+# ── 2. Weekly counts by age group (with zero-filled age × week combos) ──────
 resp_weekly_age <- resp_results_age %>%
-  group_by(year, week_start, age_grp) %>%
+  group_by(week_start, age_grp) %>%
   summarise(
     total_tested    = n_distinct(record_id),
     sars_cov2_pos   = sum(virus_detectado___4 == 1, na.rm = TRUE),
@@ -224,7 +225,21 @@ resp_weekly_age <- resp_results_age %>%
     inf_a_h1n1      = sum(subtipo_infa == "H1N1",   na.rm = TRUE),
     inf_a_h3n2      = sum(subtipo_infa == "H3N2",   na.rm = TRUE),
     .groups = "drop"
-  )
+  ) %>%
+  complete(
+    week_start, age_grp,
+    fill = list(
+      total_tested  = 0,
+      sars_cov2_pos = 0,
+      inf_a_pos     = 0,
+      inf_b_pos     = 0,
+      vsr_pos       = 0,
+      inf_a_h1n1    = 0,
+      inf_a_h3n2    = 0
+    )
+  ) %>%
+  mutate(year = lubridate::year(week_start)) %>%
+  relocate(year, .before = week_start)
 
 # ── 3. Tested persons per week & age group (denominator for ILI rate) ───────
 tested_age_week <- vigicasa %>%
@@ -238,8 +253,56 @@ tested_age_week <- vigicasa %>%
   group_by(record_id, week_start, age_grp) %>%
   summarise(tests = n(), .groups = "drop") %>%
   group_by(week_start, age_grp) %>%
-  summarise(tested = n(), .groups = "drop")
+  summarise(tested = n(), .groups = "drop") %>%
+  complete(
+    week_start, age_grp,
+    fill = list(tested = 0)
+  )
+# ── 2. Weekly counts by age group (with zero-filled age × week combos) ──────
+resp_weekly_age <- resp_results_age %>%
+  group_by(week_start, age_grp) %>%
+  summarise(
+    total_tested    = n_distinct(record_id),
+    sars_cov2_pos   = sum(virus_detectado___4 == 1, na.rm = TRUE),
+    inf_a_pos       = sum(virus_detectado___2 == 1, na.rm = TRUE),
+    inf_b_pos       = sum(virus_detectado___3 == 1, na.rm = TRUE),
+    vsr_pos         = sum(virus_detectado___5 == 1, na.rm = TRUE),
+    inf_a_h1n1      = sum(subtipo_infa == "H1N1",   na.rm = TRUE),
+    inf_a_h3n2      = sum(subtipo_infa == "H3N2",   na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  complete(
+    week_start, age_grp,
+    fill = list(
+      total_tested  = 0,
+      sars_cov2_pos = 0,
+      inf_a_pos     = 0,
+      inf_b_pos     = 0,
+      vsr_pos       = 0,
+      inf_a_h1n1    = 0,
+      inf_a_h3n2    = 0
+    )
+  ) %>%
+  mutate(year = lubridate::year(week_start)) %>%
+  relocate(year, .before = week_start)
 
+# ── 3. Tested persons per week & age group (denominator for ILI rate) ───────
+tested_age_week <- vigicasa %>%
+  filter(!is.na(f_muestra)) %>%
+  mutate(
+    week_start = floor_date(f_muestra, unit = "week", week_start = 7),
+    age        = floor(interval(start = f_nacimiento, end = f_muestra) / years(1)),
+    age_grp    = cut(age, breaks = age_breaks, labels = age_labels,
+                     right = FALSE, include.lowest = TRUE)
+  ) %>%
+  group_by(record_id, week_start, age_grp) %>%
+  summarise(tests = n(), .groups = "drop") %>%
+  group_by(week_start, age_grp) %>%
+  summarise(tested = n(), .groups = "drop") %>%
+  complete(
+    week_start, age_grp,
+    fill = list(tested = 0)
+  )
 # ── 4. Join numerators + denominators ───────────────────────────────────────
 resp_incidence_age <- resp_weekly_age %>%
   left_join(surv_age_week,   by = c("week_start", "age_grp")) %>%
@@ -458,7 +521,7 @@ resp_incidence_muni$muni <- ifelse(resp_incidence_muni$municipio_recent == 1, "C
 
 resp_incidence_municipio  <- resp_incidence_muni 
 
-write.csv(resp_incidence_muni, "/docs/resp_incidence_muni.csv")
+write.csv(resp_incidence_muni, "docs/resp_incidence_muni.csv")
 
 ##### tested dengue 
 
@@ -565,7 +628,6 @@ resp_incidence_w <- resp_incidence_w %>%
 
 resp_incidence_w <- resp_incidence_w %>% filter(week_start > "2026-01-17")
 write.csv(resp_incidence_w, "docs/vigicasa_resp_weekly.csv")
-
 
 
 
