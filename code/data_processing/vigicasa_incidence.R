@@ -458,7 +458,7 @@ resp_incidence_muni$muni <- ifelse(resp_incidence_muni$municipio_recent == 1, "C
 
 resp_incidence_municipio  <- resp_incidence_muni 
 
-write.csv(resp_incidence_muni, "resp_incidence_muni.csv")
+write.csv(resp_incidence_muni, "/docs/resp_incidence_muni.csv")
 
 ##### tested dengue 
 

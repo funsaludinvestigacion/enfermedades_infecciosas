@@ -1,25 +1,27 @@
 #comentario
 #library(shiny) #keep commented for app to be deployed on R Shiny
-library(bslib)
-library(ggplot2)
-library(ggrepel)
+library(shiny)
 library(dplyr)
-library(shinythemes)
-library(reactable)
 library(tidyr)
-library(patchwork)
-library(DT)
-library(stringr)
-library(lubridate)
-library(sf)
-library(leaflet)
+library(ggplot2)
 library(plotly)
+library(DT)
+library(reactable)
+library(leaflet)
+library(shinythemes)
+library(lubridate)
+library(patchwork)
+library(scales)
+library(htmltools)
+library(tibble)
+library(forcats)
 
 # Load dataframes -----------------------------------------------------------------------
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
-#vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
+vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
+resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
 resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
@@ -1443,6 +1445,9 @@ server <- function(input, output) {
   # --------------------------------------------------------------------------
   #                             VIGICASA
   # --------------------------------------------------------------------------
+  # --------------------------------------------------------------------------
+  #                             VIGICASA
+  # --------------------------------------------------------------------------
   output$info_VCasa_text <- renderText({
     if (input$language_VCasa == "es") {
       Info_VCasa
@@ -1780,10 +1785,7 @@ server <- function(input, output) {
         paper_bgcolor = "white"
       )
   })  # closes stacked_plot_tab5
-  # --------------------------------------------------------------------------
-  #                        TAB 5b - PATHOGEN DEEP DIVE
-  # --------------------------------------------------------------------------
-
+  
   # --------------------------------------------------------------------------
   #                        TAB 5b - PATHOGEN DEEP DIVE
   # --------------------------------------------------------------------------
@@ -1856,6 +1858,21 @@ server <- function(input, output) {
     deng    = "#F781BF",
     ali     = "#999999"
   )
+  
+  # Maps municipio_recent codes to display names.
+  # EDIT THE NAMES BELOW to match your actual municipios.
+  # If municipio_recent uses different codes than 1/2/3, update the names() here to match.
+  municipio_label_map <- c(
+    "1" = "Municipio 1",
+    "2" = "Municipio 2",
+    "3" = "Municipio 3"
+  )
+  
+  municipio_label <- function(code) {
+    code_chr <- as.character(code)
+    label <- municipio_label_map[[code_chr]]
+    if (is.null(label)) code_chr else label   # fall back to raw code if not mapped
+  }
   
   filtered_tab5b <- reactive({
     vigicasa_inc %>%
@@ -2189,8 +2206,8 @@ server <- function(input, output) {
     }
     
     # Colors assigned dynamically so this works regardless of the actual
-    # muni values/count in the data
-    municipio_levels  <- sort(unique(d$muni))
+    # municipio_recent values/count in the data
+    municipio_levels  <- sort(unique(d$municipio_recent))
     municipio_palette <- setNames(
       c("#1B9E77", "#D95F02", "#7570B3")[seq_along(municipio_levels)],
       municipio_levels
@@ -2199,8 +2216,9 @@ server <- function(input, output) {
     p <- plot_ly()
     
     for (mun in municipio_levels) {
-      d_mun <- filter(d, muni == mun)
-      color <- municipio_palette[[mun]]
+      d_mun     <- filter(d, municipio_recent == mun)
+      color     <- municipio_palette[[mun]]
+      mun_label <- municipio_label(mun)
       
       if (nrow(d_mun) == 0) next
       
@@ -2211,12 +2229,12 @@ server <- function(input, output) {
           y           = ~inc_roll,
           type        = "scatter",
           mode        = "lines+markers",
-          name        = mun,
+          name        = mun_label,
           legendgroup = mun,
           line        = list(color = color, width = 2, dash = "solid"),
           marker      = list(color = color, size = 4),
           text        = ~paste0(
-            "<b>", label, " | ", mun, "</b><br>",
+            "<b>", label, " | ", mun_label, "</b><br>",
             if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
             if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ",
             round(inc_roll, 2), "<br>",
@@ -2240,6 +2258,8 @@ server <- function(input, output) {
       paper_bgcolor = "white"
     )
   })
+  
+  
   # --------------------------------------------------------------------------
   #                             VIGIFINCA
   # --------------------------------------------------------------------------
