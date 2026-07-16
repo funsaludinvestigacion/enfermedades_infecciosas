@@ -19,6 +19,7 @@ rsconnect::deployApp('code/', forceUpdate = TRUE, launch.browser = FALSE)
 # Restart app (fixes timeout error)
 rsconnect::restartApp('code')
 
+
 # ----------------------------------------------------------
 # Using Github (extremely slow)
 
