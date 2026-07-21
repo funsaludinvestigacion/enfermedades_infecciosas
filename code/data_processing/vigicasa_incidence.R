@@ -515,9 +515,6 @@ resp_incidence_muni <- resp_incidence_muni %>%
 
 resp_incidence_muni <- resp_incidence_muni %>% filter(as.Date(week_start) > "2026-01-17")
 
-resp_incidence_muni$muni <- ifelse(resp_incidence_muni$municipio_recent == 1, "Coatepeque", 
-                                   ifelse(resp_incidence_muni$municipio_recent == 2, "La Blanca",
-                                          ifelse(resp_incidence_muni$municipio_recent == 3, "Caballo Blanco - (Valle Lirio)", "Otro")))
 
 write.csv(resp_incidence_muni, "docs/resp_incidence_muni.csv")
 
@@ -628,4 +625,242 @@ resp_incidence_w <- resp_incidence_w %>% filter(week_start > "2026-01-17")
 write.csv(resp_incidence_w, "docs/vigicasa_resp_weekly.csv")
 
 
+##### Dengue results by age group #####
 
+deng_tests_age_week <- vigicasa %>%
+  filter(!is.na(fech_tom)) %>%
+  mutate(
+    week_start = floor_date(fech_tom, unit = "week", week_start = 7),
+    age        = floor(interval(start = f_nacimiento, end = fech_tom) / years(1)),
+    age_grp    = cut(age, breaks = age_breaks, labels = age_labels,
+                     right = FALSE, include.lowest = TRUE)
+  ) %>%
+  group_by(record_id, week_start, age_grp) %>%
+  summarise(tests = n(), .groups = "drop") %>%
+  group_by(week_start, age_grp) %>%
+  summarise(tested_deng = n(), .groups = "drop") %>%
+  complete(week_start, age_grp, fill = list(tested_deng = 0))
+
+deng_results_age <- vigicasa %>%
+  filter(!is.na(fech_tom)) %>%
+  mutate(
+    week_start = floor_date(fech_tom, unit = "week", week_start = 7),
+    age        = floor(interval(start = f_nacimiento, end = fech_tom) / years(1)),
+    age_grp    = cut(age, breaks = age_breaks, labels = age_labels,
+                     right = FALSE, include.lowest = TRUE),
+    year       = year(fech_tom)
+  ) %>%
+  group_by(record_id, year, week_start, age_grp, fech_tom) %>%
+  summarize(
+    total_tested       = n_distinct(record_id),
+    ns1_pos            = n_distinct(record_id[p_ns1 == 1], na.rm = TRUE),
+    ns1_neg            = n_distinct(record_id[p_ns1 == 2], na.rm = TRUE),
+    igg_pos            = n_distinct(record_id[p_igg == 1], na.rm = TRUE),
+    igg_neg            = n_distinct(record_id[p_igg == 2], na.rm = TRUE),
+    igm_pos            = n_distinct(record_id[p_igm == 1], na.rm = TRUE),
+    igm_neg            = n_distinct(record_id[p_igm == 2], na.rm = TRUE),
+    pcr_pos            = n_distinct(record_id[p_pcr == 1], na.rm = TRUE),
+    pcr_neg            = n_distinct(record_id[p_pcr == 2], na.rm = TRUE),
+    serot_dengue_1_pos = n_distinct(record_id[serot_dengue == 1], na.rm = TRUE),
+    serot_dengue_2_pos = n_distinct(record_id[serot_dengue == 2], na.rm = TRUE),
+    serot_dengue_3_pos = n_distinct(record_id[serot_dengue == 3], na.rm = TRUE),
+    serot_dengue_4_pos = n_distinct(record_id[serot_dengue == 4], na.rm = TRUE),
+    serot_dengue_na    = n_distinct(record_id[serot_dengue == 5], na.rm = TRUE),
+    concl_dengue       = n_distinct(record_id[conclusi_n_caso == 1], na.rm = TRUE),
+    concl_dengue_sin   = n_distinct(record_id[tip_dengue == 1], na.rm = TRUE),
+    concl_dengue_con   = n_distinct(record_id[tip_dengue == 2], na.rm = TRUE),
+    concl_dengue_grave = n_distinct(record_id[tip_dengue == 3], na.rm = TRUE),
+    .groups = "drop"
+  )
+
+deng_results_age_weekly <- deng_results_age %>%
+  group_by(year, week_start, age_grp) %>%
+  summarise(
+    total_tested_deng  = sum(total_tested),
+    ns1_pos            = sum(ns1_pos),
+    ns1_neg            = sum(ns1_neg),
+    igg_pos            = sum(igg_pos),
+    igg_neg            = sum(igg_neg),
+    igm_pos            = sum(igm_pos),
+    igm_neg            = sum(igm_neg),
+    pcr_pos            = sum(pcr_pos),
+    pcr_neg            = sum(pcr_neg),
+    serot_dengue_1_pos = sum(serot_dengue_1_pos),
+    serot_dengue_2_pos = sum(serot_dengue_2_pos),
+    serot_dengue_3_pos = sum(serot_dengue_3_pos),
+    serot_dengue_4_pos = sum(serot_dengue_4_pos),
+    concl_dengue       = sum(concl_dengue),
+    concl_dengue_sin   = sum(concl_dengue_sin),
+    concl_dengue_con   = sum(concl_dengue_con),
+    concl_dengue_grave = sum(concl_dengue_grave),
+    .groups = "drop"
+  ) %>%
+  complete(
+    week_start, age_grp,
+    fill = list(
+      total_tested_deng = 0, ns1_pos = 0, ns1_neg = 0, igg_pos = 0, igg_neg = 0,
+      igm_pos = 0, igm_neg = 0, pcr_pos = 0, pcr_neg = 0,
+      serot_dengue_1_pos = 0, serot_dengue_2_pos = 0,
+      serot_dengue_3_pos = 0, serot_dengue_4_pos = 0,
+      concl_dengue = 0, concl_dengue_sin = 0, concl_dengue_con = 0, concl_dengue_grave = 0
+    )
+  )
+
+# join to age-group surveillance denominator (surv_age_week already built above)
+deng_incidence_age <- deng_results_age_weekly %>%
+  left_join(surv_age_week,      by = c("week_start", "age_grp")) %>%
+  left_join(deng_tests_age_week, by = c("week_start", "age_grp")) %>%
+  mutate(
+    ali_inc  = 1000 * tested_deng / surveilled,
+    deng_inc = 1000 * igm_pos     / surveilled
+  ) %>%
+  arrange(age_grp, week_start) %>%
+  group_by(age_grp) %>%
+  mutate(
+    surveilled_roll  = rollsum(surveilled,  k = 3, fill = NA),
+    tested_deng_roll = rollsum(tested_deng, k = 3, fill = NA),
+    deng_roll        = rollsum(igm_pos,     k = 3, fill = NA),
+    ali_inc_roll     = 1000 * tested_deng_roll / surveilled_roll,
+    deng_inc_roll    = 1000 * deng_roll        / surveilled_roll
+  ) %>%
+  ungroup() %>%
+  rename(ali = tested_deng, surveilled_deng = surveilled)
+
+# merge into resp_incidence_age
+resp_incidence_age <- resp_incidence_age %>%
+  left_join(
+    deng_incidence_age %>%
+      dplyr::select(week_start, age_grp, total_tested_deng, pcr_pos, igm_pos, ns1_pos,
+                    ali, ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll),
+    by = c("week_start", "age_grp")
+  )
+
+resp_incidence_age <- resp_incidence_age %>%
+  select(
+    age_grp, week_start, surveilled, tested,
+    inf_a_pos, inf_b_pos, sars_cov2_pos, vsr_pos, inf_a_h1n1, inf_a_h3n2,
+    ili_inc,     ili_inc_roll,
+    flu_gen_inc, flu_gen_inc_roll,
+    flua_inc,    flua_inc_roll,
+    flub_inc,    flub_inc_roll,
+    scv2_inc,    scv2_inc_roll,
+    rsv_inc,     rsv_inc_roll,
+    h1n1_inc,    h1n1_inc_roll,
+    h3n2_inc,    h3n2_inc_roll,
+    total_tested_deng, pcr_pos, igm_pos, ns1_pos, ali,
+    ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll
+  )
+
+write.csv(resp_incidence_age, "docs/resp_incidence_age.csv")
+
+
+##### Dengue results by municipio #####
+
+deng_tests_muni_week <- vigicasa2 %>%
+  filter(!is.na(fech_tom)) %>%
+  mutate(week_start = floor_date(fech_tom, unit = "week", week_start = 7)) %>%
+  group_by(record_id, week_start, municipio_recent) %>%
+  summarise(tests = n(), .groups = "drop") %>%
+  group_by(week_start, municipio_recent) %>%
+  summarise(tested_deng = n(), .groups = "drop")
+
+deng_results_muni <- vigicasa2 %>%
+  filter(!is.na(fech_tom)) %>%
+  mutate(
+    week_start = floor_date(fech_tom, unit = "week", week_start = 7),
+    year       = year(fech_tom)
+  ) %>%
+  group_by(record_id, year, week_start, municipio_recent, fech_tom) %>%
+  summarize(
+    total_tested       = n_distinct(record_id),
+    ns1_pos            = n_distinct(record_id[p_ns1 == 1], na.rm = TRUE),
+    ns1_neg            = n_distinct(record_id[p_ns1 == 2], na.rm = TRUE),
+    igg_pos            = n_distinct(record_id[p_igg == 1], na.rm = TRUE),
+    igg_neg            = n_distinct(record_id[p_igg == 2], na.rm = TRUE),
+    igm_pos            = n_distinct(record_id[p_igm == 1], na.rm = TRUE),
+    igm_neg            = n_distinct(record_id[p_igm == 2], na.rm = TRUE),
+    pcr_pos            = n_distinct(record_id[p_pcr == 1], na.rm = TRUE),
+    pcr_neg            = n_distinct(record_id[p_pcr == 2], na.rm = TRUE),
+    serot_dengue_1_pos = n_distinct(record_id[serot_dengue == 1], na.rm = TRUE),
+    serot_dengue_2_pos = n_distinct(record_id[serot_dengue == 2], na.rm = TRUE),
+    serot_dengue_3_pos = n_distinct(record_id[serot_dengue == 3], na.rm = TRUE),
+    serot_dengue_4_pos = n_distinct(record_id[serot_dengue == 4], na.rm = TRUE),
+    serot_dengue_na    = n_distinct(record_id[serot_dengue == 5], na.rm = TRUE),
+    concl_dengue       = n_distinct(record_id[conclusi_n_caso == 1], na.rm = TRUE),
+    concl_dengue_sin   = n_distinct(record_id[tip_dengue == 1], na.rm = TRUE),
+    concl_dengue_con   = n_distinct(record_id[tip_dengue == 2], na.rm = TRUE),
+    concl_dengue_grave = n_distinct(record_id[tip_dengue == 3], na.rm = TRUE),
+    .groups = "drop"
+  )
+
+deng_results_muni_weekly <- deng_results_muni %>%
+  group_by(year, week_start, municipio_recent) %>%
+  summarise(
+    total_tested_deng  = sum(total_tested),
+    ns1_pos            = sum(ns1_pos),
+    ns1_neg            = sum(ns1_neg),
+    igg_pos            = sum(igg_pos),
+    igg_neg            = sum(igg_neg),
+    igm_pos            = sum(igm_pos),
+    igm_neg            = sum(igm_neg),
+    pcr_pos            = sum(pcr_pos),
+    pcr_neg            = sum(pcr_neg),
+    serot_dengue_1_pos = sum(serot_dengue_1_pos),
+    serot_dengue_2_pos = sum(serot_dengue_2_pos),
+    serot_dengue_3_pos = sum(serot_dengue_3_pos),
+    serot_dengue_4_pos = sum(serot_dengue_4_pos),
+    concl_dengue       = sum(concl_dengue),
+    concl_dengue_sin   = sum(concl_dengue_sin),
+    concl_dengue_con   = sum(concl_dengue_con),
+    concl_dengue_grave = sum(concl_dengue_grave),
+    .groups = "drop"
+  )
+
+deng_incidence_muni <- deng_results_muni_weekly %>%
+  left_join(surv_muni_week,       by = c("week_start", "municipio_recent")) %>%
+  left_join(deng_tests_muni_week, by = c("week_start", "municipio_recent")) %>%
+  mutate(
+    ali_inc  = 1000 * tested_deng / surveilled,
+    deng_inc = 1000 * igm_pos     / surveilled
+  ) %>%
+  arrange(municipio_recent, week_start) %>%
+  group_by(municipio_recent) %>%
+  mutate(
+    surveilled_roll  = rollsum(surveilled,  k = 3, fill = NA),
+    tested_deng_roll = rollsum(tested_deng, k = 3, fill = NA),
+    deng_roll        = rollsum(igm_pos,     k = 3, fill = NA),
+    ali_inc_roll     = 1000 * tested_deng_roll / surveilled_roll,
+    deng_inc_roll    = 1000 * deng_roll        / surveilled_roll
+  ) %>%
+  ungroup() %>%
+  rename(ali = tested_deng, surveilled_deng = surveilled)
+
+resp_incidence_muni <- resp_incidence_muni %>%
+  left_join(
+    deng_incidence_muni %>%
+      dplyr::select(week_start, municipio_recent, total_tested_deng, pcr_pos, igm_pos, ns1_pos,
+                    ali, ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll),
+    by = c("week_start", "municipio_recent")
+  )
+
+resp_incidence_muni <- resp_incidence_muni %>%
+  select(
+    municipio_recent, week_start, surveilled, tested,
+    inf_a_pos, inf_b_pos, sars_cov2_pos, vsr_pos, inf_a_h1n1, inf_a_h3n2,
+    ili_inc,     ili_inc_roll,
+    flu_gen_inc, flu_gen_inc_roll,
+    flua_inc,    flua_inc_roll,
+    flub_inc,    flub_inc_roll,
+    scv2_inc,    scv2_inc_roll,
+    rsv_inc,     rsv_inc_roll,
+    h1n1_inc,    h1n1_inc_roll,
+    h3n2_inc,    h3n2_inc_roll,
+    total_tested_deng, pcr_pos, igm_pos, ns1_pos, ali,
+    ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll
+  )
+
+resp_incidence_muni$municipio_recent <- ifelse(resp_incidence_muni$municipio_recent == 1, "Coatepeque", 
+                                   ifelse(resp_incidence_muni$municipio_recent == 2, "La Blanca",
+                                          ifelse(resp_incidence_muni$municipio_recent == 3, "Caballo Blanco - (Valle Lirio)", "Otro")))
+
+write.csv(resp_incidence_muni, "docs/resp_incidence_muni.csv")
