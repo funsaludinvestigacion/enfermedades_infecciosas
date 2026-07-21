@@ -20,8 +20,7 @@ namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinv
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
-#resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
-resp_incidence_municipio <- resp_incidence_muni
+resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
 resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
