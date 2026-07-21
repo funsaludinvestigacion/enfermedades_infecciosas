@@ -519,8 +519,6 @@ resp_incidence_muni$muni <- ifelse(resp_incidence_muni$municipio_recent == 1, "C
                                    ifelse(resp_incidence_muni$municipio_recent == 2, "La Blanca",
                                           ifelse(resp_incidence_muni$municipio_recent == 3, "Caballo Blanco - (Valle Lirio)", "Otro")))
 
-resp_incidence_municipio  <- resp_incidence_muni 
-
 write.csv(resp_incidence_muni, "docs/resp_incidence_muni.csv")
 
 ##### tested dengue 

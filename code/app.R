@@ -20,8 +20,9 @@ namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinv
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
-resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
-#resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
+#resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
+resp_incidence_municipio <- resp_incidence_muni
+resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
 gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
@@ -1862,9 +1863,9 @@ server <- function(input, output) {
   # EDIT THE NAMES BELOW to match your actual municipios.
   # If municipio_recent uses different codes than 1/2/3, update the names() here to match.
   municipio_label_map <- c(
-    "1" = "Municipio 1",
-    "2" = "Municipio 2",
-    "3" = "Municipio 3"
+    "Coatepeque" = "Coatepeque",
+    "La Blanca" = "La Blanca",
+    "Caballo Blanco - (Valle Lirio)" = "Caballo Blanco - (Valle Lirio)"
   )
   
   municipio_label <- function(code) {
@@ -2522,7 +2523,7 @@ server <- function(input, output) {
   labels <- reactive({
     sprintf(
       "<strong>%s</strong><br/>Muestreados: %d<br/>Positivos: %d<br/>Tasa de Positividad: %.2f%%",
-      toupper(filtered_data_tab5_map()$municipio),
+      toupper(filtered_data_tab5_map()$municipio_recent),
       filtered_data_tab5_map()$tested,
       filtered_data_tab5_map()$pos,
       100 * filtered_data_tab5_map()$incidence
