@@ -49,8 +49,6 @@ table(realizada$departamento)
 realizada_IDs <- unique(realizada$record_id)
 
 
-q <- realizada %>% filter(edad > 64) %>% group_by(record_id)%>% summarise(recent = max(fecha_vigilancia))
-table(q$record_id)
 
 ##### tested
 
@@ -523,16 +521,19 @@ write.csv(resp_incidence_muni, "docs/resp_incidence_muni.csv")
 vigicasa_deng <- vigicasa %>%
   filter(!is.na(fech_tom))
 
+
+vigicasa_deng$deng_pos <- ifelse(vigicasa_deng$p_ns1 == 1 |  
+                                   vigicasa_deng$p_pcr == 1 |
+                                   vigicasa_deng$p_igm == 1 , 1, 0)
+
+
 vigicasa_deng$week_start_test <- floor_date(vigicasa_deng$fech_tom, unit = "week", week_start = 7)  # changed to fecha_vigilancia
 
 deng_tests_weekly <- vigicasa_deng %>% group_by( week_start_test)  %>% 
   summarise(tested = n()) 
 
 
-deng_results <- vigicasa %>%
-  filter(
-    !is.na(fech_tom) 
-  ) %>%
+deng_results <- vigicasa_deng  %>%
   mutate(
     week_start =  floor_date(fech_tom, unit = "week", week_start = 7), # changed to fecha_vigilancia
     year = year(fech_tom)
@@ -557,6 +558,7 @@ deng_results <- vigicasa %>%
     concl_dengue_sin = n_distinct(record_id[tip_dengue == 1], na.rm = TRUE),
     concl_dengue_con = n_distinct(record_id[tip_dengue == 2], na.rm = TRUE),
     concl_dengue_grave = n_distinct(record_id[tip_dengue == 3], na.rm = TRUE),
+    deng_pos = sum(deng_pos),
     month = month(fech_tom),
     .groups = "drop"
   ) 
@@ -565,6 +567,7 @@ deng_results_weekly <- deng_results %>% group_by(year, week_start) %>%
   summarise(
     total_tested_deng = sum(total_tested),
     ns1_pos    = sum(ns1_pos),
+    deng_pos   = sum(deng_pos),
     ns1_neg    = sum(ns1_neg),
     igg_pos = sum(igg_pos),
     igg_neg = sum(igg_neg),
@@ -583,13 +586,14 @@ deng_results_weekly <- deng_results %>% group_by(year, week_start) %>%
     .groups = "drop"
   )
 
+
 deng_tests_weekly$week_start <- deng_tests_weekly$week_start_test
 deng_tests_weekly$tested_deng <- deng_tests_weekly$tested
 deng_incidence_w <- left_join(deng_results_weekly, counts_weekly)
 deng_incidence_w <- left_join(deng_incidence_w, deng_tests_weekly)
 
 deng_incidence_w$ali_inc      <- 1000 * deng_incidence_w$tested_deng  / deng_incidence_w$surveilled
-deng_incidence_w$deng_inc     <- 1000 * deng_incidence_w$igm_pos    / deng_incidence_w$surveilled
+deng_incidence_w$deng_inc     <- 1000 * deng_incidence_w$deng_pos    / deng_incidence_w$surveilled
 
 
 
@@ -627,11 +631,10 @@ write.csv(resp_incidence_w, "docs/vigicasa_resp_weekly.csv")
 
 ##### Dengue results by age group #####
 
-deng_tests_age_week <- vigicasa %>%
-  filter(!is.na(fech_tom)) %>%
+deng_tests_age_week <- vigicasa_deng %>% 
   mutate(
     week_start = floor_date(fech_tom, unit = "week", week_start = 7),
-    age        = floor(interval(start = f_nacimiento, end = fech_tom) / years(1)),
+    age        = edad_2,
     age_grp    = cut(age, breaks = age_breaks, labels = age_labels,
                      right = FALSE, include.lowest = TRUE)
   ) %>%
@@ -641,11 +644,11 @@ deng_tests_age_week <- vigicasa %>%
   summarise(tested_deng = n(), .groups = "drop") %>%
   complete(week_start, age_grp, fill = list(tested_deng = 0))
 
-deng_results_age <- vigicasa %>%
-  filter(!is.na(fech_tom)) %>%
+q <- vigicasa_deng %>% filter(deng_pos == 1)
+deng_results_age <- vigicasa_deng %>%
   mutate(
     week_start = floor_date(fech_tom, unit = "week", week_start = 7),
-    age        = floor(interval(start = f_nacimiento, end = fech_tom) / years(1)),
+    age        = edad_2,
     age_grp    = cut(age, breaks = age_breaks, labels = age_labels,
                      right = FALSE, include.lowest = TRUE),
     year       = year(fech_tom)
@@ -653,6 +656,7 @@ deng_results_age <- vigicasa %>%
   group_by(record_id, year, week_start, age_grp, fech_tom) %>%
   summarize(
     total_tested       = n_distinct(record_id),
+    deng_pos = sum(deng_pos),
     ns1_pos            = n_distinct(record_id[p_ns1 == 1], na.rm = TRUE),
     ns1_neg            = n_distinct(record_id[p_ns1 == 2], na.rm = TRUE),
     igg_pos            = n_distinct(record_id[p_igg == 1], na.rm = TRUE),
@@ -677,6 +681,7 @@ deng_results_age_weekly <- deng_results_age %>%
   group_by(year, week_start, age_grp) %>%
   summarise(
     total_tested_deng  = sum(total_tested),
+    deng_pos           = sum(deng_pos),
     ns1_pos            = sum(ns1_pos),
     ns1_neg            = sum(ns1_neg),
     igg_pos            = sum(igg_pos),
@@ -696,9 +701,9 @@ deng_results_age_weekly <- deng_results_age %>%
     .groups = "drop"
   ) %>%
   complete(
-    week_start, age_grp,
+    nesting(year, week_start), age_grp,
     fill = list(
-      total_tested_deng = 0, ns1_pos = 0, ns1_neg = 0, igg_pos = 0, igg_neg = 0,
+      total_tested_deng = 0, deng_pos = 0, ns1_pos = 0, ns1_neg = 0, igg_pos = 0, igg_neg = 0,
       igm_pos = 0, igm_neg = 0, pcr_pos = 0, pcr_neg = 0,
       serot_dengue_1_pos = 0, serot_dengue_2_pos = 0,
       serot_dengue_3_pos = 0, serot_dengue_4_pos = 0,
@@ -712,14 +717,14 @@ deng_incidence_age <- deng_results_age_weekly %>%
   left_join(deng_tests_age_week, by = c("week_start", "age_grp")) %>%
   mutate(
     ali_inc  = 1000 * tested_deng / surveilled,
-    deng_inc = 1000 * igm_pos     / surveilled
+    deng_inc = 1000 * deng_pos     / surveilled
   ) %>%
   arrange(age_grp, week_start) %>%
   group_by(age_grp) %>%
   mutate(
     surveilled_roll  = rollsum(surveilled,  k = 3, fill = NA),
     tested_deng_roll = rollsum(tested_deng, k = 3, fill = NA),
-    deng_roll        = rollsum(igm_pos,     k = 3, fill = NA),
+    deng_roll        = rollsum(deng_pos,     k = 3, fill = NA),
     ali_inc_roll     = 1000 * tested_deng_roll / surveilled_roll,
     deng_inc_roll    = 1000 * deng_roll        / surveilled_roll
   ) %>%
