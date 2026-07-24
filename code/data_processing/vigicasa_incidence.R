@@ -64,7 +64,6 @@ vigicasa_tested_week <- vigicasa1 %>%
 tests_weekly <- vigicasa_tested_week %>% group_by( week_start_test)  %>% 
   summarise(tested = n()) 
 
-
 resp_results <- vigicasa %>%
   filter(
     !is.na(f_muestra) &
@@ -180,26 +179,36 @@ age_labels  <- c("0-4", "5-24", "25-49", "50-64", "65+")
 
 
 # ── 1. Denominator: surveilled persons by week & age group ──────────────────
-# Age is available in 'realizada'; compute it the same way resp_results does
 realizada_age <- realizada %>%
   mutate(
     age      = edad,
     age_grp  = cut(age, breaks = age_breaks, labels = age_labels,
                    right = FALSE, include.lowest = TRUE),
-    week_start = week_start_surv          # already on the dataset
-  ) %>%
-  filter(vigilancia_realizada == 1)
+    week_start = week_start_surv,
+  ) 
+
+sex <- vigicasa %>% mutate(sex = sexo)%>%
+  filter(!is.na(sexo)) %>%
+  group_by(record_id, sex) %>% tally() 
 
 
+realizada_age_sex <- left_join(realizada_age, sex)
 # Unique person-weeks per age group  (mirrors counts_weekly logic)
-surv_age_week <- realizada_age %>%
+surv_age_week <- realizada_age_sex %>%
   group_by(record_id, week_start, age_grp) %>%
   summarise(surv_per_week = n(), .groups = "drop") %>%
   group_by(week_start, age_grp) %>%
   summarise(surveilled = n(), .groups = "drop")
 
+
+surv_sex_week <- realizada_age_sex %>%
+  group_by(record_id, week_start, sex) %>%
+  summarise(surv_per_week = n(), .groups = "drop") %>%
+  group_by(week_start, sex) %>%
+  summarise(surveilled = n(), .groups = "drop")
+
 # ── 2. Tested & positive counts by week & age group ────────────────────────
-resp_results_age <- vigicasa %>%
+resp_results_age_sex <- vigicasa %>%
   filter(
     !is.na(f_muestra) 
   ) %>%
@@ -208,11 +217,69 @@ resp_results_age <- vigicasa %>%
     age         = floor(interval(start = f_nacimiento, end = f_muestra) / years(1)),
     age_grp     = cut(age, breaks = age_breaks, labels = age_labels,
                       right = FALSE, include.lowest = TRUE),
-    year        = year(f_muestra)
+    year        = year(f_muestra),
+    sex       = sexo_paciente
   )
 
 # ── 2. Weekly counts by age group (with zero-filled age × week combos) ──────
-resp_weekly_age <- resp_results_age %>%
+resp_weekly_age <- resp_results_age_sex %>%
+  group_by(week_start, age_grp) %>%
+  summarise(
+    total_tested    = n_distinct(record_id),
+    sars_cov2_pos   = sum(virus_detectado___4 == 1, na.rm = TRUE),
+    inf_a_pos       = sum(virus_detectado___2 == 1, na.rm = TRUE),
+    inf_b_pos       = sum(virus_detectado___3 == 1, na.rm = TRUE),
+    vsr_pos         = sum(virus_detectado___5 == 1, na.rm = TRUE),
+    inf_a_h1n1      = sum(subtipo_infa == "H1N1",   na.rm = TRUE),
+    inf_a_h3n2      = sum(subtipo_infa == "H3N2",   na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  complete(
+    week_start, age_grp,
+    fill = list(
+      total_tested  = 0,
+      sars_cov2_pos = 0,
+      inf_a_pos     = 0,
+      inf_b_pos     = 0,
+      vsr_pos       = 0,
+      inf_a_h1n1    = 0,
+      inf_a_h3n2    = 0
+    )
+  ) %>%
+  mutate(year = lubridate::year(week_start)) %>%
+  relocate(year, .before = week_start)
+
+
+resp_weekly_sex <- resp_results_age_sex %>%
+  group_by(week_start, sex) %>%
+  summarise(
+    total_tested    = n_distinct(record_id),
+    sars_cov2_pos   = sum(virus_detectado___4 == 1, na.rm = TRUE),
+    inf_a_pos       = sum(virus_detectado___2 == 1, na.rm = TRUE),
+    inf_b_pos       = sum(virus_detectado___3 == 1, na.rm = TRUE),
+    vsr_pos         = sum(virus_detectado___5 == 1, na.rm = TRUE),
+    inf_a_h1n1      = sum(subtipo_infa == "H1N1",   na.rm = TRUE),
+    inf_a_h3n2      = sum(subtipo_infa == "H3N2",   na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  complete(
+    week_start, sex,
+    fill = list(
+      total_tested  = 0,
+      sars_cov2_pos = 0,
+      inf_a_pos     = 0,
+      inf_b_pos     = 0,
+      vsr_pos       = 0,
+      inf_a_h1n1    = 0,
+      inf_a_h3n2    = 0
+    )
+  ) %>%
+  mutate(year = lubridate::year(week_start)) %>%
+  relocate(year, .before = week_start)
+
+
+
+resp_weekly_age <- resp_results_age_sex %>%
   group_by(week_start, age_grp) %>%
   summarise(
     total_tested    = n_distinct(record_id),
@@ -256,58 +323,48 @@ tested_age_week <- vigicasa %>%
     week_start, age_grp,
     fill = list(tested = 0)
   )
-# ── 2. Weekly counts by age group (with zero-filled age × week combos) ──────
-resp_weekly_age <- resp_results_age %>%
-  group_by(week_start, age_grp) %>%
-  summarise(
-    total_tested    = n_distinct(record_id),
-    sars_cov2_pos   = sum(virus_detectado___4 == 1, na.rm = TRUE),
-    inf_a_pos       = sum(virus_detectado___2 == 1, na.rm = TRUE),
-    inf_b_pos       = sum(virus_detectado___3 == 1, na.rm = TRUE),
-    vsr_pos         = sum(virus_detectado___5 == 1, na.rm = TRUE),
-    inf_a_h1n1      = sum(subtipo_infa == "H1N1",   na.rm = TRUE),
-    inf_a_h3n2      = sum(subtipo_infa == "H3N2",   na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  complete(
-    week_start, age_grp,
-    fill = list(
-      total_tested  = 0,
-      sars_cov2_pos = 0,
-      inf_a_pos     = 0,
-      inf_b_pos     = 0,
-      vsr_pos       = 0,
-      inf_a_h1n1    = 0,
-      inf_a_h3n2    = 0
-    )
-  ) %>%
-  mutate(year = lubridate::year(week_start)) %>%
-  relocate(year, .before = week_start)
 
-# ── 3. Tested persons per week & age group (denominator for ILI rate) ───────
-tested_age_week <- vigicasa %>%
+
+tested_sex_week <- vigicasa %>%
   filter(!is.na(f_muestra)) %>%
   mutate(
-    week_start = floor_date(f_muestra, unit = "week", week_start = 7),
-    age        = floor(interval(start = f_nacimiento, end = f_muestra) / years(1)),
-    age_grp    = cut(age, breaks = age_breaks, labels = age_labels,
-                     right = FALSE, include.lowest = TRUE)
+   sex = sexo_paciente,
+   week_start = floor_date(f_muestra, unit = "week", week_start = 7),
   ) %>%
-  group_by(record_id, week_start, age_grp) %>%
+  group_by(record_id, week_start, sex) %>%
   summarise(tests = n(), .groups = "drop") %>%
-  group_by(week_start, age_grp) %>%
+  group_by(week_start, sex) %>%
   summarise(tested = n(), .groups = "drop") %>%
   complete(
-    week_start, age_grp,
+    week_start, sex,
     fill = list(tested = 0)
   )
+
 # ── 4. Join numerators + denominators ───────────────────────────────────────
 resp_incidence_age <- resp_weekly_age %>%
   left_join(surv_age_week,   by = c("week_start", "age_grp")) %>%
   left_join(tested_age_week, by = c("week_start", "age_grp"))
 
+
+resp_incidence_sex <- resp_weekly_sex %>%
+  left_join(surv_sex_week,   by = c("week_start", "sex")) %>%
+  left_join(tested_sex_week, by = c("week_start", "sex"))
+
 # ── 5. Point-in-time incidence rates (per 1 000 surveilled) ─────────────────
 resp_incidence_age <- resp_incidence_age %>%
+  mutate(
+    ili_inc      = 1000 * tested        / surveilled,
+    flua_inc     = 1000 * inf_a_pos     / surveilled,
+    flub_inc     = 1000 * inf_b_pos     / surveilled,
+    scv2_inc     = 1000 * sars_cov2_pos / surveilled,
+    rsv_inc      = 1000 * vsr_pos       / surveilled,
+    flu_gen_inc  = 1000 * (inf_a_pos + inf_b_pos) / surveilled,
+    h1n1_inc     = 1000 * inf_a_h1n1   / surveilled,
+    h3n2_inc     = 1000 * inf_a_h3n2   / surveilled
+  )
+
+
+resp_incidence_sex <- resp_incidence_sex %>%
   mutate(
     ili_inc      = 1000 * tested        / surveilled,
     flua_inc     = 1000 * inf_a_pos     / surveilled,
@@ -343,6 +400,31 @@ resp_incidence_age <- resp_incidence_age %>%
   ) %>%
   ungroup() %>%
   filter(!is.na(surveilled))
+
+
+resp_incidence_sex <- resp_incidence_sex %>%
+  arrange(sex, week_start) %>%
+  group_by(sex) %>%
+  mutate(
+    across(
+      c(surveilled, tested, inf_a_pos, inf_b_pos,
+        sars_cov2_pos, vsr_pos, inf_a_h1n1, inf_a_h3n2),
+      ~ rollsum(.x, k = 3, fill = NA, align = "center"),
+      .names = "{.col}_roll"
+    )
+  ) %>%
+  mutate(
+    ili_inc_roll      = 1000 * tested_roll        / surveilled_roll,
+    flua_inc_roll     = 1000 * inf_a_pos_roll     / surveilled_roll,
+    flub_inc_roll     = 1000 * inf_b_pos_roll     / surveilled_roll,
+    scv2_inc_roll     = 1000 * sars_cov2_pos_roll / surveilled_roll,
+    rsv_inc_roll      = 1000 * vsr_pos_roll       / surveilled_roll,
+    flu_gen_inc_roll  = 1000 * (inf_a_pos_roll + inf_b_pos_roll) / surveilled_roll,
+    h1n1_inc_roll     = 1000 * inf_a_h1n1_roll    / surveilled_roll,
+    h3n2_inc_roll     = 1000 * inf_a_h3n2_roll    / surveilled_roll
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(surveilled))
 # ── 7. Tidy final column order ───────────────────────────────────────────────
 resp_incidence_age <- resp_incidence_age %>%
   select(
@@ -358,6 +440,22 @@ resp_incidence_age <- resp_incidence_age %>%
     h3n2_inc,    h3n2_inc_roll
   )
 
+
+resp_incidence_sex <- resp_incidence_sex %>%
+  select(
+    sex, week_start, surveilled, tested,
+    inf_a_pos, inf_b_pos, sars_cov2_pos, vsr_pos, inf_a_h1n1, inf_a_h3n2,
+    ili_inc,     ili_inc_roll,
+    flu_gen_inc, flu_gen_inc_roll,
+    flua_inc,    flua_inc_roll,
+    flub_inc,    flub_inc_roll,
+    scv2_inc,    scv2_inc_roll,
+    rsv_inc,     rsv_inc_roll,
+    h1n1_inc,    h1n1_inc_roll,
+    h3n2_inc,    h3n2_inc_roll
+  )
+
+resp_incidence_sex$sex <- ifelse(resp_incidence_sex$sex == 1, "Male", "Female")
 resp_incidence_age <- resp_incidence_age %>% filter(as.Date(week_start) > "2026-01-17")
 write.csv(resp_incidence_age, "docs/resp_incidence_age.csv")
 
@@ -521,7 +619,6 @@ write.csv(resp_incidence_muni, "docs/resp_incidence_muni.csv")
 vigicasa_deng <- vigicasa %>%
   filter(!is.na(fech_tom))
 
-
 vigicasa_deng$deng_pos <- ifelse(vigicasa_deng$p_ns1 == 1 |  
                                    vigicasa_deng$p_pcr == 1 |
                                    vigicasa_deng$p_igm == 1 , 1, 0)
@@ -531,6 +628,8 @@ vigicasa_deng$week_start_test <- floor_date(vigicasa_deng$fech_tom, unit = "week
 
 deng_tests_weekly <- vigicasa_deng %>% group_by( week_start_test)  %>% 
   summarise(tested = n()) 
+
+
 
 
 deng_results <- vigicasa_deng  %>%
@@ -644,7 +743,20 @@ deng_tests_age_week <- vigicasa_deng %>%
   summarise(tested_deng = n(), .groups = "drop") %>%
   complete(week_start, age_grp, fill = list(tested_deng = 0))
 
-q <- vigicasa_deng %>% filter(deng_pos == 1)
+
+
+deng_tests_sex_week <- vigicasa_deng %>% 
+  mutate(
+    week_start = floor_date(fech_tom, unit = "week", week_start = 7),
+    sex = sexo_2,
+  right = FALSE, include.lowest = TRUE
+  ) %>%
+  group_by(record_id, week_start, sex) %>%
+  summarise(tests = n(), .groups = "drop") %>%
+  group_by(week_start, sex) %>%
+  summarise(tested_deng = n(), .groups = "drop") %>%
+  complete(week_start, sex, fill = list(tested_deng = 0))
+
 deng_results_age <- vigicasa_deng %>%
   mutate(
     week_start = floor_date(fech_tom, unit = "week", week_start = 7),
@@ -654,6 +766,37 @@ deng_results_age <- vigicasa_deng %>%
     year       = year(fech_tom)
   ) %>%
   group_by(record_id, year, week_start, age_grp, fech_tom) %>%
+  summarize(
+    total_tested       = n_distinct(record_id),
+    deng_pos = sum(deng_pos),
+    ns1_pos            = n_distinct(record_id[p_ns1 == 1], na.rm = TRUE),
+    ns1_neg            = n_distinct(record_id[p_ns1 == 2], na.rm = TRUE),
+    igg_pos            = n_distinct(record_id[p_igg == 1], na.rm = TRUE),
+    igg_neg            = n_distinct(record_id[p_igg == 2], na.rm = TRUE),
+    igm_pos            = n_distinct(record_id[p_igm == 1], na.rm = TRUE),
+    igm_neg            = n_distinct(record_id[p_igm == 2], na.rm = TRUE),
+    pcr_pos            = n_distinct(record_id[p_pcr == 1], na.rm = TRUE),
+    pcr_neg            = n_distinct(record_id[p_pcr == 2], na.rm = TRUE),
+    serot_dengue_1_pos = n_distinct(record_id[serot_dengue == 1], na.rm = TRUE),
+    serot_dengue_2_pos = n_distinct(record_id[serot_dengue == 2], na.rm = TRUE),
+    serot_dengue_3_pos = n_distinct(record_id[serot_dengue == 3], na.rm = TRUE),
+    serot_dengue_4_pos = n_distinct(record_id[serot_dengue == 4], na.rm = TRUE),
+    serot_dengue_na    = n_distinct(record_id[serot_dengue == 5], na.rm = TRUE),
+    concl_dengue       = n_distinct(record_id[conclusi_n_caso == 1], na.rm = TRUE),
+    concl_dengue_sin   = n_distinct(record_id[tip_dengue == 1], na.rm = TRUE),
+    concl_dengue_con   = n_distinct(record_id[tip_dengue == 2], na.rm = TRUE),
+    concl_dengue_grave = n_distinct(record_id[tip_dengue == 3], na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+deng_results_sex <- vigicasa_deng %>%
+  mutate(
+    week_start = floor_date(fech_tom, unit = "week", week_start = 7),
+    sex        = sexo_2,
+    year       = year(fech_tom)
+  ) %>%
+  group_by(record_id, year, week_start, sex, fech_tom) %>%
   summarize(
     total_tested       = n_distinct(record_id),
     deng_pos = sum(deng_pos),
@@ -711,6 +854,41 @@ deng_results_age_weekly <- deng_results_age %>%
     )
   )
 
+
+
+deng_results_sex_weekly <- deng_results_sex %>%
+  group_by(year, week_start, sex) %>%
+  summarise(
+    total_tested_deng  = sum(total_tested),
+    deng_pos           = sum(deng_pos),
+    ns1_pos            = sum(ns1_pos),
+    ns1_neg            = sum(ns1_neg),
+    igg_pos            = sum(igg_pos),
+    igg_neg            = sum(igg_neg),
+    igm_pos            = sum(igm_pos),
+    igm_neg            = sum(igm_neg),
+    pcr_pos            = sum(pcr_pos),
+    pcr_neg            = sum(pcr_neg),
+    serot_dengue_1_pos = sum(serot_dengue_1_pos),
+    serot_dengue_2_pos = sum(serot_dengue_2_pos),
+    serot_dengue_3_pos = sum(serot_dengue_3_pos),
+    serot_dengue_4_pos = sum(serot_dengue_4_pos),
+    concl_dengue       = sum(concl_dengue),
+    concl_dengue_sin   = sum(concl_dengue_sin),
+    concl_dengue_con   = sum(concl_dengue_con),
+    concl_dengue_grave = sum(concl_dengue_grave),
+    .groups = "drop"
+  ) %>%
+  complete(
+    nesting(year, week_start), sex,
+    fill = list(
+      total_tested_deng = 0, deng_pos = 0, ns1_pos = 0, ns1_neg = 0, igg_pos = 0, igg_neg = 0,
+      igm_pos = 0, igm_neg = 0, pcr_pos = 0, pcr_neg = 0,
+      serot_dengue_1_pos = 0, serot_dengue_2_pos = 0,
+      serot_dengue_3_pos = 0, serot_dengue_4_pos = 0,
+      concl_dengue = 0, concl_dengue_sin = 0, concl_dengue_con = 0, concl_dengue_grave = 0
+    )
+  )
 # join to age-group surveillance denominator (surv_age_week already built above)
 deng_incidence_age <- deng_results_age_weekly %>%
   left_join(surv_age_week,      by = c("week_start", "age_grp")) %>%
@@ -731,6 +909,26 @@ deng_incidence_age <- deng_results_age_weekly %>%
   ungroup() %>%
   rename(ali = tested_deng, surveilled_deng = surveilled)
 
+
+deng_incidence_sex <- deng_results_sex_weekly %>%
+  left_join(surv_sex_week,      by = c("week_start", "sex")) %>%
+  left_join(deng_tests_sex_week, by = c("week_start", "sex")) %>%
+  mutate(
+    ali_inc  = 1000 * tested_deng / surveilled,
+    deng_inc = 1000 * deng_pos     / surveilled
+  ) %>%
+  arrange(sex, week_start) %>%
+  group_by(sex) %>%
+  mutate(
+    surveilled_roll  = rollsum(surveilled,  k = 3, fill = NA),
+    tested_deng_roll = rollsum(tested_deng, k = 3, fill = NA),
+    deng_roll        = rollsum(deng_pos,     k = 3, fill = NA),
+    ali_inc_roll     = 1000 * tested_deng_roll / surveilled_roll,
+    deng_inc_roll    = 1000 * deng_roll        / surveilled_roll
+  ) %>%
+  ungroup() %>%
+  rename(ali = tested_deng, surveilled_deng = surveilled)
+
 # merge into resp_incidence_age
 resp_incidence_age <- resp_incidence_age %>%
   left_join(
@@ -739,6 +937,17 @@ resp_incidence_age <- resp_incidence_age %>%
                     ali, ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll),
     by = c("week_start", "age_grp")
   )
+
+deng_incidence_sex$sex <-  ifelse(deng_incidence_sex$sex == 1, "Male", "Female")
+
+resp_incidence_sex <- resp_incidence_sex %>%
+  left_join(
+    deng_incidence_sex %>%
+      dplyr::select(week_start, sex, total_tested_deng, pcr_pos, igm_pos, ns1_pos,
+                    ali, ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll),
+    by = c("week_start", "sex")
+  )
+write.csv(resp_incidence_age, "docs/resp_incidence_sex.csv")
 
 resp_incidence_age <- resp_incidence_age %>%
   select(
@@ -863,7 +1072,6 @@ resp_incidence_muni <- resp_incidence_muni %>%
     total_tested_deng, pcr_pos, igm_pos, ns1_pos, ali,
     ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll
   )
-
 resp_incidence_muni$municipio_recent <- ifelse(resp_incidence_muni$municipio_recent == 1, "Coatepeque", 
                                    ifelse(resp_incidence_muni$municipio_recent == 2, "La Blanca",
                                           ifelse(resp_incidence_muni$municipio_recent == 3, "Caballo Blanco - (Valle Lirio)", "Otro")))
