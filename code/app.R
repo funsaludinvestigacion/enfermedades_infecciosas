@@ -22,6 +22,7 @@ vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestig
 vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
 resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
 resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
+resp_incidence_sex <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_sex.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
 gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
@@ -465,12 +466,14 @@ ui_tab5b <- function() {
         br(),
         uiOutput("tab5b_municipio_incidence_title"),
         plotlyOutput("municipio_incidence_plot_tab5b", height = "400px"),
+        br(),
+        uiOutput("tab5b_sex_incidence_title"),
+        plotlyOutput("sex_incidence_plot_tab5b", height = "400px"),
         br()
       )
     )
   )
 }
-
 # Define UI for Tab 6 (VIGIFINCA)
 ui_tab6 <- function() { 
   fluidPage(
@@ -1444,9 +1447,6 @@ server <- function(input, output) {
   # --------------------------------------------------------------------------
   #                             VIGICASA
   # --------------------------------------------------------------------------
-  # --------------------------------------------------------------------------
-  #                             VIGICASA
-  # --------------------------------------------------------------------------
   output$info_VCasa_text <- renderText({
     if (input$language_VCasa == "es") {
       Info_VCasa
@@ -1859,8 +1859,6 @@ server <- function(input, output) {
   )
   
   # Maps municipio_recent codes to display names.
-  # EDIT THE NAMES BELOW to match your actual municipios.
-  # If municipio_recent uses different codes than 1/2/3, update the names() here to match.
   municipio_label_map <- c(
     "Coatepeque" = "Coatepeque",
     "La Blanca" = "La Blanca",
@@ -2181,9 +2179,6 @@ server <- function(input, output) {
     label    <- pathogen_label(p_key, es)
     col_roll <- pathogen_inc_roll_col(p_key)
     
-    # Dengue (and any future pathogen) may not have municipio-stratified data yet.
-    # Once deng_inc_roll is added to resp_incidence_municipio, this chart will
-    # pick it up automatically with no code changes needed.
     if (!(col_roll %in% names(resp_incidence_municipio))) {
       return(plotly_empty() %>%
                layout(title = if (es) paste(label, "- datos por municipio aún no disponibles") else paste(label, "- municipality-stratified data not yet available")))
@@ -2204,8 +2199,6 @@ server <- function(input, output) {
                layout(title = if (es) "No hay datos disponibles" else "No data available"))
     }
     
-    # Colors assigned dynamically so this works regardless of the actual
-    # municipio_recent values/count in the data
     municipio_levels  <- sort(unique(d$municipio_recent))
     municipio_palette <- setNames(
       c("#1B9E77", "#D95F02", "#7570B3")[seq_along(municipio_levels)],
@@ -2256,7 +2249,107 @@ server <- function(input, output) {
       plot_bgcolor  = "white",
       paper_bgcolor = "white"
     )
+  })  # closes municipio_incidence_plot_tab5b
+  
+  # --- Sex stratification -----------------------------------------------------
+  
+  output$tab5b_sex_incidence_title <- renderUI({
+    es    <- input$language_tab5b == "es"
+    label <- pathogen_label(input$pathogen_tab5b, es)
+    tags$h3(
+      if (es) paste("Incidencia por Sexo —", label)
+      else paste("Incidence by Sex —",       label),
+      style = "font-weight: bold; text-align: center;"
+    )
   })
+  
+  sex_label <- function(code, es) {
+    code_chr <- as.character(code)
+    lbl <- c(
+      "Male"   = if (es) "Masculino" else "Male",
+      "Female" = if (es) "Femenino"  else "Female"
+    )[[code_chr]]
+    if (is.null(lbl)) code_chr else lbl   # fall back to raw code if not mapped
+  }
+  
+  sex_colors <- c(
+    "Male"   = "#1F78B4",
+    "Female" = "#E7298A"
+  )
+  
+  output$sex_incidence_plot_tab5b <- renderPlotly({
+    es       <- input$language_tab5b == "es"
+    p_key    <- input$pathogen_tab5b
+    label    <- pathogen_label(p_key, es)
+    col_roll <- pathogen_inc_roll_col(p_key)
+    
+    if (!(col_roll %in% names(resp_incidence_sex))) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- datos por sexo aún no disponibles") else paste(label, "- sex-stratified data not yet available")))
+    }
+    
+    d <- resp_incidence_sex %>%
+      filter(
+        week_start >= input$date_range_tab5b[1],
+        week_start <= input$date_range_tab5b[2]
+      ) %>%
+      mutate(
+        inc_roll       = .data[[col_roll]],
+        week_start_chr = as.character(week_start)
+      )
+    
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>%
+               layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    
+    sex_levels <- sort(unique(d$sex))
+    
+    p <- plot_ly()
+    
+    for (sx in sex_levels) {
+      d_sx     <- filter(d, sex == sx)
+      color    <- if (sx %in% names(sex_colors)) sex_colors[[sx]] else "#7F7F7F"
+      sx_label <- sex_label(sx, es)
+      
+      if (nrow(d_sx) == 0) next
+      
+      p <- p %>%
+        add_trace(
+          data        = d_sx,
+          x           = ~week_start,
+          y           = ~inc_roll,
+          type        = "scatter",
+          mode        = "lines+markers",
+          name        = sx_label,
+          legendgroup = sx,
+          line        = list(color = color, width = 2, dash = "solid"),
+          marker      = list(color = color, size = 4),
+          text        = ~paste0(
+            "<b>", label, " | ", sx_label, "</b><br>",
+            if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+            if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ",
+            round(inc_roll, 2), "<br>",
+            if (es) "Vigilados: " else "Surveilled: ", surveilled
+          ),
+          hoverinfo   = "text"
+        )
+    }
+    
+    p %>% layout(
+      xaxis         = list(
+        title     = if (es) "Semana (inicio domingo)" else "Week (starting Sunday)",
+        tickangle = -45,
+        tickfont  = list(size = 10)
+      ),
+      yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
+      legend        = list(orientation = "h", x = 0, y = -0.3),
+      hovermode     = "closest",
+      margin        = list(b = 100),
+      plot_bgcolor  = "white",
+      paper_bgcolor = "white"
+    )
+  })  # closes sex_incidence_plot_tab5b
   
   
   # --------------------------------------------------------------------------

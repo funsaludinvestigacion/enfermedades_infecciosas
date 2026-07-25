@@ -947,7 +947,7 @@ resp_incidence_sex <- resp_incidence_sex %>%
                     ali, ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll),
     by = c("week_start", "sex")
   )
-write.csv(resp_incidence_age, "docs/resp_incidence_sex.csv")
+write.csv(resp_incidence_sex, "docs/resp_incidence_sex.csv")
 
 resp_incidence_age <- resp_incidence_age %>%
   select(
