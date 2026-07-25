@@ -1055,23 +1055,14 @@ resp_incidence_muni <- resp_incidence_muni %>%
       dplyr::select(week_start, municipio_recent, total_tested_deng, pcr_pos, igm_pos, ns1_pos,
                     ali, ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll),
     by = c("week_start", "municipio_recent")
+  ) %>%
+  mutate(
+    across(
+      c(total_tested_deng, pcr_pos, igm_pos, ns1_pos, ali, deng_roll, ali_inc, ali_inc_roll, deng_inc, deng_inc_roll),
+      ~ replace_na(.x, 0)
+    )
   )
 
-resp_incidence_muni <- resp_incidence_muni %>%
-  select(
-    municipio_recent, week_start, surveilled, tested,
-    inf_a_pos, inf_b_pos, sars_cov2_pos, vsr_pos, inf_a_h1n1, inf_a_h3n2,
-    ili_inc,     ili_inc_roll,
-    flu_gen_inc, flu_gen_inc_roll,
-    flua_inc,    flua_inc_roll,
-    flub_inc,    flub_inc_roll,
-    scv2_inc,    scv2_inc_roll,
-    rsv_inc,     rsv_inc_roll,
-    h1n1_inc,    h1n1_inc_roll,
-    h3n2_inc,    h3n2_inc_roll,
-    total_tested_deng, pcr_pos, igm_pos, ns1_pos, ali,
-    ali_inc, ali_inc_roll, deng_roll, deng_inc, deng_inc_roll
-  )
 resp_incidence_muni$municipio_recent <- ifelse(resp_incidence_muni$municipio_recent == 1, "Coatepeque", 
                                    ifelse(resp_incidence_muni$municipio_recent == 2, "La Blanca",
                                           ifelse(resp_incidence_muni$municipio_recent == 3, "Caballo Blanco - (Valle Lirio)", "Otro")))
