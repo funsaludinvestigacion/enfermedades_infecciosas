@@ -58,6 +58,7 @@ de Coatepeque y el Hospital de Chimaltenango. Forman parte de esta vigilancia lo
 Sars-CoV-2, Influenza A/B y VSR y se secuencia los resultados positivos. Todos los datos son compartidos con la red mundial para mejorar capacidad de vigilancia, la decisiones 
 vacunales de Influenza anual y respuesta a viruses respiratorios."
 
+
 Info_GIHSN_eng <- "We are a site that is part of the Global Influenza Surveillance Network (<a href='https://gihsn.org' target='_blank'>GIHSN</a>). At the National Hospital of Coatepeque and the Hospital of Chimaltenango, 
 patients who experience symptoms of fever and/or cough are part of this surveillance. They are tested for Sars-CoV-2, Influenza A/B, and VSR, and the positive results are sequenced. All data is shared with the global network to 
 improve surveillance capacity, annual influenza vaccination decisions, and response to respiratory viruses."
@@ -388,7 +389,7 @@ ui_tab4 <- function() {
   )
 }
 
-# Define UI for Tab 5 (VIGICASA)
+
 ui_tab5 <- function() { 
   fluidPage(
     titlePanel(""),
@@ -420,6 +421,11 @@ ui_tab5 <- function() {
         br(),
         uiOutput("stacked_plot_header"),
         plotlyOutput("stacked_plot_tab5"),
+        
+        br(),
+        uiOutput("symptom_inc_plot_header"),
+        uiOutput("symptoms_tab5_select_ui"),
+        plotlyOutput("symptom_inc_plot_tab5", height = "450px"),
         
         br()
       )
@@ -469,6 +475,9 @@ ui_tab5b <- function() {
         br(),
         uiOutput("tab5b_sex_incidence_title"),
         plotlyOutput("sex_incidence_plot_tab5b", height = "400px"),
+        br(),
+        uiOutput("symptom_pathogen_select_ui"),
+        plotlyOutput("symptom_pathogen_bar_plot", height = "450px"),
         br()
       )
     )
@@ -1463,6 +1472,10 @@ server <- function(input, output) {
     h3(if (input$language_VCasa == "es") "Desglose Semanal de Muestreo" else "Weekly Testing Breakdown")
   })
   
+  output$symptom_inc_plot_header <- renderUI({
+    h3(if (input$language_VCasa == "es") "Incidencia de Síntomas" else "Symptom Incidence")
+  })
+  
   filtered_data_vigicasa_inc <- reactive({
     vigicasa_inc %>%
       filter(
@@ -1785,6 +1798,167 @@ server <- function(input, output) {
       )
   })  # closes stacked_plot_tab5
   
+  # Tab 5 - symptom incidence plot ---------------------------------------------
+  symptom_label_map <- c(
+    fiebre                = "Fiebre",
+    tos                   = "Tos",
+    dolor_oido            = "Dolor de Oído",
+    congestion_nasal      = "Congestión Nasal",
+    escurrimiento_nasal   = "Escurrimiento Nasal",
+    dolor_garganta        = "Dolor de Garganta",
+    vomito_despues        = "Vómito",
+    silbido_respiro       = "Silbido al Respirar",
+    dificultad_respirar   = "Dificultad para Respirar",
+    dolor_muscular        = "Dolor Muscular",
+    dolor_cabeza          = "Dolor de Cabeza",
+    dolor_articular       = "Dolor Articular",
+    sarpullido            = "Sarpullido",
+    ojos_rojos            = "Ojos Rojos",
+    articulares_hinchados = "Articulaciones Hinchadas",
+    dolor_ojos            = "Dolor de Ojos",
+    diarrea               = "Diarrea",
+    fatiga                = "Fatiga",
+    perdida_peso          = "Pérdida de Peso",
+    convulsions           = "Convulsiones",
+    labios_azules         = "Labios Azules",
+    perdida_gusto         = "Pérdida del Gusto",
+    dolor_cuerpo          = "Dolor de Cuerpo",
+    dolor_hueso           = "Dolor de Hueso",
+    irritabilidad         = "Irritabilidad",
+    letargo               = "Letargo",
+    dificultad_comer      = "Dificultad para Comer"
+  )
+  
+  symptom_label_map_en <- c(
+    fiebre                = "Fever",
+    tos                   = "Cough",
+    dolor_oido            = "Ear Pain",
+    congestion_nasal      = "Nasal Congestion",
+    escurrimiento_nasal   = "Runny Nose",
+    dolor_garganta        = "Sore Throat",
+    vomito_despues        = "Vomiting",
+    silbido_respiro       = "Wheezing",
+    dificultad_respirar   = "Difficulty Breathing",
+    dolor_muscular        = "Muscle Pain",
+    dolor_cabeza          = "Headache",
+    dolor_articular       = "Joint Pain",
+    sarpullido            = "Rash",
+    ojos_rojos            = "Red Eyes",
+    articulares_hinchados = "Swollen Joints",
+    dolor_ojos            = "Eye Pain",
+    diarrea               = "Diarrhea",
+    fatiga                = "Fatigue",
+    perdida_peso          = "Weight Loss",
+    convulsions           = "Convulsions",
+    labios_azules         = "Blue Lips",
+    perdida_gusto         = "Loss of Taste",
+    dolor_cuerpo          = "Body Pain",
+    dolor_hueso           = "Bone Pain",
+    irritabilidad         = "Irritability",
+    letargo               = "Lethargy",
+    dificultad_comer      = "Difficulty Eating"
+  )
+  
+  symptom_color_map <- setNames(
+    colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(symptom_vars)),
+    symptom_vars
+  )
+  
+  
+  output$symptoms_tab5_select_ui <- renderUI({
+    es <- input$language_VCasa == "es"
+    labels <- if (es) symptom_label_map else symptom_label_map_en
+    
+    selectizeInput(
+      "symptoms_tab5",
+      if (es) "Síntomas / Symptoms:" else "Symptoms:",
+      choices  = setNames(names(labels), labels),
+      selected = c("fiebre", "tos", "congestion_nasal", "dolor_garganta", "diarrea", "fatiga"),
+      multiple = TRUE
+    )
+  })
+  
+  output$symptom_inc_plot_tab5 <- renderPlotly({
+    es <- input$language_VCasa == "es"
+    selected_symptoms <- input$symptoms_tab5
+    
+    if (is.null(selected_symptoms) || length(selected_symptoms) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "Selecciona al menos un síntoma" else "Select at least one symptom"))
+    }
+    
+    filtered_data <- symptom_incidence %>%
+      filter(
+        week_start >= input$date_range_input_tab5[1],
+        week_start <= input$date_range_input_tab5[2]
+      )
+    
+    if (nrow(filtered_data) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    roll_cols <- paste0(selected_symptoms, "_inc_roll")
+    labels <- if (es) symptom_label_map else symptom_label_map_en
+    
+    plot_data <- filtered_data %>%
+      select(week_start, surveilled, all_of(selected_symptoms), all_of(roll_cols)) %>%
+      pivot_longer(
+        cols      = all_of(roll_cols),
+        names_to  = "symptom_col",
+        values_to = "inc_value"
+      ) %>%
+      mutate(
+        symptom       = sub("_inc_roll$", "", symptom_col),
+        symptom_label = labels[symptom],
+        raw_count     = mapply(function(sym, wk) {
+          filtered_data[[sym]][filtered_data$week_start == wk][1]
+        }, symptom, week_start),
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", symptom_label, "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_value, 2), "<br>",
+          if (es) "Casos: " else "Cases: ", raw_count, "<br>",
+          if (es) "Vigilados: " else "Surveilled: ", surveilled
+        )
+      )
+    
+    p <- plot_ly()
+    
+    for (sym in selected_symptoms) {
+      df_sym <- plot_data %>% dplyr::filter(symptom == sym)
+      
+      p <- p %>%
+        add_trace(
+          data      = df_sym,
+          x         = ~week_start,
+          y         = ~inc_value,
+          type      = "scatter",
+          mode      = "lines+markers",
+          name      = labels[[sym]],
+          line      = list(color = symptom_color_map[[sym]], width = 2),
+          marker    = list(color = symptom_color_map[[sym]], size = 5),
+          text      = ~hover_text,
+          hoverinfo = "text"
+        )
+    }
+    
+    p %>%
+      layout(
+        xaxis         = list(
+          title     = if (es) "Semana Epidemiológica" else "Epidemiological Week",
+          tickangle = -45,
+          tickfont  = list(size = 10)
+        ),
+        yaxis         = list(
+          title = if (es) "Casos por 1,000 Personas" else "Cases per 1,000 People"
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
+        hovermode     = "closest",
+        margin        = list(b = 120, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })
   # --------------------------------------------------------------------------
   #                        TAB 5b - PATHOGEN DEEP DIVE
   # --------------------------------------------------------------------------
@@ -1858,6 +2032,16 @@ server <- function(input, output) {
     ali     = "#999999"
   )
   
+  pathogen_tab5b_to_pos_col <- function(p) {
+    switch(p,
+           "flua" = "inf_a_pos",
+           "flub" = "inf_b_pos",
+           "scv2" = "sars_cov2_pos",
+           "rsv"  = "vsr_pos",
+           "deng" = "deng_pos",
+           NULL   
+    )
+  }
   # Maps municipio_recent codes to display names.
   municipio_label_map <- c(
     "Coatepeque" = "Coatepeque",
@@ -2089,9 +2273,7 @@ server <- function(input, output) {
     col_roll <- pathogen_inc_roll_col(p_key)   # reuses your existing helper
     col_raw  <- pathogen_inc_col(p_key)        # reuses your existing helper
     
-    # Dengue (and any future pathogen) may not have age-stratified data yet.
-    # Once deng_inc_roll / deng_inc columns are added to resp_incidence_age,
-    # this chart will pick them up automatically with no code changes needed.
+    
     if (!(col_roll %in% names(resp_incidence_age)) || !(col_raw %in% names(resp_incidence_age))) {
       return(plotly_empty() %>%
                layout(title = if (es) paste(label, "- datos por edad aún no disponibles") else paste(label, "- age-stratified data not yet available")))
@@ -2351,6 +2533,127 @@ server <- function(input, output) {
     )
   })  # closes sex_incidence_plot_tab5b
   
+  # --- Symptom reporting rate among pathogen-positives (bar chart) ------------
+  
+  pathogen_pos_label_map <- c(
+    inf_a_pos     = "Influenza A",
+    inf_b_pos     = "Influenza B",
+    sars_cov2_pos = "SARS-CoV-2",
+    vsr_pos       = "RSV",
+    deng_pos      = "Dengue"
+  )
+  
+  pathogen_pos_label_map_en <- c(
+    inf_a_pos     = "Influenza A",
+    inf_b_pos     = "Influenza B",
+    sars_cov2_pos = "SARS-CoV-2",
+    vsr_pos       = "RSV",
+    deng_pos      = "Dengue"
+  )
+  
+  output$symptom_pathogen_select_ui <- renderUI({
+    es <- input$language_tab5b == "es"
+    sym_labels <- if (es) symptom_label_map else symptom_label_map_en
+    
+    selectizeInput(
+      "symptoms_by_pathogen_select",
+      if (es) "Síntomas:" else "Symptoms:",
+      choices  = setNames(names(sym_labels), sym_labels),
+      selected = c("fiebre", "tos", "congestion_nasal", "dolor_garganta", "diarrea", "fatiga"),
+      multiple = TRUE
+    )
+  })
+  
+  output$symptom_pathogen_bar_plot <- renderPlotly({
+    es  <- input$language_tab5b == "es"
+    req(input$pathogen_tab5b, input$symptoms_by_pathogen_select)
+    
+    p_key             <- input$pathogen_tab5b
+    path              <- pathogen_tab5b_to_pos_col(p_key)
+    selected_symptoms <- input$symptoms_by_pathogen_select
+    label             <- pathogen_label(p_key, es)
+    
+    if (is.null(path)) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- selecciona un patógeno específico para ver síntomas") else paste(label, "- select a specific pathogen to see symptoms")))
+    }
+    
+    filtered_data <- symptom_pathogen_stacked %>%
+      dplyr::filter(
+        pos_pathogen == path,
+        week_start >= input$date_range_tab5b[1],
+        week_start <= input$date_range_tab5b[2]
+      )
+    
+    if (nrow(filtered_data) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    pct_cols   <- paste0(selected_symptoms, "_pct")
+    sym_labels <- if (es) symptom_label_map else symptom_label_map_en
+    
+    plot_data <- filtered_data %>%
+      select(week_start, n_positive, all_of(pct_cols)) %>%
+      pivot_longer(
+        cols      = all_of(pct_cols),
+        names_to  = "symptom_col",
+        values_to = "pct_value"
+      ) %>%
+      mutate(
+        symptom        = sub("_pct$", "", symptom_col),
+        symptom_label  = sym_labels[symptom],
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", symptom_label, "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "% Reportando Síntoma: " else "% Reporting Symptom: ", round(pct_value, 1), "%<br>",
+          if (es) "N Positivos: " else "N Positive: ", n_positive
+        )
+      )
+    
+    color_palette <- setNames(
+      colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(selected_symptoms)),
+      selected_symptoms
+    )
+    
+    p <- plot_ly()
+    
+    for (sym in selected_symptoms) {
+      df_sym <- plot_data %>% dplyr::filter(symptom == sym)
+      
+      p <- p %>%
+        add_trace(
+          data      = df_sym,
+          x         = ~week_start,
+          y         = ~pct_value,
+          type      = "bar",
+          name      = sym_labels[[sym]],
+          marker    = list(color = color_palette[[sym]]),
+          text      = ~hover_text,
+          hoverinfo = "text"
+        )
+    }
+    
+    p %>%
+      layout(
+        barmode = "group",
+        title   = if (es) paste("Síntomas entre Positivos a", label) else paste("Symptoms among", label, "Positives"),
+        xaxis   = list(
+          title     = if (es) "Semana (inicio domingo)" else "Week (starting Sunday)",
+          tickangle = -45,
+          tickfont  = list(size = 10)
+        ),
+        yaxis   = list(
+          title      = if (es) "% Reportando Síntoma" else "% Reporting Symptom",
+          ticksuffix = "%"
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
+        hovermode     = "closest",
+        margin        = list(b = 120, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })  # closes symptom_pathogen_bar_plot
   
   # --------------------------------------------------------------------------
   #                             VIGIFINCA

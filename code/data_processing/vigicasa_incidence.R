@@ -29,10 +29,6 @@ vigicasa$week_start <- floor_date(vigicasa$fecha_vigilancia, unit = "week", week
 vigicasa$week_start_test <- floor_date(vigicasa$f_muestra, unit = "week", week_start = 7)  # changed to fecha_vigilancia
 vigicasa$week_start_surv <- floor_date(vigicasa$fecha_vigilancia, unit = "week", week_start = 7)  # changed to fecha_vigilancia
 
-vigicasa_record_day <- vigicasa %>% filter(vigilancia_realizada == 1) %>% 
-  group_by(record_id,  week_start, fecha_vigilancia) %>% 
-  summarise(surv_per_day = n()) 
-
 vigicasa_record_week <- vigicasa %>% filter(vigilancia_realizada == 1) %>% 
   group_by(record_id, week_start) %>% 
   summarise(surv_per_week = n())                                                             
@@ -43,26 +39,22 @@ counts_weekly <- vigicasa_record_week %>% group_by( week_start)  %>%
 
 
 realizada <- vigicasa %>% filter(vigilancia_realizada == 1)
-table(realizada$edad, useNA = "always")
-table(realizada$edad, useNA = "always")
-table(realizada$departamento)
 realizada_IDs <- unique(realizada$record_id)
 
-
-
-##### tested
+##### TESTED (RESP)
 
 vigicasa1 <- vigicasa %>%
   filter(!is.na(f_muestra))
-
-
-table(vigicasa1$edad)
 
 vigicasa_tested_week <- vigicasa1 %>% 
   group_by(record_id,  week_start_test) %>% summarise (tests = n())
 
 tests_weekly <- vigicasa_tested_week %>% group_by( week_start_test)  %>% 
   summarise(tested = n()) 
+
+
+### RESP RESULTS 
+
 
 resp_results <- vigicasa %>%
   filter(
@@ -1068,3 +1060,118 @@ resp_incidence_muni$municipio_recent <- ifelse(resp_incidence_muni$municipio_rec
                                           ifelse(resp_incidence_muni$municipio_recent == 3, "Caballo Blanco - (Valle Lirio)", "Otro")))
 
 write.csv(resp_incidence_muni, "docs/resp_incidence_muni.csv")
+
+
+symptom_vars <- c(
+  "fiebre", "tos", "dolor_oido", "congestion_nasal", "escurrimiento_nasal",
+  "dolor_garganta", "vomito_despues", "silbido_respiro", "dificultad_respirar",
+  "dolor_muscular", "dolor_cabeza", "dolor_articular", "sarpullido", "ojos_rojos",
+  "articulares_hinchados", "dolor_ojos", "diarrea", "fatiga", "perdida_peso",
+  "convulsiones", "labios_azules", "perdida_gusto", "dolor_cuerpo", "dolor_hueso",
+  "irritabilidad", "letargo", "dificultad_comer"
+)
+# ── 1. Denominator: surveilled persons by week (mirrors surv_muni_week / surv_age_week logic)
+surv_week <- realizada %>%
+  filter(vigilancia_realizada == 1) %>%
+  mutate(week_start = week_start_surv) %>%
+  group_by(record_id, week_start) %>%
+  summarise(surv_per_week = n(), .groups = "drop") %>%
+  group_by(week_start) %>%
+  summarise(surveilled = n(), .groups = "drop")
+
+# ── 2. Weekly symptom counts (numerator)
+symptom_results <- vigicasa %>%
+  filter(!is.na(fecha_primer_sinto)) %>%
+  mutate(week_start = floor_date(fecha_primer_sinto, unit = "week", week_start = 7)) %>%
+  group_by(record_id, week_start) %>%
+  summarise(
+    across(all_of(symptom_vars), ~ as.integer(any(.x == 1, na.rm = TRUE))),
+    .groups = "drop"
+  )
+
+symptom_weekly <- symptom_results %>%
+  group_by(week_start) %>%
+  summarise(
+    across(all_of(symptom_vars), ~ sum(.x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  complete(week_start, fill = as.list(setNames(rep(0, length(symptom_vars)), symptom_vars)))
+
+# ── 3. Join numerator + denominator
+symptom_incidence <- symptom_weekly %>%
+  left_join(surv_week, by = "week_start") %>%
+  mutate(across(all_of(symptom_vars), ~ replace_na(.x, 0)))
+
+# ── 4. Point-in-time incidence rates (per 1,000 surveilled)
+symptom_incidence <- symptom_incidence %>%
+  mutate(across(all_of(symptom_vars), ~ 1000 * .x / surveilled, .names = "{.col}_inc"))
+
+# ── 5. Rolling sums & rates (3-week window)
+symptom_incidence <- symptom_incidence %>%
+  arrange(week_start) %>%
+  mutate(
+    surveilled_roll = rollsum(surveilled, k = 3, fill = NA, align = "center"),
+    across(all_of(symptom_vars), ~ rollsum(.x, k = 3, fill = NA, align = "center"), .names = "{.col}_roll")
+  ) %>%
+  mutate(
+    across(all_of(symptom_vars), ~ 1000 * get(paste0(cur_column(), "_roll")) / surveilled_roll, .names = "{.col}_inc_roll")
+  ) %>%
+  filter(!is.na(surveilled))
+
+# ── 6. Tidy final column order
+symptom_incidence <- symptom_incidence %>%
+  select(
+    week_start, surveilled,
+    all_of(symptom_vars),
+    ends_with("_inc"), ends_with("_inc_roll")
+  ) %>%
+  filter(as.Date(week_start) > "2026-01-17")
+
+write.csv(symptom_incidence, "docs/symptom_incidence.csv")
+# ── Per-person symptom + pathogen results, weekly ────────────────────────────
+symptom_pathogen_results <- vigicasa %>%
+  filter(!is.na(f_muestra)) %>%
+  mutate(week_start = floor_date(f_muestra, unit = "week", week_start = 7)) %>%
+  group_by(record_id, week_start) %>%
+  summarise(
+    across(all_of(symptom_vars), ~ as.integer(any(.x == 1, na.rm = TRUE))),
+    inf_a_pos     = as.integer(any(virus_detectado___2 == 1, na.rm = TRUE)),
+    inf_b_pos     = as.integer(any(virus_detectado___3 == 1, na.rm = TRUE)),
+    sars_cov2_pos = as.integer(any(virus_detectado___4 == 1, na.rm = TRUE)),
+    vsr_pos       = as.integer(any(virus_detectado___5 == 1, na.rm = TRUE)),
+    .groups = "drop"
+  )
+
+# ── For each symptom, filter to symptomatic people, then count pathogen pos/neg
+symptom_results <- realizada %>% 
+  mutate(week_start = floor_date(fecha_vigilancia, unit = "week", week_start = 7)) %>%
+  group_by(record_id, week_start) %>%
+  summarise(
+    across(all_of(symptom_vars), ~ as.integer(any(.x == 1, na.rm = TRUE))),
+    .groups = "drop"
+  )
+symptoms_combo_resp <- left_join(symptom_results, resp_results)
+
+deng_results <- deng_results %>% rename(deng_tested = total_tested ) %>% dplyr::select(!c(month, year))
+
+
+symptoms_combo <- left_join(symptoms_combo_resp, deng_results)
+
+
+pathogen_vars <- c("inf_a_pos", "inf_b_pos", "sars_cov2_pos", "vsr_pos", "deng_pos")
+symptom_pathogen_stacked <- purrr::map_dfr(pathogen_vars, function(path) {
+  symptoms_combo %>%
+    filter(.data[[path]] == 1) %>%
+    group_by(week_start) %>%
+    summarise(
+      n_positive = n(),
+      across(all_of(symptom_vars), ~ sum(.x, na.rm = TRUE)),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      across(all_of(symptom_vars), ~ 100 * .x / n_positive, .names = "{.col}_pct"),
+      pos_pathogen = path
+    )
+})
+
+write.csv(symptom_pathogen_stacked, "docs/symptom_pathogen_stacked.csv")
