@@ -23,6 +23,8 @@ vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacio
 resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
 resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
 resp_incidence_sex <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_sex.csv")
+symptom_incidence <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/symptom_incidence.csv")
+symptom_pathogen_stacked <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/symptom_pathogen_stacked.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
 gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
@@ -206,8 +208,6 @@ demo_lab_info$f_visita_f <- as.Date(demo_lab_info$f_visita_f)
 
 
 # ------------------------------------------------------
-# Define UI for random distribution app ----
-# Sidebar layout with input and output definitions ----
 
 # Define UI for Summary Tab
 ui_tab_summary <- function() {
@@ -1755,7 +1755,7 @@ server <- function(input, output) {
           marker       = list(color = color_map[path]),
           text         = ~hover_text,
           hoverinfo    = "text",
-          textposition = "none"       # text on hover only, never in bars
+          textposition = "none"       
         )
     }
     
@@ -1799,6 +1799,14 @@ server <- function(input, output) {
   })  # closes stacked_plot_tab5
   
   # Tab 5 - symptom incidence plot ---------------------------------------------
+  symptom_vars <- c(
+    "fiebre", "tos", "dolor_oido", "congestion_nasal", "escurrimiento_nasal",
+    "dolor_garganta", "vomito_despues", "silbido_respiro", "dificultad_respirar",
+    "dolor_muscular", "dolor_cabeza", "dolor_articular", "sarpullido", "ojos_rojos",
+    "articulares_hinchados", "dolor_ojos", "diarrea", "fatiga", "perdida_peso",
+    "convulsiones", "labios_azules", "perdida_gusto", "dolor_cuerpo", "dolor_hueso",
+    "irritabilidad", "letargo", "dificultad_comer"
+  )
   symptom_label_map <- c(
     fiebre                = "Fiebre",
     tos                   = "Tos",
@@ -2270,8 +2278,8 @@ server <- function(input, output) {
     es       <- input$language_tab5b == "es"
     p_key    <- input$pathogen_tab5b
     label    <- pathogen_label(p_key, es)
-    col_roll <- pathogen_inc_roll_col(p_key)   # reuses your existing helper
-    col_raw  <- pathogen_inc_col(p_key)        # reuses your existing helper
+    col_roll <- pathogen_inc_roll_col(p_key)
+    col_raw  <- pathogen_inc_col(p_key)       
     
     
     if (!(col_roll %in% names(resp_incidence_age)) || !(col_raw %in% names(resp_incidence_age))) {
@@ -2313,7 +2321,7 @@ server <- function(input, output) {
           y         = ~inc_roll,
           type      = "scatter",
           mode      = "lines+markers",
-          name      = paste(ag, if (es) "— promedio móvil" else "— rolling avg"),
+          name      = paste(ag),
           legendgroup = ag,
           line      = list(color = color, width = 2, dash = "solid"),
           marker    = list(color = color, size = 4),
@@ -2531,8 +2539,7 @@ server <- function(input, output) {
       plot_bgcolor  = "white",
       paper_bgcolor = "white"
     )
-  })  # closes sex_incidence_plot_tab5b
-  
+  })  
   # --- Symptom reporting rate among pathogen-positives (bar chart) ------------
   
   pathogen_pos_label_map <- c(
@@ -2630,7 +2637,9 @@ server <- function(input, output) {
           name      = sym_labels[[sym]],
           marker    = list(color = color_palette[[sym]]),
           text      = ~hover_text,
-          hoverinfo = "text"
+          hoverinfo = "text",
+          textposition = "none"      
+          
         )
     }
     
