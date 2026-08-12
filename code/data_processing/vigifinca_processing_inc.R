@@ -14,13 +14,13 @@ uri <- "https://redcap.ucdenver.edu/api/"
 banasa <- 
   REDCapR::redcap_read(
     redcap_uri  = uri, 
-    token = "vigi_banasa_token"
+    token = vigi_banasa_token
   )$data
 
 panta <- 
   REDCapR::redcap_read(
     redcap_uri  = uri, 
-    token = "vigi_panta_token"
+    token = vigi_panta_token
   )$data
 
 # Processing -----------------------------------------------------------------
@@ -342,7 +342,7 @@ vigifinca_results_roll_overall$lugar <- "overall"
 
 vigifinca_results_roll <- rbind(vigifinca_results_roll, vigifinca_results_roll_overall)
 
-write.csv(vigifinca_results, file = "docs/vigifinca_incidence.csv", row.names = FALSE)
+write.csv(vigifinca_results_roll, file = "docs/vigifinca_incidence.csv", row.names = FALSE)
 
 
 ############################ WHEN WE HAVE THE LAB FORM
@@ -407,7 +407,6 @@ write.csv(vigifinca_results, file = "docs/vigifinca_incidence.csv", row.names = 
 vigifinca_csv_file <- "docs/vigifinca_summary.csv"
 write.csv(vigifinca_results, file = vigifinca_csv_file, row.names = FALSE)
 
-write.csv(vigifinca_results, file = "docs/vigifinca_incidence.csv", row.names = FALSE)
 
 
 
