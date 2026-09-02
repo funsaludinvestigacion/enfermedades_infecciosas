@@ -172,6 +172,7 @@ resp_results <- vigifinca %>%
     inf_a_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_pos),
     inf_a_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_a_neg),
     inf_b_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_pos),
+    sars_cov2_pos = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, sars_cov2_pos),
     inf_b_neg = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, inf_b_neg),
     vsr_pos   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_pos),
     vsr_neg   = ifelse(exclude_flu_rsv_in_range & fecha_muestra >= cutoff_start & fecha_muestra <= cutoff_end & lugar == "Banasa", 0, vsr_neg)
@@ -201,6 +202,10 @@ dengue_results <- vigifinca %>%
     igm_neg = sum(p_igm == 2, na.rm = TRUE),
     igg_pos = sum(p_igg == 1, na.rm = TRUE),
     igg_neg = sum(p_igg == 2, na.rm = TRUE),
+    igg_neg = sum(p_igg == 2, na.rm = TRUE),
+    pcr_pos = sum(p_pcr == 1, na.rm = TRUE),
+    deng_pos = sum(ns1_pos == 1 |igm_pos == 1  |pcr_pos == 1 , na.rm = TRUE),
+    
     .groups = "drop"
   ) %>%
   mutate(source = "Deng")
@@ -219,7 +224,8 @@ vigifinca_results$week_start <- floor_date(vigifinca_results$fecha_muestra, unit
 vigifinca_results_week <- vigifinca_results %>% group_by(week_start, lugar, source) %>% 
   summarise(total_tested = sum(total_tested), inf_a_pos = sum(inf_a_pos), 
             inf_b_pos = sum(inf_b_pos), vsr_pos = sum(vsr_pos),
-            ns1_pos = sum(ns1_pos), igm_pos = sum(igm_pos), igg_pos = sum(igg_pos))
+            ns1_pos = sum(ns1_pos), igm_pos = sum(igm_pos), igg_pos = sum(igg_pos), deng_pos = sum(deng_pos), scv2_pos = sum(sars_cov2_pos)
+           )
 
 
 vigifinca_results_week$month <- month(vigifinca_results_week$week_start)
@@ -244,6 +250,8 @@ vigifinca_results_roll <- vigifinca_results_week %>%
     ns1_pos_roll       = rollsum(ns1_pos,      k = 3, align = "center", fill = NA),
     igm_pos_roll       = rollsum(igm_pos,      k = 3, align = "center", fill = NA),
     igg_pos_roll       = rollsum(igg_pos,      k = 3, align = "center", fill = NA),
+    deng_pos_roll       = rollsum(deng_pos,      k = 3, align = "center", fill = NA),
+    scv2_pos_roll       = rollsum(scv2_pos,      k = 3, align = "center", fill = NA),
     denom_roll       = rollsum(denom,          k = 3, align = "center", fill = NA),
     
     # raw (weekly) test positivity
@@ -253,7 +261,9 @@ vigifinca_results_roll <- vigifinca_results_week %>%
     ns1_pos_rate   = ns1_pos   / total_tested,
     igm_pos_rate   = igm_pos   / total_tested,
     igg_pos_rate   = igg_pos   / total_tested,
-
+    deng_pos_rate   = deng_pos   / total_tested,
+    scv2_pos_rate   = scv2_pos   / total_tested,
+    
     
     # raw (weekly) incidence
     inf_a_pos_inc = inf_a_pos / denom,
@@ -262,6 +272,9 @@ vigifinca_results_roll <- vigifinca_results_week %>%
     ns1_pos_inc   = ns1_pos   / denom,
     igm_pos_inc   = igm_pos   / denom,
     igg_pos_inc   = igg_pos   / denom,
+    deng_pos_inc   = deng_pos   / denom,
+    scv2_pos_inc   = scv2_pos   / denom,
+    tested_inc  = total_teste/ denom,
     
     # rolling test positivity (rolling positives / rolling tested)
     inf_a_pos_rate_roll = inf_a_pos_roll / total_tested_roll,
@@ -270,13 +283,19 @@ vigifinca_results_roll <- vigifinca_results_week %>%
     ns1_pos_rate_roll   = ns1_pos_roll   / total_tested_roll,
     igm_pos_rate_roll   = igm_pos_roll   / total_tested_roll,
     igg_pos_rate_roll   = igg_pos_roll   / total_tested_roll,
+    deng_pos_rate_roll   = deng_pos_roll   / total_tested_roll,
+    scv2_pos_rate_roll   = scv2_pos_roll   / total_tested_roll,
     
     inf_a_pos_inc_roll = inf_a_pos_roll / denom_roll,
     inf_b_pos_inc_roll = inf_b_pos_roll / denom_roll,
     vsr_pos_inc_roll   = vsr_pos_roll   / denom_roll,
     ns1_pos_inc_roll   = ns1_pos_roll   / denom_roll,
     igm_pos_inc_roll   = igm_pos_roll   / denom_roll,
-    igg_pos_inc_roll   = igg_pos_roll   / denom_roll
+    igg_pos_inc_roll   = igg_pos_roll   / denom_roll,
+    scv2_pos_inc_roll   = scv2_pos_roll   / denom_roll,
+    deng_pos_inc_roll   = deng_pos_roll   / denom_roll,
+    tested_inc_roll   = total_tested_roll   / denom_roll
+    
   ) %>%
   ungroup()
 
@@ -284,7 +303,7 @@ vigifinca_results_roll <- vigifinca_results_week %>%
 vigifinca_results_week_overall <- vigifinca_results %>% group_by(week_start, source) %>% 
   summarise(total_tested = sum(total_tested), inf_a_pos = sum(inf_a_pos), 
             inf_b_pos = sum(inf_b_pos), vsr_pos = sum(vsr_pos),
-            ns1_pos = sum(ns1_pos), igm_pos = sum(igm_pos), igg_pos = sum(igg_pos))
+            ns1_pos = sum(ns1_pos), igm_pos = sum(igm_pos), igg_pos = sum(igg_pos),deng_pos = sum(deng_pos), scv2_pos =sum(sars_cov2_pos))
 
 vigifinca_results_week_overall$month <- month(vigifinca_results_week_overall$week_start)
 vigifinca_results_week_overall$denom <- ifelse(vigifinca_results_week_overall$month <4 | vigifinca_results_week_overall$month >10, 9000,
@@ -303,7 +322,9 @@ vigifinca_results_roll_overall <- vigifinca_results_week_overall %>%
     ns1_pos_roll       = rollsum(ns1_pos,      k = 3, align = "center", fill = NA),
     igm_pos_roll       = rollsum(igm_pos,      k = 3, align = "center", fill = NA),
     igg_pos_roll       = rollsum(igg_pos,      k = 3, align = "center", fill = NA),
-    denom_roll       = rollsum(denom,      k = 3, align = "center", fill = NA),
+    deng_pos_roll       = rollsum(deng_pos,      k = 3, align = "center", fill = NA),
+    scv2_pos_roll       = rollsum(scv2_pos,      k = 3, align = "center", fill = NA),
+    denom_roll       = rollsum(denom,          k = 3, align = "center", fill = NA),
     
     # raw (weekly) test positivity
     inf_a_pos_rate = inf_a_pos / total_tested,
@@ -312,6 +333,9 @@ vigifinca_results_roll_overall <- vigifinca_results_week_overall %>%
     ns1_pos_rate   = ns1_pos   / total_tested,
     igm_pos_rate   = igm_pos   / total_tested,
     igg_pos_rate   = igg_pos   / total_tested,
+    deng_pos_rate   = deng_pos   / total_tested,
+    scv2_pos_rate   = scv2_pos   / total_tested,
+    
     
     # raw (weekly) incidence
     inf_a_pos_inc = inf_a_pos / denom,
@@ -320,6 +344,9 @@ vigifinca_results_roll_overall <- vigifinca_results_week_overall %>%
     ns1_pos_inc   = ns1_pos   / denom,
     igm_pos_inc   = igm_pos   / denom,
     igg_pos_inc   = igg_pos   / denom,
+    deng_pos_inc   = deng_pos   / denom,
+    scv2_pos_inc   = scv2_pos   / denom,
+    tested_inc  = total_teste/ denom,
     
     # rolling test positivity (rolling positives / rolling tested)
     inf_a_pos_rate_roll = inf_a_pos_roll / total_tested_roll,
@@ -328,15 +355,22 @@ vigifinca_results_roll_overall <- vigifinca_results_week_overall %>%
     ns1_pos_rate_roll   = ns1_pos_roll   / total_tested_roll,
     igm_pos_rate_roll   = igm_pos_roll   / total_tested_roll,
     igg_pos_rate_roll   = igg_pos_roll   / total_tested_roll,
+    deng_pos_rate_roll   = deng_pos_roll   / total_tested_roll,
+    scv2_pos_rate_roll   = scv2_pos_roll   / total_tested_roll,
     
     inf_a_pos_inc_roll = inf_a_pos_roll / denom_roll,
     inf_b_pos_inc_roll = inf_b_pos_roll / denom_roll,
     vsr_pos_inc_roll   = vsr_pos_roll   / denom_roll,
     ns1_pos_inc_roll   = ns1_pos_roll   / denom_roll,
     igm_pos_inc_roll   = igm_pos_roll   / denom_roll,
-    igg_pos_inc_roll   = igg_pos_roll   / denom_roll
+    igg_pos_inc_roll   = igg_pos_roll   / denom_roll,
+    scv2_pos_inc_roll   = scv2_pos_roll   / denom_roll,
+    deng_pos_inc_roll   = deng_pos_roll   / denom_roll,
+    tested_inc_roll   = total_tested_roll   / denom_roll
+    
   ) %>%
   ungroup()
+
 
 vigifinca_results_roll_overall$lugar <- "overall"
 
