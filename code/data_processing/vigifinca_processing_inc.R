@@ -274,7 +274,7 @@ vigifinca_results_roll <- vigifinca_results_week %>%
     igg_pos_inc   = igg_pos   / denom,
     deng_pos_inc   = deng_pos   / denom,
     scv2_pos_inc   = scv2_pos   / denom,
-    tested_inc  = total_teste/ denom,
+    tested_inc  = total_tested / denom,
     
     # rolling test positivity (rolling positives / rolling tested)
     inf_a_pos_rate_roll = inf_a_pos_roll / total_tested_roll,
@@ -346,7 +346,7 @@ vigifinca_results_roll_overall <- vigifinca_results_week_overall %>%
     igg_pos_inc   = igg_pos   / denom,
     deng_pos_inc   = deng_pos   / denom,
     scv2_pos_inc   = scv2_pos   / denom,
-    tested_inc  = total_teste/ denom,
+    tested_inc  = total_tested / denom,
     
     # rolling test positivity (rolling positives / rolling tested)
     inf_a_pos_rate_roll = inf_a_pos_roll / total_tested_roll,

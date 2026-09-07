@@ -26,6 +26,7 @@ resp_incidence_sex <- read.csv("https://raw.githubusercontent.com/funsaludinvest
 symptom_incidence <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/symptom_incidence.csv")
 symptom_pathogen_stacked <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/symptom_pathogen_stacked.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
+vigifinca_results_roll <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_incidence.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
 gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
 demo_lab_info <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/todas_las_fichas.csv")
@@ -484,7 +485,8 @@ ui_tab5b <- function() {
   )
 }
 # Define UI for Tab 6 (VIGIFINCA)
-ui_tab6 <- function() { 
+
+ui_tab6 <- function() {
   fluidPage(
     tags$style(HTML("
       .sidebar {
@@ -507,60 +509,54 @@ ui_tab6 <- function() {
     sidebarLayout(
       sidebarPanel(
         # Language selection
-        radioButtons("language_VFinca", "Idioma / Language:", 
-                     choices = c("Español" = "es", "English" = "en"), 
+        radioButtons("language_VFinca", "Idioma / Language:",
+                     choices = c("Español" = "es", "English" = "en"),
                      selected = "es"),
+        
         # Date range input
         dateRangeInput("date_range_input_tab6", "Período del tiempo / Time period:",
                        start = "2025-06-16", end = Sys.Date(), separator = " a "),
         
-        # Dropdown menu for selecting farm
-        radioButtons("lugar", "Lugar:",
-                     choices = c("Fincas de Banasa - Trifinio", 
-                                 "Fincas de Pantaleon - Escuintla",
-                                 "Ambos Sitios")
-        ),
-        
-        # Dropdown menu for selecting virus
-        selectInput("virus_tab6",
-                    "Selecciona Virus(es) / Select Virus(es):",
-                    choices = c("Todos Virus Respiratorios", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "VSR", "Dengue")),
-        
-        # Conditionally show dengue test type radio buttons only when Dengue is selected
-        conditionalPanel(
-          condition = "input.virus_tab6 == 'Dengue'",
-          radioButtons("dengue_test_type_tab6", "Selecciona tipo de prueba Dengue / Select Dengue test:",
-                       choices = c("NS1", "IgM", "IgG"),
-                       selected = "NS1")
-        ),
+        # Location - the only content filter on this tab
+        radioButtons("lugar_tab6", "Lugar:",
+                     choices = c(
+                       "Fincas de Banasa - Trifinio"     = "Fincas de Banasa - Trifinio",
+                       "Fincas de Pantaleon - Escuintla"  = "Fincas de Pantaleon - Escuintla",
+                       "Ambos Sitios"                     = "overall"
+                     ),
+                     selected = "overall"),
         class = "sidebar"
       ),
       
       mainPanel(
-        # Add information about the study
+        # Study info
         h2(textOutput("header_VFinca_text"), style = "color: orange;"),
         uiOutput("info_VFinca_text"),
         br(),
-        uiOutput("dynamic_plot_title_tab6"),
         
-        conditionalPanel(
-          condition = "input.virus_tab6 != 'Dengue'",
-          plotOutput("resp_plot_tab6")
-        ),
-        conditionalPanel(
-          condition = "input.virus_tab6 == 'Dengue'",
-          plotOutput("dengue_plot_tab6")
-        ),
-        br(),
-        br(),
+        # Incidence plot (all pathogens together)
+        h4(textOutput("inc_plot_title_tab6")),
+        plotlyOutput("inc_plot_tab6"),
+        br(), br(),
+        
+        # Respiratory stacked bar
+        h4(textOutput("resp_stacked_title_tab6")),
+        plotlyOutput("resp_stacked_plot_tab6"),
+        br(), br(),
+        
+        # Dengue stacked bar
+        h4(textOutput("deng_stacked_title_tab6")),
+        plotlyOutput("deng_stacked_plot_tab6"),
+        br(), br(),
+        
         leafletOutput("map_tab6", height = "800px"),
-        br(),
-        br(),
+        br(), br(),
         class = "content"
       )
     )
   )
 }
+
 
 #UI for tab report (7)
 ui_tab7 <- function() {
@@ -1765,7 +1761,7 @@ server <- function(input, output) {
     annotations <- lapply(1:nrow(totals), function(i) {
       list(
         x         = totals$week_start[i],
-        y         = 107,                          # fixed position above bars
+        y         = 107,                          
         text      = paste0("n=", totals$tested[i]),
         showarrow = FALSE,
         font      = list(size = 9, color = "black"),
@@ -2667,326 +2663,426 @@ server <- function(input, output) {
   # --------------------------------------------------------------------------
   #                             VIGIFINCA
   # --------------------------------------------------------------------------
-  output$info_VFinca_text <- renderText({
+  
+  # ---- Tab 6a: Incidence plot (rolling, all pathogens together) ------------
+  output$inc_plot_tab6 <- renderPlotly({
+    es <- input$language_VFinca == "es"
+    
+    resp_data <- vigifinca_results_roll %>%
+      filter(
+        lugar      == input$lugar_tab6,
+        source     == "Resp",
+        week_start >= input$date_range_input_tab6[1],
+        week_start <= input$date_range_input_tab6[2]
+      ) %>%
+      mutate(
+        flu_gen_pos_roll = inf_a_pos_roll + inf_b_pos_roll,
+        flu_gen_inc_roll = flu_gen_pos_roll / denom_roll,
+        ari_inc_roll = tested_inc_roll,
+        ari_roll = total_tested_roll 
+      )
+    
+    deng_data <- vigifinca_results_roll %>%
+      filter(
+        lugar      == input$lugar_tab6,
+        source     == "Deng",
+        week_start >= input$date_range_input_tab6[1],
+        week_start <= input$date_range_input_tab6[2]
+      ) %>% 
+      mutate(
+        ali_inc_roll = tested_inc_roll,
+        ali_roll     = total_tested_roll
+      )
+    
+    if (nrow(resp_data) == 0 && nrow(deng_data) == 0) {
+      return(plotly_empty() %>%
+               layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    # FIX #1: key changed from "deng_pos_inc_roll" -> "igm_pos_inc_roll" to match
+    # the actual pathogen name produced by deng_long's pivot_longer() below.
+    # Previously this mismatch meant the Dengue trace was silently dropped
+    # from the plot (the for-loop never found matching rows).
+    # FIX #9: ALI ("ali_inc_roll") was being computed in deng_data but never
+    # added here, so it was never plotted even though it had a label. Now
+    # included (analogous to ARI for respiratory: overall dengue-panel
+    # testing incidence, not just IgM-positive).
+    color_map <- c(
+      "flu_gen_inc_roll"   = "#E41A1C",
+      "inf_a_pos_inc_roll" = "#FF7F00",
+      "inf_b_pos_inc_roll" = "#984EA3",
+      "vsr_pos_inc_roll"   = "#4DAF4A",
+      "scv2_pos_inc_roll"  = "#377EB8",
+      "igm_pos_inc_roll"   = "#F781BF",
+      "ari_inc_roll"       = "#999999",
+      "ali_inc_roll"       = "#A65628"
+    )
+    
+    # FIX #2: both language branches now use "igm_pos_inc_roll" as the key
+    # (previously the Spanish branch used "deng_pos_inc_roll", which never
+    # matched anything -> Dengue legend/hover label was NA in Spanish mode).
+    # Also removed "ili_inc_roll" (dead: no such column exists anywhere in
+    # the data pipeline) and "ali_inc_roll" (never actually plotted -- see
+    # note below if you want to wire it up as a real feature later).
+    label_map <- if (es) {
+      c(
+        "flu_gen_inc_roll"   = "Influenza (General)",
+        "inf_a_pos_inc_roll" = "Influenza A",
+        "inf_b_pos_inc_roll" = "Influenza B",
+        "scv2_pos_inc_roll"  = "SARS-CoV-2",
+        "vsr_pos_inc_roll"   = "RSV",
+        "igm_pos_inc_roll"   = "Dengue",
+        "ari_inc_roll"       = "ARI",
+        "ali_inc_roll"       = "ALI"
+      )
+    } else {
+      c(
+        "flu_gen_inc_roll"   = "Influenza (General)",
+        "inf_a_pos_inc_roll" = "Influenza A",
+        "inf_b_pos_inc_roll" = "Influenza B",
+        "scv2_pos_inc_roll"  = "SARS-CoV-2",
+        "vsr_pos_inc_roll"   = "RSV",
+        "igm_pos_inc_roll"   = "Dengue",
+        "ari_inc_roll"       = "ARI",
+        "ali_inc_roll"       = "ALI"
+      )
+    }
+    
+    # respiratory pathogens, long format
+    resp_long <- resp_data %>%
+      select(week_start, total_tested_roll, denom_roll,
+             flu_gen_inc_roll, inf_a_pos_inc_roll, inf_b_pos_inc_roll, vsr_pos_inc_roll, scv2_pos_inc_roll, ari_inc_roll,
+             flu_gen_pos_roll, inf_a_pos_roll, inf_b_pos_roll, vsr_pos_roll, scv2_pos_roll, ari_roll) %>%
+      pivot_longer(
+        cols      = c(flu_gen_inc_roll, inf_a_pos_inc_roll, inf_b_pos_inc_roll, vsr_pos_inc_roll, scv2_pos_inc_roll, ari_inc_roll),
+        names_to  = "pathogen",
+        values_to = "inc_value"
+      ) %>%
+      mutate(
+        # FIX #3: "ari_roll" -> "ari_inc_roll" so this branch actually matches
+        # the pathogen value produced by pivot_longer above (previously this
+        # never matched -> ARI hover tooltip always showed NA for pos_count).
+        # FIX #4: scv2 branch was self-referential (mapped to the incidence
+        # column it came from instead of the raw positive count) -> now
+        # correctly points at scv2_pos_roll.
+        pos_count = case_when(
+          pathogen == "flu_gen_inc_roll"   ~ flu_gen_pos_roll,
+          pathogen == "inf_a_pos_inc_roll" ~ inf_a_pos_roll,
+          pathogen == "inf_b_pos_inc_roll" ~ inf_b_pos_roll,
+          pathogen == "scv2_pos_inc_roll"  ~ scv2_pos_roll,
+          pathogen == "vsr_pos_inc_roll"   ~ vsr_pos_roll,
+          pathogen == "ari_inc_roll"       ~ ari_roll,
+          TRUE ~ NA_real_
+        ),
+        tested_roll = total_tested_roll
+      ) %>%
+      select(week_start, pathogen, inc_value, pos_count, tested_roll, denom_roll)
+    
+    deng_long <- deng_data %>%
+      select(week_start, total_tested_roll, denom_roll,
+             igm_pos_inc_roll, ali_inc_roll, igm_pos_roll, ali_roll) %>%
+      pivot_longer(
+        cols      = c(igm_pos_inc_roll, ali_inc_roll),
+        names_to  = "pathogen",
+        values_to = "inc_value"
+      ) %>%
+      mutate(
+        pos_count = case_when(
+          pathogen == "igm_pos_inc_roll" ~ igm_pos_roll,
+          pathogen == "ali_inc_roll"     ~ ali_roll,
+          TRUE ~ NA_real_
+        ),
+        tested_roll = total_tested_roll
+      ) %>%
+      select(week_start, pathogen, inc_value, pos_count, tested_roll, denom_roll)
+    
+    plot_data <- bind_rows(resp_long, deng_long) %>%
+      mutate(
+        pathogen_label   = label_map[pathogen],
+        inc_value_per1k  = inc_value * 1000,   # NOTE: assumes inc_roll is a raw proportion; drop *1000 if already scaled
+        week_start_chr   = as.character(week_start),
+        hover_text = paste0(
+          "<b>", pathogen_label, "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000, 3 sem): " else "Incidence (per 1,000, 3-wk): ", round(inc_value_per1k, 2), "<br>",
+          if (es) "Pruebas Positivas (3 sem): " else "Positive Tests (3-wk): ", pos_count, "<br>",
+          if (es) "Muestreados (3 sem): " else "Tested (3-wk): ", tested_roll, "<br>",
+          if (es) "Denominador Poblacional (3 sem): " else "Population Denom (3-wk): ", denom_roll
+        )
+      )
+    
+    p <- plot_ly()
+    
+    for (path in names(color_map)) {
+      df_path <- plot_data %>% dplyr::filter(pathogen == path)
+      if (nrow(df_path) == 0) next
+      line_style <- "solid"
+      
+      p <- p %>%
+        add_trace(
+          data      = df_path,
+          x         = ~week_start,
+          y         = ~inc_value_per1k,
+          type      = "scatter",
+          mode      = "lines+markers",
+          name      = label_map[path],
+          line      = list(color = color_map[path], width = 2, dash = line_style),
+          marker    = list(color = color_map[path], size = 5),
+          text      = ~hover_text,
+          hoverinfo = "text"
+        )
+    }
+    
+    p %>%
+      layout(
+        # FIX #10: x-axis now shows one tick per month instead of one per
+        # week, to reduce clutter. dtick = "M1" + tickformat gives monthly
+        # labels regardless of the underlying weekly data resolution.
+        xaxis = list(
+          title     = if (es) "Mes" else "Month",
+          type      = "date",
+          dtick     = "M1",
+          tickformat = "%b %Y",
+          tickfont  = list(size = 10)
+        ),
+        yaxis = list(
+          title = if (es) "Incidencia (por 1,000 Personas)" else "Incidence (per 1,000 People)"
+        ),
+        legend = list(
+          orientation = "h", x = 0, y = -0.5,
+          xanchor = "left", yanchor = "top", font = list(size = 11)
+        ),
+        hovermode     = "closest",
+        margin        = list(b = 160, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })  # closes inc_plot_tab6
+  
+  
+  # ---- Tab 6b: Respiratory stacked bar (% of tested) ------------------------
+  output$resp_stacked_plot_tab6 <- renderPlotly({
+    es <- input$language_VFinca == "es"
+    
+    filtered_data <- vigifinca_results_roll %>%
+      filter(
+        lugar      == input$lugar_tab6,
+        source     == "Resp",
+        week_start >= input$date_range_input_tab6[1],
+        week_start <= input$date_range_input_tab6[2]
+      ) %>%
+      mutate(
+        # FIX #7: neg_all must also subtract scv2_pos, or COVID-positive
+        # people get miscounted as "Negative for All" in the stacked bar.
+        neg_all = total_tested - (inf_a_pos + inf_b_pos + vsr_pos + scv2_pos),
+        neg_all = ifelse(neg_all < 0, 0, neg_all)
+      )
+    
+    if (nrow(filtered_data) == 0) {
+      return(plotly_empty() %>%
+               layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    color_map <- c(
+      "inf_a_pos" = "#FF7F00",
+      "inf_b_pos" = "#984EA3",
+      "scv2_pos"  = "#377EB8",
+      "vsr_pos"   = "#4DAF4A",
+      "neg_all"   = "#BDBDBD"
+    )
+    
+    # FIX #7 (cont.): added scv2_pos label so it renders in the legend now
+    # that it's included in `pathogens` below.
+    label_map <- if (es) {
+      c("inf_a_pos" = "Influenza A", "inf_b_pos" = "Influenza B",
+        "scv2_pos" = "SARS-CoV-2", "vsr_pos" = "RSV", "neg_all" = "Negativo para Todos")
+    } else {
+      c("inf_a_pos" = "Influenza A", "inf_b_pos" = "Influenza B",
+        "scv2_pos" = "SARS-CoV-2", "vsr_pos" = "RSV", "neg_all" = "Negative for All")
+    }
+    
+    # FIX #7 (cont.): scv2_pos added so the SARS-CoV-2 bar segment actually
+    # gets drawn (previously defined in color_map but never plotted).
+    pathogens <- c("inf_a_pos", "inf_b_pos", "scv2_pos", "vsr_pos", "neg_all")
+    
+    plot_data <- filtered_data %>%
+      select(week_start, total_tested, all_of(pathogens)) %>%
+      pivot_longer(cols = all_of(pathogens), names_to = "pathogen", values_to = "count") %>%
+      group_by(week_start) %>%
+      mutate(
+        pct            = ifelse(total_tested > 0, count / total_tested * 100, 0),
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", label_map[pathogen], "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Cantidad: " else "Count: ", count, "<br>",
+          if (es) "% de Muestreados: " else "% of Tested: ", round(pct, 1), "%<br>",
+          if (es) "Total Muestreados: " else "Total Tested: ", total_tested
+        )
+      ) %>%
+      ungroup()
+    
+    p <- plot_ly()
+    
+    for (path in pathogens) {
+      df_path <- plot_data %>% dplyr::filter(pathogen == path)
+      p <- p %>%
+        add_trace(
+          data         = df_path,
+          x            = ~week_start,
+          y            = ~pct,
+          type         = "bar",
+          name         = label_map[path],
+          marker       = list(color = color_map[path]),
+          text         = ~hover_text,
+          hoverinfo    = "text",
+          textposition = "none"
+        )
+    }
+    
+    p %>%
+      layout(
+        barmode     = "stack",
+        xaxis = list(
+          title      = if (es) "Mes" else "Month",
+          type       = "date",
+          dtick      = "M1",
+          tickformat = "%b %Y",
+          tickfont   = list(size = 10)
+        ),
+        yaxis = list(
+          title      = if (es) "% de Personas Muestreadas" else "% of People Tested",
+          range      = c(0, 100),
+          ticksuffix = "%"
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.4),
+        hovermode     = "closest",
+        margin        = list(b = 120),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })  # closes resp_stacked_plot_tab6
+  
+  
+  # ---- Tab 6c: Dengue stacked bar (% of tested, IgM+ vs negative) -----------
+  output$deng_stacked_plot_tab6 <- renderPlotly({
+    es <- input$language_VFinca == "es"
+    
+    filtered_data <- vigifinca_results_roll %>%
+      filter(
+        lugar      == input$lugar_tab6,
+        source     == "Deng",
+        week_start >= input$date_range_input_tab6[1],
+        week_start <= input$date_range_input_tab6[2]
+      ) %>%
+      mutate(
+        neg_all = total_tested - igm_pos,
+        neg_all = ifelse(neg_all < 0, 0, neg_all)
+      )
+    
+    if (nrow(filtered_data) == 0) {
+      return(plotly_empty() %>%
+               layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    color_map <- c("igm_pos" = "#E41A1C", "neg_all" = "#BDBDBD")
+    
+    label_map <- if (es) {
+      c("igm_pos" = "Dengue Positivo", "neg_all" = "Negativo")
+    } else {
+      c("igm_pos" = "Dengue Positive", "neg_all" = "Negative")
+    }
+    
+    pathogens <- c("igm_pos", "neg_all")
+    
+    plot_data <- filtered_data %>%
+      select(week_start, total_tested, all_of(pathogens)) %>%
+      pivot_longer(cols = all_of(pathogens), names_to = "pathogen", values_to = "count") %>%
+      group_by(week_start) %>%
+      mutate(
+        pct            = ifelse(total_tested > 0, count / total_tested * 100, 0),
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", label_map[pathogen], "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Cantidad: " else "Count: ", count, "<br>",
+          if (es) "% de Muestreados: " else "% of Tested: ", round(pct, 1), "%<br>",
+          if (es) "Total Muestreados: " else "Total Tested: ", total_tested
+        )
+      ) %>%
+      ungroup()
+    
+    p <- plot_ly()
+    
+    for (path in pathogens) {
+      df_path <- plot_data %>% dplyr::filter(pathogen == path)
+      p <- p %>%
+        add_trace(
+          data         = df_path,
+          x            = ~week_start,
+          y            = ~pct,
+          type         = "bar",
+          name         = label_map[path],
+          marker       = list(color = color_map[path]),
+          text         = ~hover_text,
+          hoverinfo    = "text",
+          textposition = "none"
+        )
+    }
+    
+    p %>%
+      layout(
+        barmode     = "stack",
+        xaxis = list(
+          title      = if (es) "Mes" else "Month",
+          type       = "date",
+          dtick      = "M1",
+          tickformat = "%b %Y",
+          tickfont   = list(size = 10)
+        ),
+        yaxis = list(
+          title      = if (es) "% de Personas Muestreadas" else "% of People Tested",
+          range      = c(0, 100),
+          ticksuffix = "%"
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.4),
+        hovermode     = "closest",
+        margin        = list(b = 120),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })  # closes deng_stacked_plot_tab6
+  
+  # ---- Tab 6 section titles (bilingual) --------------------------------------
+  output$inc_plot_title_tab6 <- renderText({
+    if (input$language_VFinca == "es") "Incidencia por Patógeno (3 semanas)" else "Incidence by Pathogen (3-week rolling)"
+  })
+  
+  output$resp_stacked_title_tab6 <- renderText({
+    if (input$language_VFinca == "es") "Resultados Respiratorios (% de Muestreados)" else "Respiratory Results (% of Tested)"
+  })
+  
+  output$deng_stacked_title_tab6 <- renderText({
+    if (input$language_VFinca == "es") "Resultados de Dengue (% de Muestreados)" else "Dengue Results (% of Tested)"
+  })
+  
+  # ---- Tab 6 header/info stubs -----------------------------------------------
+  # NOTE: referenced by ui_tab6 (h2/uiOutput) but not defined anywhere you've
+  # shown me yet. Placeholder text below - replace with real study description
+  # whenever you have it, or delete these + the corresponding UI lines if you'd
+  # rather drop that section entirely.
+  output$header_VFinca_text <- renderText({
+    if (input$language_VFinca == "es") "VigiFinca" else "VigiFinca"
+  })
+  
+  output$info_VFinca_text <- renderUI({
     if (input$language_VFinca == "es") {
-      Info_VFinca  # Spanish version
+      p("Descripción del estudio VigiFinca pendiente.")
     } else {
-      Info_VFinca_eng  # English version
+      p("VigiFinca study description pending.")
     }
   })
   
-  output$dynamic_plot_title_tab6 <- renderUI({
-    title_text <- if (input$virus_tab6 == "Dengue") {
-      "Tasa de Positividad de Dengue"
-    } else {
-      "Tasa de Positividad de Enfermedades Respiratorias"
-    }
-    tags$h2(title_text,
-            style = "color: black; font-weight: bold; font-size: 24px; text-align: center; margin-bottom: 20px;")
-  })
-  
-  filtered_data_vigifinca <- reactive({
-    data <- vigifinca_summary %>%
-      filter(
-        source == "Resp",
-        epiweek_date >= input$date_range_input_tab6[1],
-        epiweek_date <= input$date_range_input_tab6[2]
-      )
-    
-    # Filter by lugar
-    data <- data %>%
-      filter(
-        case_when(
-          input$lugar == "Fincas de Banasa - Trifinio" ~ lugar == "Banasa",
-          input$lugar == "Fincas de Pantaleon - Escuintla" ~ lugar == "Pantaleon",
-          input$lugar == "Ambos Sitios" ~ TRUE,
-          TRUE ~ FALSE  # fallback safety
-        )
-      )
-    
-    return(data)
-  })
-  
-  output$resp_plot_tab6 <- renderPlot({
-    filtered_data <- filtered_data_vigifinca()
-    
-    if (nrow(filtered_data) == 0) {
-      return(
-        ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
-      )
-    }
-    
-    # Create full range of year and epiweeks in selected date range
-    full_weeks <- vigifinca_summary %>%
-      filter(
-        epiweek_date >= input$date_range_input_tab6[1],
-        epiweek_date <= input$date_range_input_tab6[2]
-      ) %>%
-      distinct(year, epiweek, epiweek_date) %>%
-      complete(nesting(year), epiweek = full_seq(epiweek, 1)) %>%
-      mutate(epiweek_label = factor(paste(year, epiweek, sep = "-")))
-    
-    # Join to filtered data
-    filtered_data <- full_weeks %>%
-      left_join(filtered_data, by = c("year", "epiweek", "epiweek_date"))
-    
-    # Replace NAs with 0 for all relevant count columns
-    filtered_data <- filtered_data %>%
-      mutate(
-        inf_a_pos = replace_na(inf_a_pos, 0),
-        inf_a_neg = replace_na(inf_a_neg, 0),
-        inf_b_pos = replace_na(inf_b_pos, 0),
-        inf_b_neg = replace_na(inf_b_neg, 0),
-        sars_cov2_pos = replace_na(sars_cov2_pos, 0),
-        sars_cov2_neg = replace_na(sars_cov2_neg, 0),
-        vsr_pos = replace_na(vsr_pos, 0),
-        vsr_neg = replace_na(vsr_neg, 0),
-        total_pos = replace_na(total_pos, 0),
-        total_tested = replace_na(total_tested, 0)
-      ) %>%
-      mutate(
-        total_pos_dynamic = case_when(
-          input$virus_tab6 == "Influenza A" ~ inf_a_pos,
-          input$virus_tab6 == "Influenza B" ~ inf_b_pos,
-          input$virus_tab6 == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
-          input$virus_tab6 == "SARS-CoV-2" ~ sars_cov2_pos,
-          input$virus_tab6 == "VSR" ~ vsr_pos,
-          TRUE ~ total_pos
-        ),
-        total_tested_dynamic = case_when(
-          input$virus_tab6 == "Influenza A" ~ inf_a_pos + inf_a_neg,
-          input$virus_tab6 == "Influenza B" ~ inf_b_pos + inf_b_neg,
-          input$virus_tab6 == "Influenza A y B" ~ inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg,
-          input$virus_tab6 == "SARS-CoV-2" ~ sars_cov2_pos + sars_cov2_neg,
-          input$virus_tab6 == "VSR" ~ vsr_pos + vsr_neg,
-          TRUE ~ total_tested
-        ),
-        epiweek_label = factor(paste(year, epiweek, sep = "-"), levels = paste(full_weeks$year, full_weeks$epiweek, sep = "-"))
-      )
-    week_breaks <- levels(filtered_data$epiweek_label)[
-      seq(1, length(levels(filtered_data$epiweek_label)), by = 4)]
-    ggplot(filtered_data, aes(x = epiweek_label)) +
-      geom_bar(aes(y = total_tested_dynamic, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
-      geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
-      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
-      scale_y_continuous(
-        breaks = scales::pretty_breaks(n = 10),
-        labels = function(x) floor(x)
-      ) +
-      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
-      scale_x_discrete(breaks = week_breaks)+
-      theme_minimal() +
-      theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank()
-      )
-  })
-  
-  
-  output$dengue_plot_tab6 <- renderPlot({
-    filtered_data <- vigifinca_summary %>%
-      filter(
-        source == "Deng",
-        epiweek_date >= input$date_range_input_tab6[1],
-        epiweek_date <= input$date_range_input_tab6[2],
-        case_when(
-          input$lugar == "Fincas de Banasa - Trifinio" ~ lugar == "Banasa",
-          input$lugar == "Fincas de Pantaleon - Escuintla" ~ lugar == "Pantaleon",
-          input$lugar == "Ambos Sitios" ~ TRUE
-        )
-      )
-    
-    test_column <- case_when(
-      input$dengue_test_type_tab6 == "NS1" ~ "ns1_pos",
-      input$dengue_test_type_tab6 == "IgM" ~ "igm_pos",
-      input$dengue_test_type_tab6 == "IgG" ~ "igg_pos"
-    )
-    
-    if (nrow(filtered_data) == 0) {
-      return(
-        ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection")
-      )
-    }
-    
-    filtered_data <- filtered_data %>%
-      mutate(
-        total_pos_dengue = .data[[test_column]],
-        epiweek_label = factor(paste(year, epiweek, sep = "-"))
-      )
-    week_breaks <- levels(filtered_data$epiweek_label)[
-      seq(1, length(levels(filtered_data$epiweek_label)), by = 4)
-    ]
-    
-    ggplot(filtered_data, aes(x = epiweek_label)) +
-      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.4) +
-      geom_bar(aes(y = total_pos_dengue, fill = "Total Positivos"), stat = "identity") +
-      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "red")) +
-      scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +  # integer-like tick spacing 
-      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
-      scale_x_discrete(breaks = week_breaks)+
-      theme_minimal() +
-      theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank()
-      )
-  })
-  
-  ########## MAP MAP MAP  
-  # Reactive: filter & summarize based on inputs
-  filtered_data_tab5_map <- reactive({
-    df <- vigifinca_joined %>%
-      filter(
-        fecha_muestra >= input$date_range_input_tab6[1],
-        fecha_muestra <= input$date_range_input_tab6[2]
-      )
-    
-    # Filter by lugar
-    if (input$lugar == "Fincas de Banasa - Trifinio") {
-      df <- df %>% filter(lugar == "Banasa")
-    } else if (input$lugar == "Fincas de Pantaleon - Escuintla") {
-      df <- df %>% filter(lugar == "Pantaleon")
-    } 
-    # "Ambos Sitios" = no filter
-    
-    # Filter by source depending on virus selection
-    if (input$virus_tab6 == "Dengue") {
-      df <- df %>% filter(source == "Deng")
-    } else {
-      df <- df %>% filter(source == "Resp")
-    }
-    
-    # Calculate virus-specific tested/pos/positivity
-    df <- df %>%
-      group_by(municipio, geometry) %>%
-      summarise(
-        total_tested = sum(total_tested, na.rm = TRUE),
-        total_pos = sum(total_pos, na.rm = TRUE),
-        sars_cov2_pos = sum(sars_cov2_pos, na.rm = TRUE),
-        sars_cov2_neg = sum(sars_cov2_neg, na.rm = TRUE),
-        inf_a_pos = sum(inf_a_pos, na.rm = TRUE),
-        inf_a_neg = sum(inf_a_neg, na.rm = TRUE),
-        inf_b_pos = sum(inf_b_pos, na.rm = TRUE),
-        inf_b_neg = sum(inf_b_neg, na.rm = TRUE),
-        vsr_pos = sum(vsr_pos, na.rm = TRUE),
-        vsr_neg = sum(vsr_neg, na.rm = TRUE),
-        ns1_pos = sum(ns1_pos, na.rm = TRUE),
-        ns1_neg = sum(ns1_neg, na.rm = TRUE),
-        igm_pos = sum(igm_pos, na.rm = TRUE),
-        igm_neg = sum(igm_neg, na.rm = TRUE),
-        igg_pos = sum(igg_pos, na.rm = TRUE),
-        igg_neg = sum(igg_neg, na.rm = TRUE),
-        .groups = "drop"
-      ) %>%
-      mutate(
-        pos = case_when(
-          input$virus_tab6 == "Todos Virus Respiratorios" ~ total_pos,
-          input$virus_tab6 == "SARS-CoV-2" ~ sars_cov2_pos,
-          input$virus_tab6 == "Influenza A y B" ~ (inf_a_pos + inf_b_pos),
-          input$virus_tab6 == "Influenza A" ~ inf_a_pos,
-          input$virus_tab6 == "Influenza B" ~ inf_b_pos,
-          input$virus_tab6 == "VSR" ~ vsr_pos,
-          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "NS1" ~ ns1_pos,
-          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "IgM" ~ igm_pos,
-          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "IgG" ~ igg_pos,
-          TRUE ~ NA_real_
-        ),
-        tested = case_when(
-          input$virus_tab6 == "Todos Virus Respiratorios" ~ total_tested,
-          input$virus_tab6 == "SARS-CoV-2" ~ (sars_cov2_pos + sars_cov2_neg),
-          input$virus_tab6 == "Influenza A y B" ~ (inf_a_pos + inf_a_neg + inf_b_pos + inf_b_neg),
-          input$virus_tab6 == "Influenza A" ~ (inf_a_pos + inf_a_neg),
-          input$virus_tab6 == "Influenza B" ~ (inf_b_pos + inf_b_neg),
-          input$virus_tab6 == "VSR" ~ (vsr_pos + vsr_neg),
-          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "NS1" ~ (ns1_pos + ns1_neg),
-          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "IgM" ~ (igm_pos + igm_neg),
-          input$virus_tab6 == "Dengue" & input$dengue_test_type_tab6 == "IgG" ~ (igg_pos + igg_neg),
-          TRUE ~ NA_real_
-        ),
-        incidence = pos / tested,
-        incidence = ifelse(is.nan(incidence) | is.infinite(incidence), 0, incidence)
-      )
-    
-    df
-  })
-  
-  
-  # Reactive color palette based on incidence
-  pal <- reactive({
-    colorNumeric(
-      palette = "YlOrRd",
-      domain = filtered_data_tab5_map()$incidence,
-      na.color = "transparent"
-    )
-  })
-  
-  # Reactive labels for tooltip
-  labels <- reactive({
-    sprintf(
-      "<strong>%s</strong><br/>Muestreados: %d<br/>Positivos: %d<br/>Tasa de Positividad: %.2f%%",
-      toupper(filtered_data_tab5_map()$municipio_recent),
-      filtered_data_tab5_map()$tested,
-      filtered_data_tab5_map()$pos,
-      100 * filtered_data_tab5_map()$incidence
-    ) %>% lapply(htmltools::HTML)
-  })
-  
-  output$map_tab6 <- renderLeaflet({
-    
-    leaflet() %>%
-      # No addTiles(), so no basemap tiles loaded
-      
-      # Base layer: all municipalities outlines, no fill
-      addPolygons(
-        data = guate_json,
-        fillColor = "transparent",
-        color = "black",
-        weight = 1,
-        opacity = 1,
-        label = ~toupper(municipio),  # simple label showing municipio name
-        labelOptions = labelOptions(
-          style = list("font-weight" = "bold", padding = "3px 8px"),
-          textsize = "15px",
-          direction = "auto"
-        )
-      ) %>%
-      
-      # Data layer: filtered municipalities with incidence fill
-      addPolygons(
-        data = filtered_data_tab5_map(),
-        fillColor = ~pal()(incidence),
-        weight = 1,
-        opacity = 1,
-        color = "black",
-        fillOpacity = 0.7,
-        highlightOptions = highlightOptions(
-          weight = 3,
-          color = "#666",
-          fillOpacity = 0.9,
-          bringToFront = TRUE
-        ),
-        label = labels(),
-        labelOptions = labelOptions(
-          style = list("font-weight" = "normal", padding = "3px 8px"),
-          textsize = "15px",
-          direction = "auto"
-        )
-      ) %>%
-      
-      addLegend(
-        pal = pal(),
-        values = filtered_data_tab5_map()$incidence,
-        opacity = 0.7,
-        title = "Tasa de Positividad",
-        position = "bottomright",
-        labFormat = labelFormat(suffix = "%", transform = function(x) 100 * x)
-      ) %>%
-      
-      setView(lng = -86.7, lat = 15.8, zoom = 7.5)
-  })
   
   cdc_fichas_filtradas <- reactive({
     
