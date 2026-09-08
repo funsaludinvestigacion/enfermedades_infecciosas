@@ -2581,11 +2581,14 @@ server <- function(input, output) {
                layout(title = if (es) paste(label, "- selecciona un patógeno específico para ver síntomas") else paste(label, "- select a specific pathogen to see symptoms")))
     }
     
+    symptom_pathogen_stacked  <- symptom_pathogen_stacked %>% 
+      mutate(date = make_date(year, month, 1))
+    symptom_pathogen_stacked$date_my <- format(  symptom_pathogen_stacked$date, "%Y-%m")
     filtered_data <- symptom_pathogen_stacked %>%
       dplyr::filter(
         pos_pathogen == path,
-        week_start >= input$date_range_tab5b[1],
-        week_start <= input$date_range_tab5b[2]
+        date >= input$date_range_tab5b[1],
+        date <= input$date_range_tab5b[2]
       )
     
     if (nrow(filtered_data) == 0) {
@@ -2596,7 +2599,7 @@ server <- function(input, output) {
     sym_labels <- if (es) symptom_label_map else symptom_label_map_en
     
     plot_data <- filtered_data %>%
-      select(week_start, n_positive, all_of(pct_cols)) %>%
+      select(date_my, n_positive, all_of(pct_cols)) %>%
       pivot_longer(
         cols      = all_of(pct_cols),
         names_to  = "symptom_col",
@@ -2605,10 +2608,10 @@ server <- function(input, output) {
       mutate(
         symptom        = sub("_pct$", "", symptom_col),
         symptom_label  = sym_labels[symptom],
-        week_start_chr = as.character(week_start),
+        month_chr = as.character(date_my),
         hover_text = paste0(
           "<b>", symptom_label, "</b><br>",
-          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Mes: " else "Month: ", month_chr, "<br>",
           if (es) "% Reportando Síntoma: " else "% Reporting Symptom: ", round(pct_value, 1), "%<br>",
           if (es) "N Positivos: " else "N Positive: ", n_positive
         )
@@ -2627,7 +2630,7 @@ server <- function(input, output) {
       p <- p %>%
         add_trace(
           data      = df_sym,
-          x         = ~week_start,
+          x         = ~month_chr,
           y         = ~pct_value,
           type      = "bar",
           name      = sym_labels[[sym]],
