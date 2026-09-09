@@ -3,7 +3,11 @@
 #install.packages("rsconnect", repos = "https://cran.rstudio.com")
 library(rsconnect)
 library(plotly)
+library(shiny)
 
+rsconnect::setAccountInfo(name='funsaludinvestigacion',
+                          token='4C87ED61532F4E5CE51893065807839B',
+                          secret='UFdUc7Q3Bu3HPLsJMg//GdE2lT35bDTz5dOYP7TK')
 
 
 # Save secret token for connecting to R shiny account

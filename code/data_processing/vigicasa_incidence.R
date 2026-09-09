@@ -89,7 +89,7 @@ resp_results <- vigicasa %>%
     .groups = "drop"
   ) 
 
-resp_weekly <- resp_results %>% group_by(year, week_start) %>%
+resp_weekly <- resp_results %>% group_by( week_start) %>%
   summarise(
     total_tested = sum(total_tested),
     total_pos    = sum(total_pos),
@@ -110,7 +110,6 @@ resp_weekly <- resp_results %>% group_by(year, week_start) %>%
 
 counts_weekly$week_start <- counts_weekly$week_start
 tests_weekly$week_start <- tests_weekly$week_start_test
-
 
 resp_incidence_w <- left_join(resp_weekly, counts_weekly)
 resp_incidence_w <- left_join(resp_incidence_w, tests_weekly)
@@ -161,8 +160,47 @@ resp_incidence_w <- resp_incidence_w %>%
   filter(!is.na(surveilled))
 
 resp_incidence_w <- resp_incidence_w %>% filter(week_start > "2026-01-17")
+
+resp_results_coinfection_corr <- resp_results %>% mutate(
+  coinfection =  ifelse( inf_a_pos == 1 & 
+                           (inf_b_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
+                         ifelse( inf_b_pos == 1 & 
+                                   (inf_a_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
+                                 ifelse( inf_b_pos == 1 & 
+                                           (inf_a_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
+                                         ifelse( vsr_pos == 1 & 
+                                                   (inf_a_pos == 1 | inf_b_pos == 1 |sars_cov2_pos ==1),1,
+                                                 ifelse( sars_cov2_pos == 1 & 
+                                                           (inf_a_pos == 1 | inf_b_pos == 1 |vsr_pos ==1),1, 0))))))
+
+resp_results_coinfection_corr$sars_cov2_pos <- ifelse(resp_results_coinfection_corr$coinfection == 1, 0,resp_results_coinfection_corr$sars_cov2_pos)                                   
+resp_results_coinfection_corr$inf_a_pos <- ifelse(resp_results_coinfection_corr$coinfection == 1, 0,resp_results_coinfection_corr$inf_a_pos)                                   
+resp_results_coinfection_corr$inf_b_pos <- ifelse(resp_results_coinfection_corr$coinfection == 1, 0,resp_results_coinfection_corr$inf_b_pos)                                   
+resp_results_coinfection_corr$vsr_pos <- ifelse(resp_results_coinfection_corr$coinfection == 1, 0,resp_results_coinfection_corr$vsr_pos)                                   
+
+resp_weekly_coinf <- resp_results_coinfection_corr %>% group_by(week_start) %>%
+  summarise(
+    tested = sum(total_tested),
+    total_pos    = sum(total_pos),
+    total_neg    = sum(total_neg),
+    sars_cov2_pos = sum(sars_cov2_pos),
+    sars_cov2_neg = sum(sars_cov2_neg),
+    inf_a_pos    = sum(inf_a_pos),
+    inf_a_neg    = sum(inf_a_neg),
+    inf_b_pos    = sum(inf_b_pos),
+    inf_b_neg    = sum(inf_b_neg),
+    vsr_pos      = sum(vsr_pos),
+    vsr_neg      = sum(vsr_neg),
+    inf_a_h1n1   = sum(inf_a_h1n1),   # added
+    inf_a_h3n2   = sum(inf_a_h3n2),   # added
+    inf_a_nosub = sum(inf_a_nosub),
+    coinfec = sum(coinfection),
+    .groups = "drop"
+  )
+
 write.csv(resp_incidence_w, "docs/vigicasa_resp_weekly.csv") 
 
+write.csv(resp_weekly_coinf, "docs/vigicasa_resp_weekly_coinf.csv") 
 
 
 # ── Age-group label helper ──────────────────────────────────────────────────
@@ -1089,6 +1127,17 @@ symptom_results <- vigicasa %>%
     .groups = "drop"
   )
 
+symptom_results$ili <-ifelse(symptom_results$fiebre == 1 & (symptom_results$tos == 1 |symptom_results$dolor_garganta == 1),1,0 )
+
+symptom_vars <- c(
+  "fiebre", "tos", "dolor_oido", "congestion_nasal", "escurrimiento_nasal",
+  "dolor_garganta", "vomito_despues", "silbido_respiro", "dificultad_respirar",
+  "dolor_muscular", "dolor_cabeza", "dolor_articular", "sarpullido", "ojos_rojos",
+  "articulares_hinchados", "dolor_ojos", "diarrea", "fatiga", "perdida_peso",
+  "convulsiones", "labios_azules", "perdida_gusto", "dolor_cuerpo", "dolor_hueso",
+  "irritabilidad", "letargo", "dificultad_comer", "ili"
+)
+
 symptom_weekly <- symptom_results %>%
   group_by(week_start) %>%
   summarise(
@@ -1129,10 +1178,13 @@ symptom_incidence <- symptom_incidence %>%
 
 write.csv(symptom_incidence, "docs/symptom_incidence.csv")
 # ── Per-person symptom + pathogen results, weekly ────────────────────────────
+
+vigicasa$month <- month(vigicasa$f_muestra)
+vigicasa$year <- year(vigicasa$f_muestra)
+
 symptom_pathogen_results <- vigicasa %>%
   filter(!is.na(f_muestra)) %>%
-  mutate(week_start = floor_date(f_muestra, unit = "week", week_start = 7)) %>%
-  group_by(record_id, week_start) %>%
+  group_by(record_id, month, year, f_muestra) %>%
   summarise(
     across(all_of(symptom_vars), ~ as.integer(any(.x == 1, na.rm = TRUE))),
     inf_a_pos     = as.integer(any(virus_detectado___2 == 1, na.rm = TRUE)),
@@ -1143,26 +1195,36 @@ symptom_pathogen_results <- vigicasa %>%
   )
 
 # ── For each symptom, filter to symptomatic people, then count pathogen pos/neg
+
+realizada$ili <-ifelse(realizada$fiebre == 1 & (realizada$tos == 1 |realizada$dolor_garganta == 1),1,0 )
+
+
 symptom_results <- realizada %>% 
-  mutate(week_start = floor_date(fecha_vigilancia, unit = "week", week_start = 7)) %>%
-  group_by(record_id, week_start) %>%
+  mutate(month = month(fecha_vigilancia),
+          year =  year(fecha_vigilancia),
+          week_start = floor_date(fecha_vigilancia, unit = "week", week_start = 7)) %>%
+  group_by(record_id, month, year, week_start, fecha_vigilancia) %>%
   summarise(
     across(all_of(symptom_vars), ~ as.integer(any(.x == 1, na.rm = TRUE))),
     .groups = "drop"
   )
+
+resp_results <- resp_results %>% dplyr::select(!c(month, year)) 
+
+
 symptoms_combo_resp <- left_join(symptom_results, resp_results)
 
 deng_results <- deng_results %>% rename(deng_tested = total_tested ) %>% dplyr::select(!c(month, year))
-
 
 symptoms_combo <- left_join(symptoms_combo_resp, deng_results)
 
 
 pathogen_vars <- c("inf_a_pos", "inf_b_pos", "sars_cov2_pos", "vsr_pos", "deng_pos")
+
 symptom_pathogen_stacked <- purrr::map_dfr(pathogen_vars, function(path) {
   symptoms_combo %>%
     filter(.data[[path]] == 1) %>%
-    group_by(week_start) %>%
+    group_by(month, year) %>%
     summarise(
       n_positive = n(),
       across(all_of(symptom_vars), ~ sum(.x, na.rm = TRUE)),
