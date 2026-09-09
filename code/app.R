@@ -20,6 +20,7 @@ namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinv
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
+vigicasa_inc_co <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly_coinf.csv")
 resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
 resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
 resp_incidence_sex <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_sex.csv")
@@ -517,11 +518,12 @@ ui_tab6 <- function() {
         dateRangeInput("date_range_input_tab6", "Período del tiempo / Time period:",
                        start = "2025-06-16", end = Sys.Date(), separator = " a "),
         
+        
         # Location - the only content filter on this tab
         radioButtons("lugar_tab6", "Lugar:",
                      choices = c(
-                       "Fincas de Banasa - Trifinio"     = "Fincas de Banasa - Trifinio",
-                       "Fincas de Pantaleon - Escuintla"  = "Fincas de Pantaleon - Escuintla",
+                       "Fincas de Banasa - Trifinio"     = "Banasa",
+                       "Fincas de Pantaleon - Escuintla"  = "Pantaleon",
                        "Ambos Sitios"                     = "overall"
                      ),
                      selected = "overall"),
@@ -1561,6 +1563,7 @@ server <- function(input, output) {
   })
   
   # Tab 5 - incidence plot (all pathogens) ------------------------------------
+ 
   output$inc_plot_tab5 <- renderPlotly({
     es <- input$language_VCasa == "es"
     
@@ -1681,18 +1684,21 @@ server <- function(input, output) {
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
-  })  # closes inc_plot_tab5
+  })
+  
+  
+  # closes inc_plot_tab5
   # Tab 5 - stacked plot ------------------------------------------------------
   output$stacked_plot_tab5 <- renderPlotly({
     es <- input$language_VCasa == "es"
     
-    filtered_data <- vigicasa_inc %>%
+    filtered_data <- vigicasa_inc_co %>%
       filter(
         week_start >= input$date_range_input_tab5[1],
         week_start <= input$date_range_input_tab5[2]
       ) %>%
       mutate(
-        neg_all = tested - (inf_a_pos + inf_b_pos + sars_cov2_pos + vsr_pos),
+        neg_all = tested - (inf_a_pos + inf_b_pos + sars_cov2_pos + vsr_pos + coinfec),
         neg_all = ifelse(neg_all < 0, 0, neg_all)
       )
     
@@ -1705,20 +1711,21 @@ server <- function(input, output) {
       "inf_b_pos"     = "#984EA3",
       "sars_cov2_pos" = "#377EB8",
       "vsr_pos"       = "#4DAF4A",
+      "coinfec"      =  "#652A0E",
       "neg_all"       = "#BDBDBD"
     )
     
     label_map <- if (es) {
       c("inf_a_pos" = "Influenza A", "inf_b_pos" = "Influenza B",
-        "sars_cov2_pos" = "SARS-CoV-2", "vsr_pos" = "RSV",
+        "sars_cov2_pos" = "SARS-CoV-2", "vsr_pos" = "RSV", "coinfec" = "Coinfección",
         "neg_all" = "Negativo para Todos")
     } else {
       c("inf_a_pos" = "Influenza A", "inf_b_pos" = "Influenza B",
-        "sars_cov2_pos" = "SARS-CoV-2", "vsr_pos" = "RSV",
+        "sars_cov2_pos" = "SARS-CoV-2", "vsr_pos" = "RSV", "coinfec" = "Coinfection",
         "neg_all" = "Negative for All")
     }
     
-    pathogens <- c("inf_a_pos", "inf_b_pos", "sars_cov2_pos", "vsr_pos", "neg_all")
+    pathogens <- c("inf_a_pos", "inf_b_pos", "sars_cov2_pos", "vsr_pos", "coinfec", "neg_all")
     
     plot_data <- filtered_data %>%
       select(week_start, tested, all_of(pathogens)) %>%
@@ -1801,8 +1808,9 @@ server <- function(input, output) {
     "dolor_muscular", "dolor_cabeza", "dolor_articular", "sarpullido", "ojos_rojos",
     "articulares_hinchados", "dolor_ojos", "diarrea", "fatiga", "perdida_peso",
     "convulsiones", "labios_azules", "perdida_gusto", "dolor_cuerpo", "dolor_hueso",
-    "irritabilidad", "letargo", "dificultad_comer"
+    "irritabilidad", "letargo", "dificultad_comer", "ili"
   )
+  
   symptom_label_map <- c(
     fiebre                = "Fiebre",
     tos                   = "Tos",
@@ -1823,14 +1831,16 @@ server <- function(input, output) {
     diarrea               = "Diarrea",
     fatiga                = "Fatiga",
     perdida_peso          = "Pérdida de Peso",
-    convulsions           = "Convulsiones",
+    convulsiones           = "Convulsiones",
     labios_azules         = "Labios Azules",
     perdida_gusto         = "Pérdida del Gusto",
     dolor_cuerpo          = "Dolor de Cuerpo",
     dolor_hueso           = "Dolor de Hueso",
     irritabilidad         = "Irritabilidad",
     letargo               = "Letargo",
-    dificultad_comer      = "Dificultad para Comer"
+    dificultad_comer      = "Dificultad para Comer",
+    ili     = "ILI"
+    
   )
   
   symptom_label_map_en <- c(
@@ -1853,14 +1863,15 @@ server <- function(input, output) {
     diarrea               = "Diarrhea",
     fatiga                = "Fatigue",
     perdida_peso          = "Weight Loss",
-    convulsions           = "Convulsions",
+    convulsiones           = "Convulsions",
     labios_azules         = "Blue Lips",
     perdida_gusto         = "Loss of Taste",
     dolor_cuerpo          = "Body Pain",
     dolor_hueso           = "Bone Pain",
     irritabilidad         = "Irritability",
     letargo               = "Lethargy",
-    dificultad_comer      = "Difficulty Eating"
+    dificultad_comer      = "Difficulty Eating",
+    ili      = "ILI"
   )
   
   symptom_color_map <- setNames(
@@ -1877,7 +1888,7 @@ server <- function(input, output) {
       "symptoms_tab5",
       if (es) "Síntomas / Symptoms:" else "Symptoms:",
       choices  = setNames(names(labels), labels),
-      selected = c("fiebre", "tos", "congestion_nasal", "dolor_garganta", "diarrea", "fatiga"),
+      selected = c("fiebre", "tos", "congestion_nasal", "dolor_garganta", "diarrea", "fatiga", "ili"),
       multiple = TRUE
     )
   })
