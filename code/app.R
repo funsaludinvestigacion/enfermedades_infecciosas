@@ -1082,7 +1082,7 @@ server <- function(input, output) {
         "Otro/Desconocido" = "#CCCCCC"
       )) +
       scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
-      labs(x = "Semana Epidemiológica", y = "Número de Casos", fill = "Resultado PCR") +
+      labs(x = "Semana", y = "Número de Casos", fill = "Resultado PCR") +
       theme_minimal() +
       theme(
         legend.position = "bottom",
@@ -1306,7 +1306,7 @@ server <- function(input, output) {
         breaks = seq(0, max(filtered_data$total_tested, na.rm = TRUE), by = 5)
       ) +
       scale_x_discrete(breaks = x_labels) +
-      labs(x = "Semana epidemiológica", y = "# Muestreados", fill = "Resultado") +
+      labs(x = "Semana", y = "# Muestreados", fill = "Resultado") +
       theme_minimal() +
       theme(
         axis.text.x = element_text(angle = 45, hjust = 1),
@@ -1344,7 +1344,7 @@ server <- function(input, output) {
       scale_fill_manual(values = c("A(H1N1)" = "#1b9e77", 
                                    "A(H3N2)" = "#d95f02", 
                                    "Sin subtipificar" = "#7570b3")) +
-      labs(x = "Semana epidemiológica", y = "Casos positivos",
+      labs(x = "Semana", y = "Casos positivos",
            fill = "Subtipo", title = "Subtipos de Influenza A") +
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -1411,7 +1411,7 @@ server <- function(input, output) {
         "RSV B" = "#d95f02",
         "No subgroup" = "#7570b3"
       )) +
-      xlab("Epidemiological week")+
+      xlab("Week")+
       scale_x_discrete(
         breaks = levels(subgroup_data$week_label)[seq(1, length(levels(subgroup_data$week_label)), by = 4)]
       )+
@@ -1664,7 +1664,7 @@ server <- function(input, output) {
     p %>%
       layout(
         xaxis         = list(
-          title     = if (es) "Semana Epidemiológica" else "Epidemiological Week",
+          title     = if (es) "Semana" else "Week",
           tickangle = -45,
           tickfont  = list(size = 10)
         ),
@@ -1784,7 +1784,7 @@ server <- function(input, output) {
         barmode     = "stack",
         annotations = annotations,
         xaxis       = list(
-          title     = if (es) "Semana Epidemiológica" else "Epidemiological Week",
+          title     = if (es) "Semana" else "Week",
           tickangle = -45,
           tickfont  = list(size = 10)
         ),
@@ -1960,7 +1960,7 @@ server <- function(input, output) {
     p %>%
       layout(
         xaxis         = list(
-          title     = if (es) "Semana Epidemiológica" else "Epidemiological Week",
+          title     = if (es) "Semana" else "Week",
           tickangle = -45,
           tickfont  = list(size = 10)
         ),
@@ -2658,7 +2658,7 @@ server <- function(input, output) {
         barmode = "group",
         title   = if (es) paste("Síntomas entre Positivos a", label) else paste("Symptoms among", label, "Positives"),
         xaxis   = list(
-          title     = if (es) "Semana (inicio domingo)" else "Week (starting Sunday)",
+          title     = if (es) "Mes" else "Month",
           tickangle = -45,
           tickfont  = list(size = 10)
         ),
@@ -2853,7 +2853,7 @@ server <- function(input, output) {
         # week, to reduce clutter. dtick = "M1" + tickformat gives monthly
         # labels regardless of the underlying weekly data resolution.
         xaxis = list(
-          title     = if (es) "Mes" else "Month",
+          title     = if (es) "Semana" else "Week",
           type      = "date",
           dtick     = "M1",
           tickformat = "%b %Y",
@@ -2958,7 +2958,7 @@ server <- function(input, output) {
       layout(
         barmode     = "stack",
         xaxis = list(
-          title      = if (es) "Mes" else "Month",
+          title      = if (es) "Semana" else "Week",
           type       = "date",
           dtick      = "M1",
           tickformat = "%b %Y",
@@ -3048,7 +3048,7 @@ server <- function(input, output) {
       layout(
         barmode     = "stack",
         xaxis = list(
-          title      = if (es) "Mes" else "Month",
+          title      = if (es) "Semana" else "Week",
           type       = "date",
           dtick      = "M1",
           tickformat = "%b %Y",
