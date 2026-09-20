@@ -573,7 +573,47 @@ ui_tab6 <- function() {
   )
 }
 
-
+ui_tab6b <- function() {
+  fluidPage(
+    titlePanel(""),
+    sidebarLayout(
+      sidebarPanel(
+        radioButtons("language_tab6b", "Idioma / Language:",
+                     choices = c("Español" = "es", "English" = "en"),
+                     selected = "es"),
+        dateRangeInput("date_range_tab6b", "Período del tiempo / Time period:",
+                       start = "2025-06-16", end = Sys.Date(), separator = " a "),
+        selectInput("pathogen_tab6b",
+                    "Selecciona Patógeno / Select Pathogen:",
+                    choices = c(
+                      "Influenza A"    = "flua",
+                      "Influenza B"    = "flub",
+                      "Influenza A&B"  = "flu_gen",
+                      "SARS-CoV-2"     = "scv2",
+                      "RSV"            = "rsv",
+                      "ARI"            = "ili",
+                      "Dengue"         = "deng",
+                      "ALI"            = "ali"
+                    ),
+                    selected = "flua")
+      ),
+      
+      mainPanel(
+        h2(textOutput("header_tab6b"), style = "color: orange;"),
+        br(),
+        uiOutput("tab6b_positivity_title"),
+        plotlyOutput("positivity_plot_tab6b"),
+        br(),
+        uiOutput("tab6b_incidence_title"),
+        plotlyOutput("incidence_plot_tab6b"),
+        br(),
+        uiOutput("tab6b_lugar_incidence_title"),
+        plotlyOutput("lugar_incidence_plot_tab6b", height = "400px"),
+        br()
+      )
+    )
+  )
+}
 #UI for tab report (7)
 ui_tab7 <- function() {
   
@@ -642,6 +682,7 @@ ui <- fluidPage(
     tabPanel("VIGICASA Overview", ui_tab5()),
     tabPanel("VIGICASA Pathogen Deep Dive", ui_tab5b()),
     tabPanel("VIGIFINCA", ui_tab6()),
+    tabPanel("VIGIFINCA Pathogen Deep Dive", ui_tab6b()),
     tabPanel("CDC Dashboard", ui_tab7())
   )
 )
@@ -3413,6 +3454,362 @@ server <- function(input, output) {
         paper_bgcolor = "white"
       )
   })  # closes symptom_inc_plot_deng
+  
+  # --------------------------------------------------------------------------
+  #                  VIGIFINCA PATHOGEN DEEP DIVE (tab6b)
+  # --------------------------------------------------------------------------
+  
+  # NOTE: column names in vigifinca_results_roll differ from vigicasa_inc,
+  # so these are separate mapping functions from pathogen_inc_roll_col()/
+  # pathogen_inc_col() (used by tab5b) to avoid a silent mismatch like the
+  # one fixed in inc_plot_tab6.
+  pathogen_inc_roll_col_vf <- function(p) {
+    switch(p,
+           "flua"    = "inf_a_pos_inc_roll",
+           "flub"    = "inf_b_pos_inc_roll",
+           "flu_gen" = "flu_gen_inc_roll",
+           "scv2"    = "scv2_pos_inc_roll",
+           "rsv"     = "vsr_pos_inc_roll",
+           "ili"     = "ari_inc_roll",
+           "deng"    = "igm_pos_inc_roll",
+           "ali"     = "ali_inc_roll"
+    )
+  }
+  
+  pathogen_inc_col_vf <- function(p) {
+    switch(p,
+           "flua"    = "inf_a_pos_inc",
+           "flub"    = "inf_b_pos_inc",
+           "flu_gen" = "flu_gen_inc",
+           "scv2"    = "scv2_pos_inc",
+           "rsv"     = "vsr_pos_inc",
+           "ili"     = "ari_inc",
+           "deng"    = "igm_pos_inc",
+           "ali"     = "ali_inc"
+    )
+  }
+  
+  lugar_label_map_vf <- c(
+    "Overall"   = "Ambos Sitios / Overall",
+    "Banasa"    = "Banasa",
+    "Pantaleon" = "Pantaleon"
+  )
+  
+  lugar_colors_vf <- c(
+    "Overall"   = "#000000",
+    "Banasa"    = "#1B9E77",
+    "Pantaleon" = "#D95F02"
+  )
+  
+  output$header_tab6b <- renderText({
+    es <- input$language_tab6b == "es"
+    if (es) "VIGIFINCA: Análisis Detallado por Patógeno" else "VIGIFINCA: Pathogen Deep Dive"
+  })
+  
+  # "Overall" filtered dataset (source depends on pathogen), used for graphs 1 & 2
+  # Includes both rolling (_roll) and raw (non-roll) computed columns.
+  filtered_tab6b <- reactive({
+    p_key <- input$pathogen_tab6b
+    src   <- if (p_key %in% c("deng", "ali")) "Deng" else "Resp"
+    
+    vigifinca_results_roll %>%
+      filter(
+        lugar      == "Overall",
+        source     == src,
+        week_start >= input$date_range_tab6b[1],
+        week_start <= input$date_range_tab6b[2]
+      ) %>%
+      mutate(
+        # rolling composites
+        flu_gen_pos_roll = inf_a_pos_roll + inf_b_pos_roll,
+        flu_gen_inc_roll  = flu_gen_pos_roll / denom_roll,
+        ari_inc_roll      = tested_inc_roll,
+        ari_roll          = total_tested_roll,
+        ali_inc_roll      = tested_inc_roll,
+        ali_roll          = total_tested_roll,
+        # raw (non-rolling) composites
+        flu_gen_pos = inf_a_pos + inf_b_pos,
+        flu_gen_inc = flu_gen_pos / denom,
+        ari         = total_tested,
+        ari_inc     = tested_inc,
+        ali         = total_tested,
+        ali_inc     = tested_inc,
+        week_start_chr = as.character(week_start)
+      )
+  })
+  
+  output$tab6b_positivity_title <- renderUI({
+    es    <- input$language_tab6b == "es"
+    label <- pathogen_label(input$pathogen_tab6b, es)
+    tags$h3(
+      if (es) paste("Tasa de Positividad —", label) else paste("Test Positivity —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$tab6b_incidence_title <- renderUI({
+    es    <- input$language_tab6b == "es"
+    label <- pathogen_label(input$pathogen_tab6b, es)
+    tags$h3(
+      if (es) paste("Incidencia —", label) else paste("Incidence —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$tab6b_lugar_incidence_title <- renderUI({
+    es    <- input$language_tab6b == "es"
+    label <- pathogen_label(input$pathogen_tab6b, es)
+    tags$h3(
+      if (es) paste("Incidencia por Lugar —", label) else paste("Incidence by Site —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  # ---- Graph 1: Positivity bar chart (tested vs. positive) -----------------
+  # NOT rolling — uses raw weekly counts. Axis/hover text explicitly say
+  # "Semanal" (weekly) rather than the "(3 sem)" label used for rolling plots,
+  # to keep it visually/textually distinct from the rolling incidence graph below.
+  output$positivity_plot_tab6b <- renderPlotly({
+    es    <- input$language_tab6b == "es"
+    p_key <- input$pathogen_tab6b
+    d     <- filtered_tab6b()
+    color <- pathogen_color[[p_key]]
+    label <- pathogen_label(p_key, es)
+    
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    
+    d <- d %>%
+      mutate(
+        pos_count = case_when(
+          p_key == "flu_gen" ~ flu_gen_pos,
+          p_key == "flua"    ~ inf_a_pos,
+          p_key == "flub"    ~ inf_b_pos,
+          p_key == "scv2"    ~ scv2_pos,
+          p_key == "rsv"     ~ vsr_pos,
+          p_key == "ili"     ~ ari,
+          p_key == "deng"    ~ igm_pos,
+          p_key == "ali"     ~ ali,
+          TRUE               ~ total_tested
+        ),
+        hover_tested = paste0(
+          "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
+          "<b>", if (es) "Total Muestreados (semanal):" else "Total Tested (weekly):", "</b> ", total_tested
+        ),
+        hover_pos = paste0(
+          "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
+          "<b>", if (es) "Total Positivos (semanal):" else "Total Positive (weekly):", "</b> ", pos_count, "<br>",
+          "<b>", if (es) "Total Muestreados (semanal):" else "Total Tested (weekly):", "</b> ", total_tested
+        )
+      )
+    
+    plot_ly(d, x = ~week_start) %>%
+      add_bars(
+        y            = ~total_tested,
+        name         = if (es) "Total Muestreados" else "Total Tested",
+        marker       = list(color = "grey", opacity = 0.4),
+        text         = ~hover_tested,
+        hoverinfo    = "text",
+        textposition = "none"
+      ) %>%
+      add_bars(
+        y            = ~pos_count,
+        name         = if (es) paste("Positivos —", label) else paste("Positive —", label),
+        marker       = list(color = color),
+        text         = ~hover_pos,
+        hoverinfo    = "text",
+        textposition = "none"
+      ) %>%
+      layout(
+        barmode = "overlay",
+        xaxis = list(
+          title      = if (es) "Mes" else "Month",
+          type       = "date",
+          dtick      = "M1",
+          tickformat = "%b %Y",
+          tickfont   = list(size = 10)
+        ),
+        yaxis         = list(title = if (es) "# Muestreados (Semanal, No Móvil)" else "# Tested (Weekly, Not Rolling)"),
+        legend        = list(orientation = "h", x = 0, y = -0.35),
+        hovermode     = "closest",
+        margin        = list(b = 120),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })
+  
+  # ---- Graph 2: Incidence line chart — rolling (solid) + raw (dashed) -------
+  output$incidence_plot_tab6b <- renderPlotly({
+    es       <- input$language_tab6b == "es"
+    p_key    <- input$pathogen_tab6b
+    d        <- filtered_tab6b()
+    color    <- pathogen_color[[p_key]]
+    label    <- pathogen_label(p_key, es)
+    col_roll <- pathogen_inc_roll_col_vf(p_key)
+    col_raw  <- pathogen_inc_col_vf(p_key)
+    
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    
+    if (!(col_roll %in% names(d))) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- datos aún no disponibles") else paste(label, "- data not yet available")))
+    }
+    
+    has_raw <- col_raw %in% names(d)
+    
+    d <- d %>%
+      mutate(
+        inc_roll   = .data[[col_roll]] * 1000,
+        hover_roll = paste0(
+          "<b>", label, " — ", if (es) "promedio móvil (3 sem)" else "rolling avg (3-wk)", "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_roll, 2), "<br>",
+          if (es) "Denominador: " else "Denominator: ", denom_roll
+        )
+      )
+    
+    if (has_raw) {
+      d <- d %>%
+        mutate(
+          inc_raw   = .data[[col_raw]] * 1000,
+          hover_raw = paste0(
+            "<b>", label, " — ", if (es) "semanal" else "weekly", "</b><br>",
+            if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+            if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_raw, 2), "<br>",
+            if (es) "Denominador: " else "Denominator: ", denom
+          )
+        )
+    }
+    
+    p <- plot_ly(d, x = ~week_start) %>%
+      add_trace(
+        y         = ~inc_roll,
+        type      = "scatter",
+        mode      = "lines+markers",
+        name      = if (es) paste(label, "— promedio móvil") else paste(label, "— rolling avg"),
+        line      = list(color = color, width = 2, dash = "solid"),
+        marker    = list(color = color, size = 5),
+        text      = ~hover_roll,
+        hoverinfo = "text"
+      )
+    
+    if (has_raw) {
+      p <- p %>%
+        add_trace(
+          y         = ~inc_raw,
+          type      = "scatter",
+          mode      = "lines+markers",
+          name      = if (es) paste(label, "— semanal") else paste(label, "— weekly"),
+          line      = list(color = color, width = 2, dash = "dash"),
+          marker    = list(color = color, size = 5, symbol = "circle-open"),
+          text      = ~hover_raw,
+          hoverinfo = "text"
+        )
+    }
+    
+    p %>%
+      layout(
+        xaxis = list(
+          title      = if (es) "Mes" else "Month",
+          type       = "date",
+          dtick      = "M1",
+          tickformat = "%b %Y",
+          tickfont   = list(size = 10)
+        ),
+        yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
+        legend        = list(orientation = "h", x = 0, y = -0.25),
+        hovermode     = "closest",
+        margin        = list(b = 100),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })
+  
+  # ---- Graph 3: Incidence by lugar (Overall vs Banasa vs Pantaleon) ---------
+  # Unchanged — still rolling only, per original design.
+  output$lugar_incidence_plot_tab6b <- renderPlotly({
+    es       <- input$language_tab6b == "es"
+    p_key    <- input$pathogen_tab6b
+    label    <- pathogen_label(p_key, es)
+    col_roll <- pathogen_inc_roll_col_vf(p_key)
+    src      <- if (p_key %in% c("deng", "ali")) "Deng" else "Resp"
+    
+    d <- vigifinca_results_roll %>%
+      filter(
+        source     == src,
+        week_start >= input$date_range_tab6b[1],
+        week_start <= input$date_range_tab6b[2]
+      ) %>%
+      mutate(
+        flu_gen_pos_roll = inf_a_pos_roll + inf_b_pos_roll,
+        flu_gen_inc_roll = flu_gen_pos_roll / denom_roll,
+        ari_inc_roll     = tested_inc_roll,
+        ali_inc_roll     = tested_inc_roll,
+        week_start_chr   = as.character(week_start)
+      )
+    
+    if (!(col_roll %in% names(d))) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- datos aún no disponibles") else paste(label, "- data not yet available")))
+    }
+    
+    d <- d %>% mutate(inc_roll = .data[[col_roll]] * 1000)
+    
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    
+    lugar_levels <- c("Overall", "Banasa", "Pantaleon")
+    
+    p <- plot_ly()
+    
+    for (lg in lugar_levels) {
+      d_lg <- filter(d, lugar == lg)
+      if (nrow(d_lg) == 0) next
+      color    <- lugar_colors_vf[[lg]]
+      lg_label <- lugar_label_map_vf[[lg]]
+      
+      p <- p %>%
+        add_trace(
+          data        = d_lg,
+          x           = ~week_start,
+          y           = ~inc_roll,
+          type        = "scatter",
+          mode        = "lines+markers",
+          name        = lg_label,
+          legendgroup = lg,
+          line        = list(color = color, width = 2, dash = if (lg == "Overall") "dash" else "solid"),
+          marker      = list(color = color, size = 4),
+          text        = ~paste0(
+            "<b>", label, " | ", lg_label, "</b><br>",
+            if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+            if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_roll, 2), "<br>",
+            if (es) "Denominador: " else "Denominator: ", denom_roll
+          ),
+          hoverinfo   = "text"
+        )
+    }
+    
+    p %>% layout(
+      xaxis = list(
+        title      = if (es) "Mes" else "Month",
+        type       = "date",
+        dtick      = "M1",
+        tickformat = "%b %Y",
+        tickfont   = list(size = 10)
+      ),
+      yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
+      legend        = list(orientation = "h", x = 0, y = -0.3),
+      hovermode     = "closest",
+      margin        = list(b = 100),
+      plot_bgcolor  = "white",
+      paper_bgcolor = "white"
+    )
+  })
+  
   
   # ---- Tab 6 section titles (bilingual) --------------------------------------
   output$inc_plot_title_tab6 <- renderText({
