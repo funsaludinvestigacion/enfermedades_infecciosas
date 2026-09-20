@@ -28,6 +28,8 @@ symptom_incidence <- read.csv("https://raw.githubusercontent.com/funsaludinvesti
 symptom_pathogen_stacked <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/symptom_pathogen_stacked.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 vigifinca_results_roll <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_incidence.csv")
+vigifinca_symptoms_deng <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/finca_symptom_incidence_deng.csv")
+vigifinca_symptoms_resp <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/finca_symptom_incidence_resp.csv")
 gihsn_ages <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages.csv")
 gihsn_ages_vsr <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_ages_vsr.csv")
 demo_lab_info <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/todas_las_fichas.csv")
@@ -524,9 +526,9 @@ ui_tab6 <- function() {
                      choices = c(
                        "Fincas de Banasa - Trifinio"     = "Banasa",
                        "Fincas de Pantaleon - Escuintla"  = "Pantaleon",
-                       "Ambos Sitios"                     = "overall"
+                       "Ambos Sitios"                     = "Overall"
                      ),
-                     selected = "overall"),
+                     selected = "Overall"),
         class = "sidebar"
       ),
       
@@ -549,6 +551,18 @@ ui_tab6 <- function() {
         # Dengue stacked bar
         h4(textOutput("deng_stacked_title_tab6")),
         plotlyOutput("deng_stacked_plot_tab6"),
+        br(), br(),
+        
+        # Respiratory symptom incidence  <-- NEW
+        h4(textOutput("symptom_inc_resp_title_tab6")),
+        uiOutput("symptoms_tab_resp_select_ui"),
+        plotlyOutput("symptom_inc_plot_resp"),
+        br(), br(),
+        
+        # Dengue symptom incidence  <-- NEW
+        h4(textOutput("symptom_inc_deng_title_tab6")),
+        uiOutput("symptoms_tab_deng_select_ui"),
+        plotlyOutput("symptom_inc_plot_deng"),
         br(), br(),
         
         leafletOutput("map_tab6", height = "800px"),
@@ -1663,10 +1677,13 @@ server <- function(input, output) {
     
     p %>%
       layout(
-        xaxis         = list(
-          title     = if (es) "Semana" else "Week",
-          tickangle = -45,
-          tickfont  = list(size = 10)
+        xaxis = list(
+          title      = if (es) "Mes" else "Month",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
         ),
         yaxis         = list(
           title = if (es) "Pruebas Positivas por 1,000 Personas" else "Positive Tests per 1,000 People"
@@ -3065,7 +3082,337 @@ server <- function(input, output) {
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
-  })  # closes deng_stacked_plot_tab6
+  })  
+  
+  symptom_vars_r <- c(
+    "fiebre_38", "ante_fiebre", "tos_p", "malestar", "dolor_decabeza",
+    "dolor_muscular_articulaciones", "odinofagia", "rinorrea", "conjuntivitis",
+    "adenopatia", "disnea", "p_gusto", "perdida_olfato", "nausea_vomitos",
+    "diarrea_r", "alt_conciencia", "estridor", "tiraje", "aleteo_nasal",
+    "vomitos_diarrea"
+  )
+  
+  symptom_vars_d <- c(
+    "anorexia_d", "dolor_articular_d", "articulares_hinchados_d",
+    "fatiga_d", "dolor_cabeza_d", "conjuntivitis_d", "diarrea_d",
+    "dolor_abdominal_d", "articulares_hinchados_d", "enterorragia_d",
+    "epistaxis_d", "sarpullido_d", "fiebre_d", "hemorragia_encías_d",
+    "hemorragia_urinaria_d", "hemorragia_vaginal_d", "melena_d",
+    "dolor_cuerpo_d", "petequias_d", "piel_fria_d", "sudoracion_d",
+    "tos_d", "vomito_d", "vomito_sangre_d", "manifestaciones_neurologicas_d"
+  )
+  
+  # ---- Spanish labels (existing) ----
+  symptom_label_map_r_es <- c(
+    "fiebre_38"                     = "Fiebre 38",
+    "ante_fiebre"                   = "Antecedente de Fiebre",
+    "tos_p"                         = "Tos",
+    "malestar"                      = "Malestar",
+    "dolor_decabeza"                = "Dolor de Cabeza",
+    "dolor_muscular_articulaciones" = "Dolor Muscular/Articular",
+    "odinofagia"                    = "Odinofagia",
+    "rinorrea"                      = "Rinorrea",
+    "conjuntivitis"                 = "Conjuntivitis",
+    "adenopatia"                    = "Adenopatía",
+    "disnea"                        = "Disnea",
+    "p_gusto"                       = "Pérdida del Gusto",
+    "perdida_olfato"                = "Pérdida del Olfato",
+    "nausea_vomitos"                = "Náusea/Vómitos",
+    "diarrea_r"                     = "Diarrea",
+    "alt_conciencia"                = "Alteración de Conciencia",
+    "estridor"                      = "Estridor",
+    "tiraje"                        = "Tiraje",
+    "aleteo_nasal"                  = "Aleteo Nasal",
+    "vomitos_diarrea"               = "Vómitos/Diarrea"
+  )
+  
+  # ---- English labels (new) ----
+  symptom_label_map_r_en <- c(
+    "fiebre_38"                     = "Fever 38",
+    "ante_fiebre"                   = "History of Fever",
+    "tos_p"                         = "Cough",
+    "malestar"                      = "Malaise",
+    "dolor_decabeza"                = "Headache",
+    "dolor_muscular_articulaciones" = "Muscle/Joint Pain",
+    "odinofagia"                    = "Sore Throat",
+    "rinorrea"                      = "Runny Nose",
+    "conjuntivitis"                 = "Conjunctivitis",
+    "adenopatia"                    = "Swollen Lymph Nodes",
+    "disnea"                        = "Shortness of Breath",
+    "p_gusto"                       = "Loss of Taste",
+    "perdida_olfato"                = "Loss of Smell",
+    "nausea_vomitos"                = "Nausea/Vomiting",
+    "diarrea_r"                     = "Diarrhea",
+    "alt_conciencia"                = "Altered Consciousness",
+    "estridor"                      = "Stridor",
+    "tiraje"                        = "Chest Indrawing",
+    "aleteo_nasal"                  = "Nasal Flaring",
+    "vomitos_diarrea"               = "Vomiting/Diarrhea"
+  )
+  
+  symptom_label_map_d_es <- c(
+    "anorexia_d"                       = "Anorexia",
+    "dolor_articular_d"                = "Dolor Articular",
+    "articulares_hinchados_d"          = "Articulaciones Hinchadas",
+    "fatiga_d"                         = "Fatiga",
+    "dolor_cabeza_d"                   = "Dolor de Cabeza",
+    "conjuntivitis_d"                  = "Conjuntivitis",
+    "diarrea_d"                        = "Diarrea",
+    "dolor_abdominal_d"                = "Dolor Abdominal",
+    "enterorragia_d"                   = "Enterorragia",
+    "epistaxis_d"                      = "Epistaxis",
+    "sarpullido_d"                     = "Sarpullido",
+    "fiebre_d"                         = "Fiebre",
+    "hemorragia_encías_d"              = "Hemorragia de Encías",
+    "hemorragia_urinaria_d"            = "Hemorragia Urinaria",
+    "hemorragia_vaginal_d"             = "Hemorragia Vaginal",
+    "melena_d"                         = "Melena",
+    "dolor_cuerpo_d"                   = "Dolor de Cuerpo",
+    "petequias_d"                      = "Petequias",
+    "piel_fria_d"                      = "Piel Fría",
+    "sudoracion_d"                     = "Sudoración",
+    "tos_d"                            = "Tos",
+    "vomito_d"                         = "Vómito",
+    "vomito_sangre_d"                  = "Vómito con Sangre",
+    "manifestaciones_neurologicas_d"   = "Manifestaciones Neurológicas"
+  )
+  
+  symptom_label_map_d_en <- c(
+    "anorexia_d"                       = "Anorexia",
+    "dolor_articular_d"                = "Joint Pain",
+    "articulares_hinchados_d"          = "Swollen Joints",
+    "fatiga_d"                         = "Fatigue",
+    "dolor_cabeza_d"                   = "Headache",
+    "conjuntivitis_d"                  = "Conjunctivitis",
+    "diarrea_d"                        = "Diarrhea",
+    "dolor_abdominal_d"                = "Abdominal Pain",
+    "enterorragia_d"                   = "Rectal Bleeding",
+    "epistaxis_d"                      = "Nosebleed",
+    "sarpullido_d"                     = "Rash",
+    "fiebre_d"                         = "Fever",
+    "hemorragia_encías_d"              = "Gum Bleeding",
+    "hemorragia_urinaria_d"            = "Urinary Bleeding",
+    "hemorragia_vaginal_d"             = "Vaginal Bleeding",
+    "melena_d"                         = "Melena",
+    "dolor_cuerpo_d"                   = "Body Pain",
+    "petequias_d"                      = "Petechiae",
+    "piel_fria_d"                      = "Cold Skin",
+    "sudoracion_d"                     = "Sweating",
+    "tos_d"                            = "Cough",
+    "vomito_d"                         = "Vomiting",
+    "vomito_sangre_d"                  = "Vomiting Blood",
+    "manifestaciones_neurologicas_d"   = "Neurological Manifestations"
+  )
+  
+  symptom_color_map_r <- setNames(
+    colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(symptom_vars_r)),
+    symptom_vars_r
+  )
+  
+  symptom_color_map_d <- setNames(
+    colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(symptom_vars_d)),
+    symptom_vars_d
+  )
+  # ---- Symptom picker UIs ----------------------------------------------------
+  output$symptoms_tab_resp_select_ui <- renderUI({
+    es <- input$language_VFinca == "es"
+    symptom_label_map_r <- if (es) symptom_label_map_r_es else symptom_label_map_r_en
+    
+    selectizeInput(
+      "symptoms_tab_resp",
+      if (es) "Síntomas Respiratorios:" else "Respiratory Symptoms:",
+      choices  = setNames(names(symptom_label_map_r), symptom_label_map_r),
+      selected = symptom_vars_r[1:5],
+      multiple = TRUE
+    )
+  })
+  
+  output$symptoms_tab_deng_select_ui <- renderUI({
+    es <- input$language_VFinca == "es"
+    symptom_label_map_d <- if (es) symptom_label_map_d_es else symptom_label_map_d_en
+    
+    selectizeInput(
+      "symptoms_tab_deng",
+      if (es) "Síntomas de Dengue:" else "Dengue Symptoms:",
+      choices  = setNames(names(symptom_label_map_d), symptom_label_map_d),
+      selected = symptom_vars_d[1:5],
+      multiple = TRUE
+    )
+  })
+  
+  # ---- Respiratory symptom incidence plot ------------------------------------
+  output$symptom_inc_plot_resp <- renderPlotly({
+    es <- input$language_VFinca == "es"
+    symptom_label_map_r <- if (es) symptom_label_map_r_es else symptom_label_map_r_en
+    selected_symptoms <- input$symptoms_tab_resp
+    
+    if (is.null(selected_symptoms) || length(selected_symptoms) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "Selecciona al menos un síntoma" else "Select at least one symptom"))
+    }
+    
+    filtered_data <- vigifinca_symptoms_resp %>%
+      filter(
+        lugar      == input$lugar_tab6,
+        week_start >= input$date_range_input_tab6[1],
+        week_start <= input$date_range_input_tab6[2]
+      )
+    
+    if (nrow(filtered_data) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    roll_cols <- paste0(selected_symptoms, "_roll")
+    
+    plot_data <- filtered_data %>%
+      select(week_start, denom, all_of(selected_symptoms), all_of(roll_cols)) %>%
+      pivot_longer(
+        cols      = all_of(roll_cols),
+        names_to  = "symptom_col",
+        values_to = "inc_value"
+      ) %>%
+      mutate(
+        symptom       = sub("_roll$", "", symptom_col),
+        symptom_label = symptom_label_map_r[symptom],
+        raw_count     = mapply(function(sym, wk) {
+          filtered_data[[sym]][filtered_data$week_start == wk][1]
+        }, symptom, week_start),
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", symptom_label, "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_value, 2), "<br>",
+          if (es) "Casos: " else "Cases: ", raw_count, "<br>",
+          if (es) "Denominador: " else "Denominator: ", denom
+        )
+      )
+    
+    p <- plot_ly()
+    
+    for (sym in selected_symptoms) {
+      df_sym <- plot_data %>% dplyr::filter(symptom == sym)
+      
+      p <- p %>%
+        add_trace(
+          data      = df_sym,
+          x         = ~week_start,
+          y         = ~inc_value,
+          type      = "scatter",
+          mode      = "lines+markers",
+          name      = symptom_label_map_r[[sym]],
+          line      = list(color = symptom_color_map_r[[sym]], width = 2),
+          marker    = list(color = symptom_color_map_r[[sym]], size = 5),
+          text      = ~hover_text,
+          hoverinfo = "text"
+        )
+    }
+    
+    p %>%
+      layout(
+        xaxis = list(
+          title      = if (es) "Mes" else "Month",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
+        ),
+        yaxis         = list(
+          title = if (es) "Casos por 1,000 Personas" else "Cases per 1,000 People"
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
+        hovermode     = "closest",
+        margin        = list(b = 120, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })  # closes symptom_inc_plot_resp
+  
+  # ---- Dengue symptom incidence plot -----------------------------------------
+  output$symptom_inc_plot_deng <- renderPlotly({
+    es <- input$language_VFinca == "es"
+    symptom_label_map_d <- if (es) symptom_label_map_d_es else symptom_label_map_d_en
+    selected_symptoms <- input$symptoms_tab_deng
+    
+    if (is.null(selected_symptoms) || length(selected_symptoms) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "Selecciona al menos un síntoma" else "Select at least one symptom"))
+    }
+    
+    filtered_data <- vigifinca_symptoms_deng %>%
+      filter(
+        lugar      == input$lugar_tab6,
+        week_start >= input$date_range_input_tab6[1],
+        week_start <= input$date_range_input_tab6[2]
+      )
+    
+    if (nrow(filtered_data) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    roll_cols <- paste0(selected_symptoms, "_roll")
+    
+    plot_data <- filtered_data %>%
+      select(week_start, denom, all_of(selected_symptoms), all_of(roll_cols)) %>%
+      pivot_longer(
+        cols      = all_of(roll_cols),
+        names_to  = "symptom_col",
+        values_to = "inc_value"
+      ) %>%
+      mutate(
+        symptom       = sub("_roll$", "", symptom_col),
+        symptom_label = symptom_label_map_d[symptom],
+        raw_count     = mapply(function(sym, wk) {
+          filtered_data[[sym]][filtered_data$week_start == wk][1]
+        }, symptom, week_start),
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", symptom_label, "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_value, 2), "<br>",
+          if (es) "Casos: " else "Cases: ", raw_count, "<br>",
+          if (es) "Denominador: " else "Denominator: ", denom
+        )
+      )
+    
+    p <- plot_ly()
+    
+    for (sym in selected_symptoms) {
+      df_sym <- plot_data %>% dplyr::filter(symptom == sym)
+      
+      p <- p %>%
+        add_trace(
+          data      = df_sym,
+          x         = ~week_start,
+          y         = ~inc_value,
+          type      = "scatter",
+          mode      = "lines+markers",
+          name      = symptom_label_map_d[[sym]],
+          line      = list(color = symptom_color_map_d[[sym]], width = 2),
+          marker    = list(color = symptom_color_map_d[[sym]], size = 5),
+          text      = ~hover_text,
+          hoverinfo = "text"
+        )
+    }
+    
+    p %>%
+      layout(
+        xaxis = list(
+          title      = if (es) "Mes" else "Month",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
+        ),
+        yaxis         = list(
+          title = if (es) "Casos por 1,000 Personas" else "Cases per 1,000 People"
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
+        hovermode     = "closest",
+        margin        = list(b = 120, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })  # closes symptom_inc_plot_deng
   
   # ---- Tab 6 section titles (bilingual) --------------------------------------
   output$inc_plot_title_tab6 <- renderText({
