@@ -74,11 +74,81 @@ Header_VCasa <- "Vigilancia de enfermedades respiratorias y Dengue en casas del 
 
 Header_VCasa_eng <- "Respiratory and Dengue Illness Surveillance in Trifinio Houses"
 
-Info_VCasa <- "Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades como dengue. 
-Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, 
-y se realizan pruebas de laboratorio.
+Info_VCasa <- "
+Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades como dengue. Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, y se realizan pruebas de laboratorio.
 
-Definiciones
+#### Definiciones
+"
+
+Info_VCasa_defs <- "
+**Infección respiratoria aguda (ARI):** La definición de caso inicial incluye ≥1 de los siguientes síntomas durante uno o más días de evolución:
+
+- Fiebre
+- Tos
+- Dolor de oídos
+- Congestión nasal
+- Rinorrea
+- Dolor de garganta
+- Vómitos después de toser
+- Sibilancias
+- Respiración laboriosa, rápida o superficial
+
+**Enfermedad similar a arbovirus (ALI):** 1 o más de los siguientes síntomas durante uno o más días de evolución (no explicados por otra etiología):
+
+- Fiebre
+- Erupción
+- Dolor articular
+- Conjuntivitis
+- Dolor retroorbitario/ocular
+- Dolor de cabeza
+- Dolor muscular
+- Articulaciones hinchadas
+"
+
+Info_VCasa_eng <- "
+We are conducting active surveillance in houses in the Trifinio communities for respiratory illnesses and dengue-like illnesses. Household members are screened twice a week for symptoms, and if either or both case definitions are met, a nasal swab and/or blood sample is taken and lab tests are run.
+
+#### Definitions
+"
+
+Info_VCasa_defs_eng <- "
+**Acute respiratory infection (ARI):** The initial case definition includes ≥1 of the following symptoms during one or more days of evolution:
+
+- Fever
+- Cough
+- Earache
+- Nasal congestion
+- Rhinorrhea
+- Sore throat
+- Vomiting after coughing
+- Wheezing
+- Labored, rapid, or shallow breathing
+
+**Arbovirus-like illness (ALI):** 1 or more of the following symptoms during one or more days of evolution (not explained by another etiology):
+
+- Fever
+- Rash
+- Joint pain
+- Conjunctivitis
+- Retro-orbital/eye pain
+- Headache
+- Muscle pain
+- Swollen joints
+"
+
+##
+Header_VFinca <- "Vigilancia de enfermedades respiratorias y dengue en fincas del sur centro de Guatemala."
+
+Header_VFinca_eng <- "Respiratory and Dengue Illness Surveillance in South-Central Guatemalan Farms"
+
+
+Info_VFinca <- "
+Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades similares al dengue. Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, y se realizan pruebas de laboratorio.
+
+"
+
+Info_VFinca_defs <- "
+#### Definiciones
 
 **Infección respiratoria aguda (ARI):** La definición de caso inicial incluye ≥1 de los siguientes síntomas durante uno o más días de evolución:
 
@@ -104,12 +174,12 @@ Definiciones
 - Articulaciones hinchadas
 "
 
-Info_VCasa_eng <-
-"We are conducting active surveillance in houses in the Trifinio communities for respiratory illnesses and dengue-like illnesses. Household members are screened twice a week for symptoms, and if either or both case definitions are met, a nasal swab and/or blood sample is taken and lab tests are run.
+Info_VFinca_eng <- "We are conducting active surveillance in banana farmworkers in the Trifinio region and sugarcane farmworkers central Guatemala. Farmworkers reporting symptoms that meet the case definition(s) will be tested for Flu A/B/Sars-CoV-2/RSV by nasal swab and/or Dengue by blood sample."
 
-Definitions
+Info_VFinca_defs_eng <- "
+#### Definitions
 
-**Acute respiratory infection (ARI):** The initial case definition includes ≥1 of the following symptoms during one or more days of evolution:
+*Acute respiratory infection (ARI):** The initial case definition includes ≥1 of the following symptoms during one or more days of evolution:
 
 - Fever
 - Cough
@@ -132,69 +202,6 @@ Definitions
 - Muscle pain
 - Swollen joints
 "
-##
-Header_VFinca <- "Vigilancia de enfermedades respiratorias y dengue en fincas del sur centro de Guatemala."
-
-Header_VFinca_eng <- "Respiratory and Dengue Illness Surveillance in South-Central Guatemalan Farms"
-
-
-Info_VFinca <- "Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades similares al dengue. 
-Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, 
-y se realizan pruebas de laboratorio.
-
-Definiciones
-
-**Infección respiratoria aguda (IRA):** La definición de caso inicial incluye ≥1 de los siguientes síntomas durante uno o más días de evolución:
-
-- Fiebre
-- Tos
-- Dolor de oídos
-- Congestión nasal
-- Rinorrea
-- Dolor de garganta
-- Vómitos después de toser
-- Sibilancias
-- Respiración laboriosa, rápida o superficial
-
-**Enfermedad similar a arbovirus (ALI):** 1 o más de los siguientes síntomas durante uno o más días de evolución (no explicados por otra etiología):
-
-- Fiebre
-- Erupción
-- Dolor articular
-- Conjuntivitis
-- Dolor retroorbitario/ocular
-- Dolor de cabeza
-- Dolor muscular
-- Articulaciones hinchadas"
-
-Info_VFinca_eng <- "We are conducting active surveillance in banana farmworkers in the Trifinio region and sugarcane farmworkers central Guatemala. Farmworkers reporting symptoms that
-meet the case definition(s) will be tested for Flu A/B/Sars-CoV-2/RSV by nasal swab and/or Dengue by blood sample.
-
-
-Definitions
-
-**Acute respiratory infection (ARI):** The initial case definition includes ≥1 of the following symptoms during one or more days of evolution:
-
-- Fever
-- Cough
-- Earache
-- Nasal congestion
-- Rhinorrhea
-- Sore throat
-- Vomiting after coughing
-- Wheezing
-- Labored, rapid, or shallow breathing
-
-**Arbovirus-like illness (ALI):** 1 or more of the following symptoms during one or more days of evolution (not explained by another etiology):
-
-- Fever
-- Rash
-- Joint pain
-- Conjunctivitis
-- Retro-orbital/eye pain
-- Headache
-- Muscle pain
-- Swollen joints"
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish
@@ -1613,11 +1620,19 @@ server <- function(input, output) {
   #                             VIGICASA
   # --------------------------------------------------------------------------
   output$info_VCasa_text <- renderUI({
-    if (input$language_VCasa == "es") {
-      markdown(Info_VCasa)
-    } else {
-      markdown(Info_VCasa_eng)
-    }
+    es <- input$language_VCasa == "es"
+    tagList(
+      tags$style(HTML("
+        .small-defs, .small-defs p, .small-defs li, .small-defs strong {
+          font-size: 12px !important;
+        }
+      ")),
+      markdown(if (es) Info_VCasa else Info_VCasa_eng),
+      div(
+        class = "small-defs",
+        markdown(if (es) Info_VCasa_defs else Info_VCasa_defs_eng)
+      )
+    )
   })
   
   output$inc_plot_header <- renderUI({
@@ -1825,10 +1840,16 @@ server <- function(input, output) {
     }
     
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. El denominador antes del 11-01-2026 es estimado (250); las semanas anteriores a esta fecha
+      corresponden al período previo al uso del formulario de vigilancia."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. The denominator prior to 01-11-2026 is estimated (250); weeks before this date were before the use of the surveillance form."
     }
+    
     
     p %>%
       layout(
@@ -1860,7 +1881,7 @@ server <- function(input, output) {
         legend        = list(orientation = "h", x = 0, y = -0.35,
                              xanchor = "left", yanchor = "top", font = list(size = 11)),
         hovermode     = "closest",
-        margin        = list(b = 170, t = 40, l = 60, r = 20),
+        margin        = list(b = 190, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -2125,9 +2146,15 @@ server <- function(input, output) {
     
     
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque estos datos se
+      recopilan mediante el formulario de vigilancia, que comenzó a usarse en esa fecha."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. No data are available prior to 01-11-2026 (01-18-2026 for rolling averages)
+      because these data are collected using the surveillance form, which began on that date."
     }
     
     p %>%
@@ -2147,7 +2174,7 @@ server <- function(input, output) {
           list(
             text      = footnote,
             x         = 0,
-            y         = -0.6,
+            y         = -0.45,
             xref      = "paper",
             yref      = "paper",
             xanchor   = "left",
@@ -2159,7 +2186,7 @@ server <- function(input, output) {
         ),
         legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
         hovermode     = "closest",
-        margin        = list(b = 170, t = 40, l = 60, r = 20),
+        margin        = list(b = 180, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -2442,10 +2469,18 @@ server <- function(input, output) {
     }
     
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles para la línea suavizada debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles para la línea suavizada debido al cálculo 
+      del promedio móvil centrado.
+      2. El denominador antes del 11-01-2026 es estimado (250); datos anteriores a esta fecha corresponden
+      al período previo al uso del formulario de vigilancia."
     } else {
-      "Note: Data for the most recent week are not yet available for the smoothed line due to the centered rolling average calculation."
-    }
+      "Notes:
+      1. Data for the most recent week are not yet available for the smoothed line due to the centered 
+      rolling average calculation.
+      2. The denominator prior to 01-11-2026 is estimated (250); data before this date were before the
+      use of the surveillance form."
+    } 
     
     p %>%
       layout(
@@ -2474,7 +2509,7 @@ server <- function(input, output) {
         ),
         legend        = list(orientation = "h", x = 0, y = -0.35),
         hovermode     = "closest",
-        margin        = list(b = 170, t = 40, l = 60, r = 20),
+        margin        = list(b = 180, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -2565,10 +2600,17 @@ server <- function(input, output) {
         )
     }
     
+    
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque no contamos 
+      con denominadores por grupo de edad antes de esa fecha."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. Data are not available before 01-11-2026 (01-18-2026 for rolling averages) because age-specific 
+      denominators are not available before this date."
     }
     
     p %>% layout(
@@ -2678,9 +2720,15 @@ server <- function(input, output) {
     
     
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque no contamos 
+      con denominadores por grupo de edad antes de esa fecha."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. Data are not available before 01-11-2026 (01-18-2026 for rolling averages) because age-specific 
+      denominators are not available before this date."
     }
     
     p %>% layout(
@@ -2709,7 +2757,7 @@ server <- function(input, output) {
       ),
       legend        = list(orientation = "h", x = 0, y = -0.3),
       hovermode     = "closest",
-      margin        = list(b = 170, t = 40, l = 60, r = 20),
+      margin        = list(b = 190, t = 40, l = 60, r = 20),
       plot_bgcolor  = "white",
       paper_bgcolor = "white"
     )
@@ -2803,9 +2851,15 @@ server <- function(input, output) {
     
     
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque no contamos 
+      con denominadores por grupo de edad antes de esa fecha."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. Data are not available before 01-11-2026 (01-18-2026 for rolling averages) because age-specific 
+      denominators are not available before this date."
     }
     
     p %>% layout(
@@ -2945,12 +2999,14 @@ server <- function(input, output) {
         )
     }
     
-    
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Nota: No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque estos datos se
+      recopilan mediante el formulario de vigilancia, que comenzó a usarse en esa fecha."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Note: No data are available prior to 01-11-2026 (01-18-2026 for rolling averages)
+      because these data are collected using the surveillance form, which began on that date."
     }
+
     
     p %>%
       layout(
@@ -2981,7 +3037,7 @@ server <- function(input, output) {
         ),
         legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
         hovermode     = "closest",
-        margin        = list(b = 170, t = 40, l = 60, r = 20),
+        margin        = list(b = 180, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -3145,11 +3201,14 @@ server <- function(input, output) {
         )
       }
     
-    
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. Denominators are estimated based on seasonal farm workforce sizes."
     }
     
     p %>%
@@ -3184,7 +3243,7 @@ server <- function(input, output) {
           xanchor = "left", yanchor = "top", font = list(size = 11)
         ),
         hovermode     = "closest",
-        margin        = list(b = 160, t = 40, l = 60, r = 20),
+        margin        = list(b = 170, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -3608,11 +3667,14 @@ server <- function(input, output) {
         )
     }
     
-    
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. Denominators are estimated based on seasonal farm workforce sizes."
     }
     
     p %>%
@@ -3644,7 +3706,7 @@ server <- function(input, output) {
         ),
         legend        = list(orientation = "h", x = 0, y = -0.30, xanchor = "left", yanchor = "top", font = list(size = 11)),
         hovermode     = "closest",
-        margin        = list(b = 160, t = 40, l = 60, r = 20),
+        margin        = list(b = 170, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -3717,9 +3779,13 @@ server <- function(input, output) {
     }
     
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
     } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. Denominators are estimated based on seasonal farm workforce sizes."
     }
     
     p %>%
@@ -4013,11 +4079,23 @@ server <- function(input, output) {
         )
     }
     
+    
+
+    
     footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles para la línea suavizada debido al cálculo del promedio móvil centrado."
+      "Notas: 
+      1.Los datos de la semana más reciente aún no están disponibles para la línea suavizada debido al cálculo 
+      del promedio móvil centrado.
+      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
+
     } else {
-      "Note: Data for the most recent week are not yet available for the smoothed line due to the centered rolling average calculation."
+      "Notes:
+      1. Data for the most recent week are not yet available for the smoothed line due to the 
+      centered rolling average calculation.
+      2. Denominators are estimated based on seasonal farm workforce sizes."
     }
+    
+    
     p %>%
       layout(
         xaxis = list(
@@ -4113,14 +4191,16 @@ server <- function(input, output) {
             if (es) "Denominador: " else "Denominator: ", denom_roll
           ),
           hoverinfo   = "text"
-        )
-    }
-    
-    footnote <- if (es) {
-      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
-    } else {
-      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
-    }
+        )}
+      footnote <- if (es) {
+        "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
+      } else {
+        "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. Denominators are estimated based on seasonal farm workforce sizes."
+      }
     
     
     p %>% layout(
@@ -4153,9 +4233,8 @@ server <- function(input, output) {
       margin        = list(b = 170, t = 40, l = 60, r = 20),
       plot_bgcolor  = "white",
       paper_bgcolor = "white"
-    )
-  })
-  
+    )})
+
   
   # ---- Tab 6 section titles (bilingual) --------------------------------------
   output$inc_plot_title_tab6 <- renderText({
@@ -4179,14 +4258,22 @@ server <- function(input, output) {
     if (input$language_VFinca == "es") "VigiFinca" else "VigiFinca"
   })
   
-  
   output$info_VFinca_text <- renderUI({
-    if (input$language_VFinca == "es") {
-      markdown(Info_VFinca)
-    } else {
-      markdown(Info_VFinca_eng)
-    }
+    es <- input$language_VFinca == "es"
+    tagList(
+      tags$style(HTML("
+        .small-defs, .small-defs p, .small-defs li, .small-defs strong {
+          font-size: 12px !important;
+        }
+      ")),
+      markdown(if (es) Info_VFinca else Info_VFinca_eng),
+      div(
+        class = "small-defs",
+        markdown(if (es) Info_VFinca_defs else Info_VFinca_defs_eng)
+      )
+    )
   })
+  
   
   cdc_fichas_filtradas <- reactive({
     

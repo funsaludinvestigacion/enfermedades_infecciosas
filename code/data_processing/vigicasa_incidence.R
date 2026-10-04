@@ -14,7 +14,7 @@ uri <- "https://redcap.ucdenver.edu/api/"
 vigicasa <- 
   REDCapR::redcap_read(
     redcap_uri  = uri, 
-    token = "vigicasa_token"
+    token = vigicasa_token
   )$data
 
 # Processing -----------------------------------------------------------------
@@ -35,8 +35,13 @@ vigicasa_record_week <- vigicasa %>% filter(vigilancia_realizada == 1) %>%
 
 
 counts_weekly <- vigicasa_record_week %>% group_by( week_start)  %>% 
-  summarise(surveilled = n()) 
+  summarise(surveilled = n()) %>% 
+  tidyr::complete(
+    week_start = seq(as.Date("2025-06-15"), as.Date("2026-01-05"), by = "week"),
+    fill = list(surveilled = 250)
+  ) %>% filter(week_start > "2025-01-01")
 
+counts_weekly$surveilled <- ifelse(counts_weekly$week_start == "2026-01-04", 250, counts_weekly$surveilled )
 
 realizada <- vigicasa %>% filter(vigilancia_realizada == 1)
 realizada_IDs <- unique(realizada$record_id)
@@ -102,8 +107,8 @@ resp_weekly <- resp_results %>% group_by( week_start) %>%
     inf_b_neg    = sum(inf_b_neg),
     vsr_pos      = sum(vsr_pos),
     vsr_neg      = sum(vsr_neg),
-    inf_a_h1n1   = sum(inf_a_h1n1),   # added
-    inf_a_h3n2   = sum(inf_a_h3n2),   # added
+    inf_a_h1n1   = sum(inf_a_h1n1),   
+    inf_a_h3n2   = sum(inf_a_h3n2),  
     inf_a_nosub = sum(inf_a_nosub),
     .groups = "drop"
   )
@@ -124,11 +129,7 @@ resp_incidence_w$h1n1_inc     <- 1000 * resp_incidence_w$inf_a_h1n1  / resp_inci
 resp_incidence_w$h3n2_inc     <- 1000 * resp_incidence_w$inf_a_h3n2  / resp_incidence_w$surveilled  # added
 
 
-library(zoo)
 
-
-
-#### Roll SUMS 
 #### Roll SUMS 
 resp_incidence_w$surveilled_roll      <- rollsum(resp_incidence_w$surveilled,      k = 3, fill = NA)
 resp_incidence_w$tested_roll          <- rollsum(resp_incidence_w$tested,          k = 3, fill = NA)
@@ -159,19 +160,19 @@ resp_incidence_w <- resp_incidence_w %>%
                 h1n1_inc, h1n1_inc_roll, h3n2_inc, h3n2_inc_roll) %>%        # added h1n1/h3n2 inc + roll
   filter(!is.na(surveilled))
 
-resp_incidence_w <- resp_incidence_w %>% filter(week_start > "2026-01-17")
+resp_incidence_w <- resp_incidence_w 
 
 resp_results_coinfection_corr <- resp_results %>% mutate(
   coinfection =  ifelse( inf_a_pos == 1 & 
-                           (inf_b_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
+                        (inf_b_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
                          ifelse( inf_b_pos == 1 & 
-                                   (inf_a_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
-                                 ifelse( inf_b_pos == 1 & 
-                                           (inf_a_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
-                                         ifelse( vsr_pos == 1 & 
-                                                   (inf_a_pos == 1 | inf_b_pos == 1 |sars_cov2_pos ==1),1,
-                                                 ifelse( sars_cov2_pos == 1 & 
-                                                           (inf_a_pos == 1 | inf_b_pos == 1 |vsr_pos ==1),1, 0))))))
+                         (inf_a_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
+                           ifelse( inf_b_pos == 1 & 
+                         (inf_a_pos == 1 | vsr_pos == 1 |sars_cov2_pos ==1),1,
+                         ifelse( vsr_pos == 1 & 
+                          (inf_a_pos == 1 | inf_b_pos == 1 |sars_cov2_pos ==1),1,
+                          ifelse( sars_cov2_pos == 1 & 
+                        (inf_a_pos == 1 | inf_b_pos == 1 |vsr_pos ==1),1, 0))))))
 
 resp_results_coinfection_corr$sars_cov2_pos <- ifelse(resp_results_coinfection_corr$coinfection == 1, 0,resp_results_coinfection_corr$sars_cov2_pos)                                   
 resp_results_coinfection_corr$inf_a_pos <- ifelse(resp_results_coinfection_corr$coinfection == 1, 0,resp_results_coinfection_corr$inf_a_pos)                                   
@@ -754,7 +755,6 @@ resp_incidence_w <- resp_incidence_w %>%
                 ali_inc, ali_inc_roll, deng_roll,deng_inc, deng_inc_roll) %>%        
   filter(!is.na(surveilled))
 
-resp_incidence_w <- resp_incidence_w %>% filter(week_start > "2026-01-17")
 write.csv(resp_incidence_w, "docs/vigicasa_resp_weekly.csv")
 
 
@@ -1173,14 +1173,15 @@ symptom_incidence <- symptom_incidence %>%
     week_start, surveilled,
     all_of(symptom_vars),
     ends_with("_inc"), ends_with("_inc_roll")
-  ) %>%
-  filter(as.Date(week_start) > "2026-01-17")
+  ) 
 
 write.csv(symptom_incidence, "docs/symptom_incidence.csv")
-# ── Per-person symptom + pathogen results, weekly ────────────────────────────
+# ── Per-person symptom + pathogen results, monthly ────────────────────────────
 
 vigicasa$month <- month(vigicasa$f_muestra)
 vigicasa$year <- year(vigicasa$f_muestra)
+
+vigicasa$ili <-ifelse(vigicasa$fiebre == 1 & (vigicasa$tos == 1 |vigicasa$dolor_garganta == 1),1,0 )
 
 symptom_pathogen_results <- vigicasa %>%
   filter(!is.na(f_muestra)) %>%
@@ -1207,7 +1208,7 @@ symptom_results <- realizada %>%
   summarise(
     across(all_of(symptom_vars), ~ as.integer(any(.x == 1, na.rm = TRUE))),
     .groups = "drop"
-  )
+  ) %>% filter(week_start > "2026-01-09")
 
 resp_results <- resp_results %>% dplyr::select(!c(month, year)) 
 
