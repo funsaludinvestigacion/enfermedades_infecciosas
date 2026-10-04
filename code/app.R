@@ -144,7 +144,7 @@ y se realizan pruebas de laboratorio.
 
 Definiciones
 
-**Infección respiratoria aguda (IRA):** La definición de caso inicial incluye ≥1 de los siguientes síntomas durante uno o más días de evolución:
+**Infección respiratoria aguda (ARI):** La definición de caso inicial incluye ≥1 de los siguientes síntomas durante uno o más días de evolución:
 
 - Fiebre
 - Tos
