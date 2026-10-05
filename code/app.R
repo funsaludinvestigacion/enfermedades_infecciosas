@@ -202,8 +202,7 @@ Info_VFinca_defs_eng <- "
 - Muscle pain
 - Swollen joints
 "
-<<<<<<< HEAD
-=======
+
 ##
 Header_VFinca <- "Vigilancia de enfermedades respiratorias y dengue en fincas del sur centro de Guatemala."
 
@@ -267,7 +266,6 @@ Definitions
 - Headache
 - Muscle pain
 - Swollen joints"
->>>>>>> 3246b03e1cfc36327aa3c231190d2f84b8dcacc9
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish

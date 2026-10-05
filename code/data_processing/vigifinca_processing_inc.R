@@ -372,75 +372,299 @@ vigifinca_results_roll_overall <- vigifinca_results_week_overall %>%
   ungroup()
 
 
-vigifinca_results_roll_overall$lugar <- "overall"
+vigifinca_results_roll_overall$lugar <- "Overall"
 
 vigifinca_results_roll <- rbind(vigifinca_results_roll, vigifinca_results_roll_overall)
 
 write.csv(vigifinca_results_roll, file = "docs/vigifinca_incidence.csv", row.names = FALSE)
 
 
-############################ WHEN WE HAVE THE LAB FORM
-# Create epiweek column
-# vigicasa <- vigicasa %>%
-#  mutate(epiweek = epiweek(fecha_recoleccion_m))
-
-# # Function to determine final result per record_id (preferring positive)
-# resolve_result <- function(main, repit) {
-#   case_when(
-#     main == 1 | repit == 1 ~ 1,  # Prefer positive
-#     main == 2 & (is.na(repit) | repit == 2 | repit == 5) ~ 2,  # Keep negative if no positive
-#     (main == 3 & (is.na(repit)) | repit == 3) ~ 3,  # Keep negative if no positive
-#     TRUE ~ NA_real_
-#   )
-# }
-
-# # Apply function to all relevant columns and filter to keep rows with at least one non-NA result
-# vigicasa <- vigicasa %>%
-#   rowwise() %>%
-#   mutate(
-#     sars_cov2_final = resolve_result(sars_cov2, sars_cov2_repit),
-#     inf_a_final = resolve_result(inf_a, inf_a_repit),
-#     inf_b_final = resolve_result(inf_b, inf_b_repit),
-#     vsr_final = resolve_result(vsr, vsr_repit)
-#   ) %>%
-#   ungroup() %>%
-#   filter(
-#     !is.na(sars_cov2_final) | 
-#       !is.na(inf_a_final) | 
-#       !is.na(inf_b_final) | 
-#       !is.na(vsr_final)
-#   )
-
-# # Group by epiweek and count positives, negatives, and total tested
-# vigicasa_results <- vigicasa %>%
-#   mutate(record_id_first_letter = substr(record_id, 1, 1)) %>%  # Extract the first letter of record_id
-#   mutate(year = year(both_swab_date)) %>%  # Extract year from epiweek (assuming epiweek is in Date format)
-#   group_by(record_id_first_letter, epiweek, year) %>%
-#   summarize(
-#     total_tested = n_distinct(record_id),  # Count unique IDs tested per epiweek
-#     total_pos = n_distinct(record_id[sars_cov2_final == 1 | inf_a_final == 1 | 
-#                                        inf_b_final == 1 | vsr_final == 1], na.rm = TRUE),
-#     total_neg = n_distinct(record_id[(sars_cov2_final == 2 & inf_a_final == 2 & 
-#                                         inf_b_final == 2 & vsr_final == 2)], na.rm = TRUE),
-#     sars_cov2_pos = sum(sars_cov2_final == 1, na.rm = TRUE),
-#     sars_cov2_neg = sum(sars_cov2_final == 2, na.rm = TRUE),
-#     inf_a_pos = sum(inf_a_final == 1, na.rm = TRUE),
-#     inf_a_neg = sum(inf_a_final == 2, na.rm = TRUE),
-#     inf_b_pos = sum(inf_b_final == 1, na.rm = TRUE),
-#     inf_b_neg = sum(inf_b_final == 2, na.rm = TRUE),
-#     vsr_pos = sum(vsr_final == 1, na.rm = TRUE),
-#     vsr_neg = sum(vsr_final == 2, na.rm = TRUE),
-#     inf_a_h1n1 = sum(subtipo_infa == "H1N1", na.rm = TRUE),
-#     inf_a_h3n2 = sum(subtipo_infa == "H3N2", na.rm = TRUE),
-#     inf_a_nosub = sum(inf_a_final == 1 & is.na(subtipo_infa), na.rm = TRUE)
-#   ) %>%
-#   arrange(year, epiweek)  # Optionally, sort by year and epiweek
+vigifinca$sign_sintom___3 <- ifelse(vigifinca$sign_sintom___3 == 1 |
+                                      vigifinca$sign_sintom___10 == 1, 1,vigifinca$sign_sintom___3  )
 
 
-# Save the summary dataframe------------------------------------
-vigifinca_csv_file <- "docs/vigifinca_summary.csv"
-write.csv(vigifinca_results, file = vigifinca_csv_file, row.names = FALSE)
+##clean up symptoms
+vigifinca <- vigifinca %>% 
+  rename( anorexia_d = sign_sintom___1,
+          dolor_articular_d = sign_sintom___2,
+          articulares_hinchados_d = sign_sintom___3,
+          fatiga_d = sign_sintom___4,
+          dolor_cabeza_d = sign_sintom___5,
+          conjuntivitis_d = sign_sintom___6,
+          diarrea_d = sign_sintom___7,
+          dolor_abdominal_d = sign_sintom___8,
+          dolor_ojos_d = sign_sintom___9,
+          enterorragia_d = sign_sintom___11,
+          epistaxis_d = sign_sintom___12,
+          sarpullido_d = sign_sintom___13, 
+          fiebre_d = sign_sintom___14, 
+          hemorragia_encías_d = sign_sintom___15, 
+          hemorragia_urinaria_d = sign_sintom___16, 
+          hemorragia_vaginal_d = sign_sintom___17, 
+          melena_d = sign_sintom___18, 
+          dolor_cuerpo_d = sign_sintom___19, 
+          petequias_d = sign_sintom___20, 
+          piel_fria_d = sign_sintom___21, 
+          sudoracion_d = sign_sintom___22, 
+          tos_d = sign_sintom___23, 
+          vomito_d = sign_sintom___24, 
+          vomito_sangre_d = sign_sintom___25, 
+          manifestaciones_neurologicas_d = sign_sintom___26)
+          
+symptom_vars_r <- c(
+  "fiebre_38", "ante_fiebre", "tos_p", "malestar", "dolor_decabeza",
+  "dolor_muscular_articulaciones", "odinofagia", "rinorrea", "conjuntivitis",
+  "adenopatia", "disnea", "p_gusto", "perdida_olfato", "nausea_vomitos",
+  "diarrea_r", "alt_conciencia", "estridor", "tiraje", "aleteo_nasal",
+  "vomitos_diarrea")
+
+symptom_vars_d <- c(
+  "anorexia_d", "dolor_articular_d", "articulares_hinchados_d",
+  "fatiga_d" ,"dolor_cabeza_d","conjuntivitis_d","diarrea_d",
+  "dolor_abdominal_d", "enterorragia_d",
+  "epistaxis_d", "sarpullido_d",  "fiebre_d" , "hemorragia_encías_d" , 
+  "hemorragia_urinaria_d",  "hemorragia_vaginal_d",  "melena_d", 
+  "dolor_cuerpo_d", "petequias_d", "piel_fria_d", "sudoracion_d", 
+  "tos_d" ,  "vomito_d" , "vomito_sangre_d" , "manifestaciones_neurologicas_d" )
 
 
 
+symptom_results_resp <- vigifinca %>%
+  filter(!is.na(f_visita_f)) %>%
+  mutate(week_start = floor_date(f_visita_f, unit = "week", week_start = 7)) %>%
+  group_by(record_id, lugar, week_start) %>%
+  summarise(
+    across(all_of(symptom_vars_r), ~ as.integer(any(.x == 1, na.rm = TRUE))),
+    .groups = "drop"
+  )
 
+symptom_results_deng <- vigifinca %>%
+  filter(!is.na(fecha_visita)) %>%
+  mutate(week_start = floor_date(fecha_visita, unit = "week", week_start = 7)) %>%
+  group_by(record_id,lugar, week_start) %>%
+  summarise(
+    across(all_of(symptom_vars_d), ~ as.integer(any(.x == 1, na.rm = TRUE))),
+    .groups = "drop"
+  )
+
+
+
+symptom_resp_weekly <- symptom_results_resp %>%
+  group_by(week_start, lugar) %>%
+  summarise(
+    across(all_of(symptom_vars_r), ~ sum(.x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  complete(week_start, fill = as.list(setNames(rep(0, length(symptom_vars_r)), symptom_vars_r)))
+
+
+symptom_deng_weekly <- symptom_results_deng %>%
+  group_by(week_start, lugar) %>%
+  summarise(
+    across(all_of(symptom_vars_d), ~ sum(.x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  complete(week_start, fill = as.list(setNames(rep(0, length(symptom_vars_d)), symptom_vars_d)))
+
+
+
+
+
+
+# --- Rolling window size (in weeks) — adjust as needed ---
+# Use an ODD number for a clean, symmetric centered window (e.g. 3 = the
+# week itself + 1 week before + 1 week after).
+roll_window <- 3
+
+# rollsum(..., align = "center") = centered rolling sum. fill = NA means the
+# first and last floor(roll_window/2) rows of each group/series will be NA,
+# since there aren't enough weeks on one side yet to fill the window.
+
+# =========================================================
+# LUGAR-LEVEL COUNTS
+# =========================================================
+counts <- vigifinca_results_week %>%
+  group_by(week_start, lugar, source, denom, total_tested) %>%
+  tally() %>%
+  ungroup()
+
+# =========================================================
+# OVERALL COUNTS (no lugar, but keeps source) — built by summing
+# the lugar-level counts up to week level within each source, so
+# it is guaranteed to have exactly one row per week_start/source
+# even if denom/total_tested vary by lugar.
+# =========================================================
+counts_overall <- counts %>%
+  group_by(week_start, source) %>%
+  summarise(
+    n            = sum(n),
+    denom        = sum(denom),
+    total_tested = sum(total_tested),
+    .groups = "drop"
+  ) %>%
+  arrange(source, week_start) %>%
+  group_by(source) %>%
+  mutate(
+    n_roll            = rollsum(n,            k = roll_window, fill = NA, align = "center"),
+    denom_roll        = rollsum(denom,        k = roll_window, fill = NA, align = "center"),
+    total_tested_roll = rollsum(total_tested, k = roll_window, fill = NA, align = "center")
+  ) %>%
+  ungroup()
+
+# Now add the rolling columns to the lugar-level counts (rolled within
+# each lugar + source combination)
+counts <- counts %>%
+  arrange(lugar, source, week_start) %>%
+  group_by(lugar, source) %>%
+  mutate(
+    n_roll            = rollsum(n,            k = roll_window, fill = NA, align = "center"),
+    denom_roll        = rollsum(denom,        k = roll_window, fill = NA, align = "center"),
+    total_tested_roll = rollsum(total_tested, k = roll_window, fill = NA, align = "center")
+  ) %>%
+  ungroup()
+
+# =========================================================
+# RESP — by lugar
+# =========================================================
+symptom_resp_weekly$source <- "Resp"
+
+symptom_incidence_resp <- symptom_resp_weekly %>%
+  left_join(counts, by = c("week_start", "lugar", "source")) %>%
+  mutate(across(all_of(symptom_vars_r), ~ replace_na(.x, 0))) %>%
+  arrange(lugar, week_start) %>%
+  group_by(lugar) %>%
+  mutate(across(
+    all_of(symptom_vars_r),
+    ~ 1000 * rollsum(.x, k = roll_window, fill = NA, align = "center") / denom_roll,
+    .names = "{.col}_roll"
+  )) %>%
+  ungroup()
+
+symptom_incidence_resp <- symptom_incidence_resp %>%
+  mutate(across(all_of(symptom_vars_r), ~ 1000 * .x / denom, .names = "{.col}_inc"))
+
+# =========================================================
+# DENGUE — by lugar
+# =========================================================
+symptom_deng_weekly$source <- "Deng"
+
+symptom_incidence_deng <- symptom_deng_weekly %>%
+  left_join(counts, by = c("week_start", "lugar", "source")) %>%
+  mutate(across(all_of(symptom_vars_d), ~ replace_na(.x, 0))) %>%
+  arrange(lugar, week_start) %>%
+  group_by(lugar) %>%
+  mutate(across(
+    all_of(symptom_vars_d),
+    ~ 1000 * rollsum(.x, k = roll_window, fill = NA, align = "center") / denom_roll,
+    .names = "{.col}_roll"
+  )) %>%
+  ungroup()
+
+symptom_incidence_deng <- symptom_incidence_deng %>%
+  mutate(across(all_of(symptom_vars_d), ~ 1000 * .x / denom, .names = "{.col}_inc"))
+
+
+# =========================================================
+# RESP — overall
+# =========================================================
+symptom_resp_weekly_o <- symptom_results_resp %>%
+  group_by(week_start) %>%
+  summarise(
+    across(all_of(symptom_vars_r), ~ sum(.x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  complete(week_start, fill = as.list(setNames(rep(0, length(symptom_vars_r)), symptom_vars_r)))
+symptom_resp_weekly_o$source <- "Resp"
+
+symptom_deng_weekly_o <- symptom_results_deng %>%
+  group_by(week_start) %>%
+  summarise(
+    across(all_of(symptom_vars_d), ~ sum(.x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  complete(week_start, fill = as.list(setNames(rep(0, length(symptom_vars_d)), symptom_vars_d)))
+symptom_deng_weekly_o$source <- "Deng"
+
+symptom_incidence_resp_o <- symptom_resp_weekly_o %>%
+  left_join(counts_overall, by = c("week_start", "source")) %>%
+  mutate(across(all_of(symptom_vars_r), ~ replace_na(.x, 0))) %>%
+  arrange(week_start) %>%
+  mutate(across(
+    all_of(symptom_vars_r),
+    ~ 1000 * rollsum(.x, k = roll_window, fill = NA, align = "center") / denom_roll,
+    .names = "{.col}_roll"
+  ))
+
+symptom_incidence_resp_o <- symptom_incidence_resp_o %>%
+  mutate(across(all_of(symptom_vars_r), ~ 1000 * .x / denom, .names = "{.col}_inc"))
+
+symptom_incidence_deng_o <- symptom_deng_weekly_o %>%
+  left_join(counts_overall, by = c("week_start", "source")) %>%
+  mutate(across(all_of(symptom_vars_d), ~ replace_na(.x, 0))) %>%
+  arrange(week_start) %>%
+  mutate(across(
+    all_of(symptom_vars_d),
+    ~ 1000 * rollsum(.x, k = roll_window, fill = NA, align = "center") / denom_roll,
+    .names = "{.col}_roll"
+  ))
+
+symptom_incidence_deng_o <- symptom_incidence_deng_o %>%
+  mutate(across(all_of(symptom_vars_d), ~ 1000 * .x / denom, .names = "{.col}_inc"))
+
+# =========================================================
+# COMBINE lugar-level + overall into one table per source
+# =========================================================
+symptom_incidence_resp_combined <- bind_rows(
+  symptom_incidence_resp,
+  symptom_incidence_resp_o %>% mutate(lugar = "Overall")
+)
+
+symptom_incidence_deng_combined <- bind_rows(
+  symptom_incidence_deng,
+  symptom_incidence_deng_o %>% mutate(lugar = "Overall")
+)
+
+write.csv(symptom_incidence_resp_combined, "docs/finca_symptom_incidence_resp.csv", row.names = FALSE)
+write.csv(symptom_incidence_deng_combined, "docs/finca_symptom_incidence_deng.csv", row.names = FALSE)
+
+vigifinca_results_deng <- vigifinca_results %>% filter(source == "Deng")
+vigifinca_results_resp <- vigifinca_results %>% filter(source == "Resp")
+
+results_symptoms_deng <- left_join(symptom_results_deng,vigifinca_results_deng )
+results_symptoms_resp <- left_join(symptom_results_resp,vigifinca_results_resp )
+
+results_symptoms_deng$month <- month(results_symptoms_deng$fecha_muestra)
+results_symptoms_deng$year <- year(results_symptoms_deng$fecha_muestra)
+results_symptoms_resp$month <- month(results_symptoms_resp$fecha_muestra)
+results_symptoms_resp$year <- year(results_symptoms_resp$fecha_muestra)
+
+###NOT ENOUGH POSITIVES TO REPORT 
+results_symptoms_deng_month <- results_symptoms_deng %>%
+  filter(deng_pos == 1) %>% 
+  group_by(month) %>% 
+  group_by(month, year) %>%
+  summarise(
+    n_positive = n(),
+    across(all_of(symptom_vars_d), ~ sum(.x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    across(all_of(symptom_vars_d), ~ 100 * .x / n_positive, .names = "{.col}_pct"),
+    pos_pathogen = "Dengue"  )
+
+path_vars <-  c("inf_a_pos", "inf_b_pos", "sars_cov2_pos", "vsr_pos")
+  
+results_symptoms_resp_month <- purrr::map_dfr(path_vars, function(path) {
+  results_symptoms_resp %>%
+    filter(.data[[path]] == 1) %>%
+    group_by(month, year) %>%
+    summarise(
+      n_positive = n(),
+      across(all_of(symptom_vars_r), ~ sum(.x, na.rm = TRUE)),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      across(all_of(symptom_vars_r), ~ 100 * .x / n_positive, .names = "{.col}_pct"),
+      pos_pathogen = path
+    )
+})
