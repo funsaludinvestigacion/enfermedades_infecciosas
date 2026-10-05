@@ -42,6 +42,7 @@ counts_weekly <- vigicasa_record_week %>% group_by( week_start)  %>%
   ) %>% filter(week_start > "2025-01-01")
 
 counts_weekly$surveilled <- ifelse(counts_weekly$week_start == "2026-01-04", 250, counts_weekly$surveilled )
+counts_weekly$surveilled <- ifelse(week_start == "2026-01-04",250, counts_weekly$surveilled )
 
 realizada <- vigicasa %>% filter(vigilancia_realizada == 1)
 realizada_IDs <- unique(realizada$record_id)

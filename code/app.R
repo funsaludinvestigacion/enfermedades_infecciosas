@@ -202,6 +202,72 @@ Info_VFinca_defs_eng <- "
 - Muscle pain
 - Swollen joints
 "
+<<<<<<< HEAD
+=======
+##
+Header_VFinca <- "Vigilancia de enfermedades respiratorias y dengue en fincas del sur centro de Guatemala."
+
+Header_VFinca_eng <- "Respiratory and Dengue Illness Surveillance in South-Central Guatemalan Farms"
+
+
+Info_VFinca <- "Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades similares al dengue. 
+Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, 
+y se realizan pruebas de laboratorio.
+
+Definiciones
+
+**Infección respiratoria aguda (ARI):** La definición de caso inicial incluye ≥1 de los siguientes síntomas durante uno o más días de evolución:
+
+- Fiebre
+- Tos
+- Dolor de oídos
+- Congestión nasal
+- Rinorrea
+- Dolor de garganta
+- Vómitos después de toser
+- Sibilancias
+- Respiración laboriosa, rápida o superficial
+
+**Enfermedad similar a arbovirus (ALI):** 1 o más de los siguientes síntomas durante uno o más días de evolución (no explicados por otra etiología):
+
+- Fiebre
+- Erupción
+- Dolor articular
+- Conjuntivitis
+- Dolor retroorbitario/ocular
+- Dolor de cabeza
+- Dolor muscular
+- Articulaciones hinchadas"
+
+Info_VFinca_eng <- "We are conducting active surveillance in banana farmworkers in the Trifinio region and sugarcane farmworkers central Guatemala. Farmworkers reporting symptoms that
+meet the case definition(s) will be tested for Flu A/B/Sars-CoV-2/RSV by nasal swab and/or Dengue by blood sample.
+
+
+Definitions
+
+**Acute respiratory infection (ARI):** The initial case definition includes ≥1 of the following symptoms during one or more days of evolution:
+
+- Fever
+- Cough
+- Earache
+- Nasal congestion
+- Rhinorrhea
+- Sore throat
+- Vomiting after coughing
+- Wheezing
+- Labored, rapid, or shallow breathing
+
+**Arbovirus-like illness (ALI):** 1 or more of the following symptoms during one or more days of evolution (not explained by another etiology):
+
+- Fever
+- Rash
+- Joint pain
+- Conjunctivitis
+- Retro-orbital/eye pain
+- Headache
+- Muscle pain
+- Swollen joints"
+>>>>>>> 3246b03e1cfc36327aa3c231190d2f84b8dcacc9
 
 # Define any needed functions -------------------------
 # Function to format date labels in Spanish
