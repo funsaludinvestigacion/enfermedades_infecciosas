@@ -8,7 +8,7 @@ uri <- "https://redcap.ucdenver.edu/api/"
 gihsn <- 
   REDCapR::redcap_read(
     redcap_uri  = uri, 
-    token = "0FCBA7123DB567841B7BF1A7FF0399F7"
+    token = gihsn_token
   )$data
 
 # Processing -----------------------------------------------------------------
