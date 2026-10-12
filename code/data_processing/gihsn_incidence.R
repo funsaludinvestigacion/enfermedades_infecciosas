@@ -1,5 +1,9 @@
 
 library(dplyr)
+library(lubridate)
+library(zoo)
+library(tidyr)
+
 # Load data -----------------------------------------------------------------
 gihsn_token <- Sys.getenv("gihsn_token")
 
@@ -12,9 +16,10 @@ gihsn <-
   )$data
 
 # Processing -----------------------------------------------------------------
-# Create epiweek column
 gihsn <- gihsn %>%
-  mutate(epiweek = epiweek(both_swab_date))
+  mutate(epiweek = epiweek(both_swab_date),
+         week_start = floor_date(both_swab_date, unit = "week", week_start = 7) 
+  )
 
 # Function to determine final result per record_id (preferring positive)
 resolve_result <- function(main, repit) {
@@ -42,14 +47,15 @@ gihsn <- gihsn %>%
       !is.na(inf_b_final) | 
       !is.na(vsr_final)
   )
+table(gihsn$sars_cov2_final,gihsn$both_lab2_sarscov2_yesno , useNA = 'always')
 
-# Group by epiweek and count positives, negatives, and total tested
+# Group by week_start and count positives, negatives, and total tested
 gihsn_results <- gihsn %>%
   mutate(record_id_first_letter = substr(record_id, 1, 1)) %>%  # Extract the first letter of record_id
-  mutate(year = year(both_swab_date)) %>%  # Extract year from epiweek (assuming epiweek is in Date format)
-  group_by(record_id_first_letter, epiweek, year) %>%
+  mutate(year = year(both_swab_date)) %>%  
+  group_by(record_id_first_letter, week_start, year) %>%
   summarize(
-    total_tested = n_distinct(record_id),  # Count unique IDs tested per epiweek
+    total_tested = n_distinct(record_id),  # Count unique IDs tested per week_start
     total_pos = n_distinct(record_id[sars_cov2_final == 1 | inf_a_final == 1 | 
                                        inf_b_final == 1 | vsr_final == 1|inf_a_abi==1|
                                        inf_b_abi==1|sars_cov2_abi==1], na.rm = TRUE),
@@ -79,67 +85,73 @@ gihsn_results <- gihsn %>%
     vsr_nosub = sum((vsr_final==1 & is.na(resultados_vsra)&is.na(resultados_vsrb))|
                       (vsr_final==1 & resultados_vsra==2&resultados_vsrb==2), na.rm=TRUE)
   ) %>%
-  arrange(year, epiweek)  # Optionally, sort by year and epiweek
+  arrange(year, week_start)  # Optionally, sort by year and week_start
 
 gihsn_results$record_id_first_letter <- ifelse(gihsn_results$record_id_first_letter == "Q", "Hospital de Coatepeque",
                                                ifelse(gihsn_results$record_id_first_letter == "C", "Hospital de Chimaltenango", NA))
 
 gihsn_results <- gihsn_results %>%
-  rename(hospital = "record_id_first_letter")
+  rename(hospital = record_id_first_letter)
 
-table
-# Convert year and epiweek to the correct Monday of that epiweek
-gihsn_results <- gihsn_results %>%
-  mutate(epiweek_date = as.Date(paste(year, epiweek, 0), format = "%Y %U %w"))
+# Convert year and week_start to the correct Monday of that week_start
 
-table(gihsn_results$hospital)
+
+#El número de camas hospital de Chimaltenango: 232
+#El número de camas hospital de Coatepeque: 152
 
 chim <- gihsn_results %>% filter( hospital == "Hospital de Chimaltenango")
 coa <- gihsn_results %>% filter( hospital == "Hospital de Coatepeque")
 
-chim$tested_roll <- rollsum(chim$total_tested, k= 3, fill = NA)
-chim$inf_a_pos_roll <- rollsum(chim$inf_a_pos, k= 3, fill = NA)
-chim$inf_b_pos_roll <- rollsum(chim$inf_b_pos, k= 3, fill = NA) 
-chim$sars_cov2_pos_roll <- rollsum(chim$sars_cov2_pos, k= 3, fill = NA)
-chim$vsr_pos_roll <- rollsum(chim$vsr_pos, k= 3, fill = NA)
+denom_chim <- 232
+denom_coa  <- 152
+denom_o <- 152 + 232
 
-chim <- chim %>% arrange(year, epiweek)
-
-chim$flua_inc <- 100*chim$inf_a_pos / chim$total_tested
-chim$flub_inc <- 100*chim$inf_b_pos / chim$total_tested
-chim$scv2_inc <- 100*chim$sars_cov2_pos / chim$total_tested
-chim$rsv_inc <- 100*chim$vsr_pos / chim$total_tested
-chim$flu_gen_inc <- 100*(chim$inf_a_pos  + chim$inf_b_pos )/ chim$total_tested
-
-chim$flua_inc_roll <- 100*chim$inf_a_pos_roll / chim$tested_roll
-chim$flub_inc_roll <- 100*chim$inf_b_pos_roll / chim$tested_roll
-chim$scv2_inc_roll <- 100*chim$sars_cov2_pos_roll/ chim$tested_roll
-chim$rsv_inc_roll <- 100*chim$vsr_pos_roll / chim$tested_roll
-chim$flu_gen_inc_roll <- 100*(chim$inf_a_pos_roll  + chim$inf_b_pos_roll )/ chim$tested_roll
+chim$denom <- denom_chim
+inc_vars <- c("denom", "total_tested", "inf_a_pos", "inf_b_pos", "sars_cov2_pos", "vsr_pos")
 
 
-coa$tested_roll <- rollsum(coa$total_tested, k= 3, fill = NA)
-coa$inf_a_pos_roll <- rollsum(coa$inf_a_pos, k= 3, fill = NA)
-coa$inf_b_pos_roll <- rollsum(coa$inf_b_pos, k= 3, fill = NA) 
-coa$sars_cov2_pos_roll <- rollsum(coa$sars_cov2_pos, k= 3, fill = NA)
-coa$vsr_pos_roll <- rollsum(coa$vsr_pos, k= 3, fill = NA)
-
-coa <- coa %>% arrange(year, epiweek)
-
-coa$flua_inc <- 100*coa$inf_a_pos / coa$total_tested
-coa$flub_inc <- 100*coa$inf_b_pos / coa$total_tested
-coa$scv2_inc <- 100*coa$sars_cov2_pos / coa$total_tested
-coa$rsv_inc <- 100*coa$vsr_pos / coa$total_tested
-coa$flu_gen_inc <- 100*(coa$inf_a_pos  + coa$inf_b_pos )/ coa$total_tested
 
 
-coa$flua_inc_roll <- 100*coa$inf_a_pos_roll / coa$tested_roll
-coa$flub_inc_roll <- 100*coa$inf_b_pos_roll / coa$tested_roll
-coa$scv2_inc_roll <- 100*coa$sars_cov2_pos_roll/ coa$tested_roll
-coa$rsv_inc_roll <- 100*coa$vsr_pos_roll / coa$tested_roll
-coa$flu_gen_inc_roll <- 100*(coa$inf_a_pos_roll  + coa$inf_b_pos_roll )/ coa$tested_roll
+roll3 <- function(x) rollapply(x, width = 3, FUN = sum, partial = TRUE, align = "center")
 
-overall <- gihsn_results %>% group_by(epiweek, year) %>% summarise(
+chim <- chim %>%
+  arrange(year, week_start) %>%
+  mutate(across(all_of(inc_vars), roll3, .names = "{.col}_roll"))
+
+chim$flua_inc <- 100*chim$inf_a_pos / chim$denom
+chim$flub_inc <- 100*chim$inf_b_pos / chim$denom
+chim$scv2_inc <- 100*chim$sars_cov2_pos / chim$denom
+chim$rsv_inc <- 100*chim$vsr_pos / chim$denom
+chim$flu_gen_inc <- 100*(chim$inf_a_pos  + chim$inf_b_pos )/ chim$denom
+
+chim$flua_inc_roll <- 100*chim$inf_a_pos_roll / chim$denom_roll
+chim$flub_inc_roll <- 100*chim$inf_b_pos_roll / chim$denom_roll
+chim$scv2_inc_roll <- 100*chim$sars_cov2_pos_roll/ chim$denom_roll
+chim$rsv_inc_roll <- 100*chim$vsr_pos_roll / chim$denom_roll
+chim$flu_gen_inc_roll <- 100*(chim$inf_a_pos_roll  + chim$inf_b_pos_roll )/ chim$denom_roll
+
+
+coa$denom <- denom_coa
+
+coa <- coa %>%
+  arrange(year, week_start) %>%
+  mutate(across(all_of(inc_vars), roll3, .names = "{.col}_roll"))
+
+
+coa$flua_inc <- 100*coa$inf_a_pos / coa$denom
+coa$flub_inc <- 100*coa$inf_b_pos / coa$denom
+coa$scv2_inc <- 100*coa$sars_cov2_pos / coa$denom
+coa$rsv_inc <- 100*coa$vsr_pos / coa$denom
+coa$flu_gen_inc <- 100*(coa$inf_a_pos  + coa$inf_b_pos )/ coa$denom
+
+
+coa$flua_inc_roll <- 100*coa$inf_a_pos_roll / coa$denom_roll
+coa$flub_inc_roll <- 100*coa$inf_b_pos_roll / coa$denom_roll
+coa$scv2_inc_roll <- 100*coa$sars_cov2_pos_roll/ coa$denom_roll
+coa$rsv_inc_roll <- 100*coa$vsr_pos_roll / coa$denom_roll
+coa$flu_gen_inc_roll <- 100*(coa$inf_a_pos_roll  + coa$inf_b_pos_roll )/ coa$denom_roll
+
+overall <- gihsn_results %>% group_by(week_start, year) %>% summarise(
   total_tested = sum(total_tested),
   inf_a_pos = sum(inf_a_pos),
   inf_b_pos = sum(inf_b_pos),
@@ -147,47 +159,151 @@ overall <- gihsn_results %>% group_by(epiweek, year) %>% summarise(
   vsr_pos = sum(vsr_pos)
 )
 
-overall <- overall %>% arrange(year, epiweek)
-overall$tested_roll <- rollsum(overall$total_tested, k= 3, fill = NA)
-overall$inf_a_pos_roll <- rollsum(overall$inf_a_pos, k= 3, fill = NA)
-overall$inf_b_pos_roll <- rollsum(overall$inf_b_pos, k= 3, fill = NA) 
-overall$sars_cov2_pos_roll <- rollsum(overall$sars_cov2_pos, k= 3, fill = NA)
-overall$vsr_pos_roll <- rollsum(overall$vsr_pos, k= 3, fill = NA)
 
-overall$flua_inc <- 100*overall$inf_a_pos / overall$total_tested
-overall$flub_inc <- 100*overall$inf_b_pos / overall$total_tested
-overall$scv2_inc <- 100*overall$sars_cov2_pos / overall$total_tested
-overall$rsv_inc <- 100*overall$vsr_pos / overall$total_tested
-overall$flu_gen_inc <- 100*(overall$inf_a_pos  + overall$inf_b_pos )/ overall$total_tested
+overall$denom <- denom_o
 
-overall$flua_inc_roll <- 100*overall$inf_a_pos_roll / overall$tested_roll
-overall$flub_inc_roll <- 100*overall$inf_b_pos_roll / overall$tested_roll
-overall$scv2_inc_roll <- 100*overall$sars_cov2_pos_roll/ overall$tested_roll
-overall$rsv_inc_roll <- 100*overall$vsr_pos_roll / overall$tested_roll
-overall$flu_gen_inc_roll <- 100*(overall$inf_a_pos_roll  + overall$inf_b_pos_roll )/ overall$tested_roll
+overall <- overall %>%
+  arrange(year, week_start) %>%
+  mutate(across(all_of(inc_vars), roll3, .names = "{.col}_roll"))
+
+
+
+overall$flua_inc <- 100*overall$inf_a_pos / overall$denom
+overall$flub_inc <- 100*overall$inf_b_pos / overall$denom
+overall$scv2_inc <- 100*overall$sars_cov2_pos / overall$denom
+overall$rsv_inc <- 100*overall$vsr_pos / overall$denom
+overall$flu_gen_inc <- 100*(overall$inf_a_pos  + overall$inf_b_pos )/ overall$denom
+
+overall$flua_inc_roll <- 100*overall$inf_a_pos_roll / overall$denom_roll
+overall$flub_inc_roll <- 100*overall$inf_b_pos_roll / overall$denom_roll
+overall$scv2_inc_roll <- 100*overall$sars_cov2_pos_roll/ overall$denom_roll
+overall$rsv_inc_roll <- 100*overall$vsr_pos_roll / overall$denom_roll
+overall$flu_gen_inc_roll <- 100*(overall$inf_a_pos_roll  + overall$inf_b_pos_roll )/ overall$denom_roll
 
 overall$hospital <- "Overall"
 
-overall <- overall %>% dplyr::select(hospital, year, epiweek, total_tested, inf_a_pos, 
+overall <- overall %>% dplyr::select(hospital, year, week_start, total_tested, inf_a_pos, 
                                      inf_b_pos, sars_cov2_pos, vsr_pos, 
                                     flu_gen_inc, flu_gen_inc_roll, flua_inc, flua_inc_roll,
-                                    flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll)
+                                    flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll, denom, denom_roll)
 
-chim <- chim %>% dplyr::select(hospital, year, epiweek, total_tested, inf_a_pos, 
+chim <- chim %>% dplyr::select(hospital, year, week_start, total_tested, inf_a_pos, 
                                      inf_b_pos, sars_cov2_pos, vsr_pos, 
                                      flu_gen_inc, flu_gen_inc_roll, flua_inc, flua_inc_roll,
-                                     flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll)
+                                     flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll, denom, denom_roll)
 
-coa <- coa %>% dplyr::select(hospital, year, epiweek, total_tested, inf_a_pos, 
+coa <- coa %>% dplyr::select(hospital, year, week_start, total_tested, inf_a_pos, 
                        inf_b_pos, sars_cov2_pos, vsr_pos, 
                        flu_gen_inc, flu_gen_inc_roll, flua_inc, flua_inc_roll,
-                       flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll)
+                       flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll, denom, denom_roll)
 
 all_inc1 <- rbind(chim, coa) 
 all_inc <- rbind(all_inc1, overall)
 
  write.csv(all_inc, "docs/gihsn_incidence_week.csv")
-
 # Save the summary dataframe------------------------------------
 gihsn_csv_file <- "docs/gihsn_summary.csv"
 write.csv(gihsn_results, file = gihsn_csv_file, row.names = FALSE)
+
+
+#### symptoms 
+
+gihsn_symptom_vars <- c("both_ilisystemic_malaise", "both_ilisystemic_headache",
+                       "both_ilisystemic_myalgia", "both_ilirespiratory_cough",
+                       "both_ilirespiratory_sorethroat", "both_ilirespiratory_shortnessbreath",
+                       "both_ilirespiratory_wheezing","both_ilirespiratory_nasalcongestion",
+                        "both_othersymptoms_nausea", "both_othersymptoms_diarrhea",
+                       "both_othersymptoms_smell", "both_othersymptoms_chestpain")
+
+symptom_weekly <- gihsn %>%
+  group_by(week_start) %>%
+  summarise(
+    across(all_of(gihsn_symptom_vars), ~ sum(.x == 1, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  complete(week_start, fill = as.list(setNames(rep(0, length(gihsn_symptom_vars)), gihsn_symptom_vars)))
+# ── 3. Join numerator + denominator
+symptom_incidence_o <- symptom_weekly %>%
+  left_join(overall, by = "week_start") 
+
+symptom_incidence_o <- symptom_incidence_o %>%
+  mutate(across(all_of(gihsn_symptom_vars), ~ 1000 * .x / denom, .names = "{.col}_inc"))
+
+# ── 5. Rolling sums & rates (3-week window)
+symptom_incidence_o <- symptom_incidence_o %>%
+  arrange(week_start) %>%
+  mutate(across(all_of(gihsn_symptom_vars), roll3, .names = "{.col}_roll")) %>%
+  mutate(
+    across(all_of(gihsn_symptom_vars), ~ 1000 * get(paste0(cur_column(), "_roll")) / denom_roll, .names = "{.col}_inc_roll")
+  ) 
+# ── 6. Tidy final column order
+symptom_incidence_o <- symptom_incidence_o %>%
+  select(
+    week_start, hospital,
+    all_of(inc_vars), all_of(gihsn_symptom_vars),
+    ends_with("_inc"), ends_with("_roll")
+  ) 
+
+#### symptoms by hospital
+
+gihsn <- gihsn %>%
+  mutate(
+    record_id_first_letter = substr(record_id, 1, 1),
+    hospital = case_when(
+      record_id_first_letter == "Q" ~ "Hospital de Coatepeque",
+      record_id_first_letter == "C" ~ "Hospital de Chimaltenango",
+      TRUE ~ NA_character_
+    )
+  )
+
+symptom_weekly <- gihsn %>%
+  group_by(week_start,hospital) %>%
+  summarise(
+    across(all_of(gihsn_symptom_vars), ~ sum(.x == 1, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  complete(week_start, fill = as.list(setNames(rep(0, length(gihsn_symptom_vars)), gihsn_symptom_vars)))
+# ── 3. Join numerator + denominator
+symptom_incidence_hosp <- symptom_weekly %>%
+  left_join(all_inc1, by = c("week_start", "hospital") )
+
+chim <- symptom_incidence_hosp %>% filter( hospital == "Hospital de Chimaltenango")
+coa <- symptom_incidence_hosp %>% filter( hospital == "Hospital de Coatepeque")
+
+symptom_incidence_chim <- chim %>%
+  mutate(across(all_of(gihsn_symptom_vars), ~ 1000 * .x / denom, .names = "{.col}_inc"))
+
+# ── 5. Rolling sums & rates (3-week window)
+symptom_incidence_chim <- symptom_incidence_chim %>%
+  arrange(week_start) %>%
+  mutate(across(all_of(gihsn_symptom_vars), roll3, .names = "{.col}_roll")) %>%
+  mutate(
+    across(all_of(gihsn_symptom_vars), ~ 1000 * get(paste0(cur_column(), "_roll")) / denom_roll, .names = "{.col}_inc_roll")
+  ) 
+# ── 6. Tidy final column order
+symptom_incidence_chim <- symptom_incidence_chim %>%
+  select(
+    week_start, hospital,
+    all_of(inc_vars), all_of(gihsn_symptom_vars),
+    ends_with("_inc"), ends_with("_roll"))
+  
+    symptom_incidence_coa <- coa %>%
+  mutate(across(all_of(gihsn_symptom_vars), ~ 1000 * .x / denom, .names = "{.col}_inc"))
+
+# ── 5. Rolling sums & rates (3-week window)
+    symptom_incidence_coa <- symptom_incidence_coa %>%
+  arrange(week_start) %>%
+  mutate(across(all_of(gihsn_symptom_vars), roll3, .names = "{.col}_roll")) %>%
+  mutate(
+    across(all_of(gihsn_symptom_vars), ~ 1000 * get(paste0(cur_column(), "_roll")) / denom_roll, .names = "{.col}_inc_roll")
+  ) 
+# ── 6. Tidy final column order
+    symptom_incidence_coa <- symptom_incidence_coa %>%
+  select(
+    week_start, hospital,
+    all_of(inc_vars), all_of(gihsn_symptom_vars),
+    ends_with("_inc"), ends_with("_roll"))
+    
+    
+all_inc_symp <- rbind(symptom_incidence_o, symptom_incidence_chim)
+write.csv(all_inc_symp, "docs/gihsn_incidence_week.csv")
