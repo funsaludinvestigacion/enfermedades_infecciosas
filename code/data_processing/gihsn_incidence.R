@@ -52,8 +52,7 @@ table(gihsn$sars_cov2_final,gihsn$both_lab2_sarscov2_yesno , useNA = 'always')
 # Group by week_start and count positives, negatives, and total tested
 gihsn_results <- gihsn %>%
   mutate(record_id_first_letter = substr(record_id, 1, 1)) %>%  # Extract the first letter of record_id
-  mutate(year = year(both_swab_date)) %>%  
-  group_by(record_id_first_letter, week_start, year) %>%
+  group_by(record_id_first_letter, week_start) %>%
   summarize(
     total_tested = n_distinct(record_id),  # Count unique IDs tested per week_start
     total_pos = n_distinct(record_id[sars_cov2_final == 1 | inf_a_final == 1 | 
@@ -85,7 +84,7 @@ gihsn_results <- gihsn %>%
     vsr_nosub = sum((vsr_final==1 & is.na(resultados_vsra)&is.na(resultados_vsrb))|
                       (vsr_final==1 & resultados_vsra==2&resultados_vsrb==2), na.rm=TRUE)
   ) %>%
-  arrange(year, week_start)  # Optionally, sort by year and week_start
+  arrange( week_start)  # Optionally, sort by year and week_start
 
 gihsn_results$record_id_first_letter <- ifelse(gihsn_results$record_id_first_letter == "Q", "Hospital de Coatepeque",
                                                ifelse(gihsn_results$record_id_first_letter == "C", "Hospital de Chimaltenango", NA))
@@ -115,7 +114,7 @@ inc_vars <- c("denom", "total_tested", "inf_a_pos", "inf_b_pos", "sars_cov2_pos"
 roll3 <- function(x) rollapply(x, width = 3, FUN = sum, partial = TRUE, align = "center")
 
 chim <- chim %>%
-  arrange(year, week_start) %>%
+  arrange(week_start) %>%
   mutate(across(all_of(inc_vars), roll3, .names = "{.col}_roll"))
 
 chim$flua_inc <- 100*chim$inf_a_pos / chim$denom
@@ -134,7 +133,7 @@ chim$flu_gen_inc_roll <- 100*(chim$inf_a_pos_roll  + chim$inf_b_pos_roll )/ chim
 coa$denom <- denom_coa
 
 coa <- coa %>%
-  arrange(year, week_start) %>%
+  arrange( week_start) %>%
   mutate(across(all_of(inc_vars), roll3, .names = "{.col}_roll"))
 
 
@@ -151,7 +150,7 @@ coa$scv2_inc_roll <- 100*coa$sars_cov2_pos_roll/ coa$denom_roll
 coa$rsv_inc_roll <- 100*coa$vsr_pos_roll / coa$denom_roll
 coa$flu_gen_inc_roll <- 100*(coa$inf_a_pos_roll  + coa$inf_b_pos_roll )/ coa$denom_roll
 
-overall <- gihsn_results %>% group_by(week_start, year) %>% summarise(
+overall <- gihsn_results %>% group_by(week_start) %>% summarise(
   total_tested = sum(total_tested),
   inf_a_pos = sum(inf_a_pos),
   inf_b_pos = sum(inf_b_pos),
@@ -163,7 +162,7 @@ overall <- gihsn_results %>% group_by(week_start, year) %>% summarise(
 overall$denom <- denom_o
 
 overall <- overall %>%
-  arrange(year, week_start) %>%
+  arrange(week_start) %>%
   mutate(across(all_of(inc_vars), roll3, .names = "{.col}_roll"))
 
 
@@ -182,17 +181,17 @@ overall$flu_gen_inc_roll <- 100*(overall$inf_a_pos_roll  + overall$inf_b_pos_rol
 
 overall$hospital <- "Overall"
 
-overall <- overall %>% dplyr::select(hospital, year, week_start, total_tested, inf_a_pos, 
+overall <- overall %>% dplyr::select(hospital,  week_start, total_tested, inf_a_pos, 
                                      inf_b_pos, sars_cov2_pos, vsr_pos, 
                                     flu_gen_inc, flu_gen_inc_roll, flua_inc, flua_inc_roll,
                                     flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll, denom, denom_roll)
 
-chim <- chim %>% dplyr::select(hospital, year, week_start, total_tested, inf_a_pos, 
+chim <- chim %>% dplyr::select(hospital, week_start, total_tested, inf_a_pos, 
                                      inf_b_pos, sars_cov2_pos, vsr_pos, 
                                      flu_gen_inc, flu_gen_inc_roll, flua_inc, flua_inc_roll,
                                      flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll, denom, denom_roll)
 
-coa <- coa %>% dplyr::select(hospital, year, week_start, total_tested, inf_a_pos, 
+coa <- coa %>% dplyr::select(hospital, week_start, total_tested, inf_a_pos, 
                        inf_b_pos, sars_cov2_pos, vsr_pos, 
                        flu_gen_inc, flu_gen_inc_roll, flua_inc, flua_inc_roll,
                        flub_inc, flub_inc_roll,  scv2_inc, scv2_inc_roll, rsv_inc, rsv_inc_roll, denom, denom_roll)
@@ -304,7 +303,72 @@ symptom_incidence_chim <- symptom_incidence_chim %>%
     all_of(inc_vars), all_of(gihsn_symptom_vars),
     ends_with("_inc"), ends_with("_roll"))
     
+### coinfection and percent pos 
+   coinfection_corr <- gihsn %>% mutate(
+     inf_a_final = ifelse(inf_a_abi %in% c(1,2),inf_a_abi, inf_a_final),
+     inf_b_final = ifelse(inf_b_abi %in% c(1,2),inf_b_abi, inf_b_final),
+     sars_cov2_final = ifelse(sars_cov2_abi %in% c(1,2),sars_cov2_abi, sars_cov2_final),
+     coinfection =  ifelse( inf_a_final == 1 & 
+                               (inf_b_final == 1 | vsr_final == 1 |sars_cov2_final ==1),1,
+                             ifelse( inf_b_final == 1 & 
+                                       (inf_a_final == 1 | vsr_final == 1 |sars_cov2_final ==1),1,
+                                     ifelse( inf_b_final == 1 & 
+                                               (inf_a_final == 1 | vsr_final == 1 |sars_cov2_final ==1),1,
+                                             ifelse( vsr_final == 1 & 
+                                                       (inf_a_final == 1 | inf_b_final == 1 |sars_cov2_final ==1),1,
+                                                     ifelse( sars_cov2_final == 1 & 
+                                                               (inf_a_final == 1 | inf_b_final == 1 |vsr_final ==1),1, 0))))))
+    
+    coinfection_corr$sars_cov2_final_corr <- ifelse(coinfection_corr$coinfection == 1, 0,coinfection_corr$sars_cov2_final)                                   
+    coinfection_corr$inf_a_pos_final_corr <- ifelse(coinfection_corr$coinfection == 1, 0,coinfection_corr$inf_a_final)                                   
+    coinfection_corr$inf_b_final_corr <- ifelse(coinfection_corr$coinfection == 1, 0,coinfection_corr$inf_b_final)                                   
+    coinfection_corr$vsr_pos_final_corr <- ifelse(coinfection_corr$coinfection == 1, 0,coinfection_corr$vsr_final)                                   
+    
+    coinfection_corr_week_hosp <- coinfection_corr %>%
+      mutate(record_id_first_letter = substr(record_id, 1, 1)) %>%  # Extract the first letter of record_id
+      group_by(record_id_first_letter, week_start) %>%
+      summarize(
+      sars_cov2_pos_co = sum(sars_cov2_final == 1, na.rm = TRUE),
+      inf_a_pos_co = sum(inf_a_final == 1, na.rm = TRUE),
+      inf_b_pos_co = sum(inf_b_final == 1, na.rm = TRUE),
+      vsr_pos_co = sum(vsr_final == 1, na.rm = TRUE),
+      conif = sum(coinfection == 1, na.rm = TRUE),
+ ) %>% ungroup()
+    
+    
+    
+    coinfection_corr_week_o <- coinfection_corr %>%
+      group_by( week_start) %>%
+      summarize(
+        sars_cov2_pos_co = sum(sars_cov2_final == 1, na.rm = TRUE),
+        inf_a_pos_co = sum(inf_a_final == 1, na.rm = TRUE),
+        inf_b_pos_co = sum(inf_b_final == 1, na.rm = TRUE),
+        vsr_pos_co = sum(vsr_final == 1, na.rm = TRUE),
+        conif = sum(coinfection == 1, na.rm = TRUE),
+      )
+    
+    coinfection_corr_week_hosp$hospital <- ifelse(coinfection_corr_week_hosp$record_id_first_letter == "Q", "Hospital de Coatepeque",
+                                                   ifelse(coinfection_corr_week_hosp$record_id_first_letter == "C", "Hospital de Chimaltenango", NA))
+    coinfection_corr_week_hosp <- coinfection_corr_week_hosp %>%
+    select(!record_id_first_letter)  
+    
+    coinfection_corr_week_o$hospital <- "Overall"
+
+    all_coinfections <- rbind(coinfection_corr_week_hosp, coinfection_corr_week_o)
     
 all_inc_symp <- rbind(symptom_incidence_o, symptom_incidence_chim)
 all_inc_symp <- rbind(all_inc_symp, symptom_incidence_coa)
+
+all_inc_symp <- left_join(all_inc_symp ,all_coinfections, by = c("week_start",   "hospital") )
+
+all_inc_symp <- all_inc_symp %>% 
+  mutate(
+inf_a_perc = 100*inf_a_pos_co / total_tested,
+inf_b_perc = 100*inf_b_pos_co / total_tested,
+sars_cov2_perc = 100*sars_cov2_pos_co / total_tested,
+vsr_perc = 100*vsr_pos_co / total_tested,
+allpos = sum(inf_a_perc,inf_b_perc, sars_cov2_perc, vsr_perc),
+allneg = 100- allpos )
+
+
 write.csv(all_inc_symp, "docs/gihsn_incidence_week.csv")

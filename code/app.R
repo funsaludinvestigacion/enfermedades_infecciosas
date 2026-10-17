@@ -18,6 +18,7 @@ library(tibble)
 # Load dataframes -----------------------------------------------------------------------
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")
 gihsn_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_summary.csv")
+gihsn_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/gihsn_incidence_week.csv")
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
 vigicasa_inc_co <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly_coinf.csv")
@@ -450,60 +451,43 @@ ui_tab4 <- function() {
         
         # Dropdown menu for selecting hospital
         radioButtons("hospital", "Hospital:",
-                     choices = c("Ambos Hospitales",
+                     choices = c("Ambos Hospitales / Overall",
                                  "Hospital de Coatepeque", 
                                  "Hospital de Chimaltenango")
-        ),
+        )),
+    
+     mainPanel(
+          # Study info
+          h2(textOutput("header_gihsn_text"), style = "color: orange;"),
+          uiOutput("info_gihsn_text"),
+          br(), br(),
+          
+          # Incidence plot (all pathogens together)
+          h4(textOutput("inc_plot_title_tab4")),
+          plotlyOutput("inc_plot_tab4"),
+          br(), br(),
+          
+          # Respiratory stacked bar
+        #  h4(textOutput("resp_stacked_title_tab6")),
+         #   plotlyOutput("resp_stacked_plot_tab6"),
+        #  br(), br(),
+          
+        uiOutput("inc_plot_header_tab4")   ,       
+        uiOutput("symptom_inc_plot_header_tab4"),
+        uiOutput("symptoms_tab4_select_ui"),
+        plotlyOutput("symptom_inc_plot_tab4") ,   
         
-        # Dropdown menu for selecting virus
-        selectInput("virus", 
-                    "Selecciona Virus(es) / Select Virus(es):",
-                    choices = c("Todos Virus", "Influenza A y B", "Influenza A", "Influenza B", "SARS-CoV-2", "RSV"))
-      ),
-      
-      mainPanel(
-        # Add information about the study
-        h2(textOutput("header_gihsn_text"), style = "color: orange;"),
-        uiOutput("info_gihsn_text"),
-        br(),
-        br(),
-        # Table output for the data summary
-        DTOutput("summary_table_tab4", height="125px"),
-        
-        # Plot output for the graph
-        plotOutput("disease_plot_tab4"),
-        conditionalPanel(
-          condition = "input.virus == 'Influenza A'",
-          br(),
-          h4("Distribución de Subtipos de Influenza A", style = "color: steelblue;"),
-          plotOutput("influenza_a_subtypes_plot")),
-        conditionalPanel(
-          condition = "input.virus == 'Influenza A'",
-          br(),
-          h4("Distribución grupo de edad de individuos positivos por influenza A", style = "color: steelblue;"),
-          plotOutput("influenza_a_ages")),
-        plotOutput("disease_plot_tab4"),
-        conditionalPanel(
-          condition = "input.virus == 'Influenza A'",
-          br(),
-          h4("Distribución de Subtipos de Influenza A", style = "color: steelblue;"),
-          plotOutput("influenza_a_subtypes_plot")),
-        #grafica vsr
-        conditionalPanel(
-          condition = "input.virus == 'VSR'",
-          br(),
-          h4("Distribución grupo de edad de individuos positivos por VSR", style = "color: steelblue;"),
-          plotOutput("vsr_ages")),
-        conditionalPanel(
-          condition = "input.virus == 'VSR'",
-          br(),
-          h4("Distribución de VSR por subgrupo", style = "color: steelblue;"),
-          plotOutput("vsr_subgroups")),
-        
-        downloadButton("download_vsr_subgroups", "Download plot")
+     
+          leafletOutput("map_tab4", height = "800px"),
+          br(), br(),
+          class = "content"
+        )
       )
     )
-  )
+  
+      
+       
+        
 }
 
 
@@ -1359,265 +1343,353 @@ server <- function(input, output) {
   # Reactive text output for study information
   output$info_gihsn_text <- renderUI({
     if (input$language_gihsn == "es") {
-      HTML(Info_GIHSN)  # Spanish version
+      HTML(Info_GIHSN)  
     } else {
-      HTML(Info_GIHSN_eng)  # English version
+      HTML(Info_GIHSN_eng)  
     }
   })
   
+  output$inc_plot_header_tab4 <- renderUI({
+    h3(if (input$language_gihsn == "es") "Incidencia de Patógenos (Promedio móvil de 3 semanas)" else "Pathogen Incidence (3-week Rolling Average)")
+  })
   
-  ####### This is the table
-  # Reactive expression for the filtered data based on date range and selected hospital
-  # Filter data based on date range and hospital selection
+  # output$stacked_plot_header <- renderUI({
+  #    h3(if (input$language_VCasa == "es") "Desglose Semanal de Muestreo" else "Weekly Testing Breakdown")
+  # })
+  output$symptom_inc_plot_header_tab4 <- renderUI({
+    h3(if (input$language_gihsn == "es") "Incidencia de Síntomas (Promedio móvil de 3 semanas)" else "Symptom Incidence (3-week Rolling Average)")
+  })
+  
   filtered_data_gihsn <- reactive({
-    date_range <- input$date_range_input_tab4
-    hospital_filter <- input$hospital
+    req(input$date_range_input_tab4, input$hospital)
     
-    # Convert the date range into epiweeks and years
-    start_date <- as.Date(date_range[1])
-    end_date <- as.Date(date_range[2])
+    start_date <- as.Date(input$date_range_input_tab4[1])
+    end_date   <- as.Date(input$date_range_input_tab4[2])
     
-    start_epiweek <- epiweek(start_date)  
-    end_epiweek <- epiweek(end_date)
-    start_year <- year(start_date)       
-    end_year <- year(end_date)           
-    
-    # Ungroup the data if it has any grouping variables
-    gihsn_summary_ungrouped <- gihsn_summary %>% ungroup()
-    
-    # If "Ambos Hospitales" is selected, combine both hospitals
-    if (hospital_filter == "Ambos Hospitales") {
-      filtered <- gihsn_summary_ungrouped %>%
-        filter(
-          (year == start_year & epiweek >= start_epiweek) |
-            (year == end_year & epiweek <= end_epiweek) |
-            (year > start_year & year < end_year)
-        )
+    hospital_filter <- if (input$hospital == "Ambos Hospitales / Overall") {
+      "Overall"
     } else {
-      filtered <- gihsn_summary_ungrouped %>%
-        filter(hospital == hospital_filter) %>%
-        filter(
-          (year == start_year & epiweek >= start_epiweek) |
-            (year == end_year & epiweek <= end_epiweek) |
-            (year > start_year & year < end_year)
-        )
+      input$hospital
     }
     
-    return(filtered)
-  })
-  
-  output$summary_table_tab4 <- renderDT({
-    filtered_data <- filtered_data_gihsn()
-    
-    if (is.null(filtered_data) || nrow(filtered_data) == 0) {
-      return(datatable(data.frame(Message = "No hay datos disponibles para esta selección / No data available for this selection")))
-    }
-    
-    datatable(filtered_data %>%
-                select(year, epiweek, total_tested, total_pos, sars_cov2_pos, inf_a_pos, inf_b_pos, vsr_pos) %>%
-                rename(
-                  Año = year,
-                  Epiweek = epiweek,
-                  `Total Muestreados` = total_tested,
-                  `Total Positivos` = total_pos,
-                  `Positivo Sars-CoV-2` = sars_cov2_pos,
-                  `Positivo Influenza A` = inf_a_pos,
-                  `Positivo Influenza B` = inf_b_pos,
-                  `Positivo VSR` = vsr_pos
-                ), options = list(searching = FALSE), rownames = FALSE)
-  })
-  
-  ####### Now for the Graph
-  output$disease_plot_tab4 <- renderPlot({
-    # Get filtered data based on user selections
-    filtered_data <- filtered_data_gihsn()
-    
-    # If there's no data after filtering, return an empty plot
-    if (nrow(filtered_data) == 0) {
-      return(ggplot() + labs(title = "No hay datos disponibles para esta selección / No data available for this selection"))
-    }
-    
-    # Determine which variable to use for "Total Positivos"
-    filtered_data <- filtered_data %>%
-      mutate(
-        total_pos_dynamic = case_when(
-          input$virus == "Influenza A" ~ inf_a_pos,
-          input$virus == "Influenza B" ~ inf_b_pos,
-          input$virus == "Influenza A y B" ~ inf_a_pos + inf_b_pos,
-          input$virus == "SARS-CoV-2" ~ sars_cov2_pos,
-          input$virus == "RSV" ~ vsr_pos,
-          TRUE ~ total_pos  # Default: all positives
-        ),
-        epiweek_label = paste(year, epiweek, sep = "-")
-      )
-    
-    filtered_data <- filtered_data %>%
-      arrange(year, epiweek) %>%
-      mutate(
-        epiweek_label = paste(year, epiweek, sep = "-"),
-        epiweek_label = factor(
-          epiweek_label,
-          levels = unique(epiweek_label)
-        )
-      )
-    
-    # Filter to label every other week on the x-axis
-    x_labels <- unique(filtered_data$epiweek_label)
-    x_labels <- x_labels[seq(1, length(x_labels), by = 4)]
-    
-    # Generate the plot
-    ggplot(filtered_data, aes(x = factor(epiweek_label))) +
-      geom_bar(aes(y = total_tested, fill = "Total Muestreados"), stat = "identity", alpha = 0.5) +
-      geom_bar(aes(y = total_pos_dynamic, fill = "Total Positivos"), stat = "identity") +
-      scale_fill_manual(values = c("Total Muestreados" = "grey", "Total Positivos" = "skyblue")) +
-      scale_y_continuous(
-        breaks = seq(0, max(filtered_data$total_tested, na.rm = TRUE), by = 5)
-      ) +
-      scale_x_discrete(breaks = x_labels) +
-      labs(x = "Semana", y = "# Muestreados", fill = "Resultado") +
-      theme_minimal() +
-      theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank()
+    gihsn_inc %>%
+      filter(
+        week_start >= start_date,
+        week_start <= end_date,
+        hospital == .env$hospital_filter
       )
   })
   
-  output$influenza_a_subtypes_plot <- renderPlot({
-    data <- filtered_data_gihsn()
+  output$inc_plot_tab4 <- renderPlotly({
+    es <- input$language_gihsn == "es"
     
-    if (nrow(data) == 0) {
-      return(ggplot() + labs(title = "No hay datos disponibles para Influenza A"))
-    }
     
-    # Convert epiweek & year into a proper date
-    data <- data %>%
-      mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
+    color_map <- c(
+      "flu_gen_inc_roll" = "#E41A1C",
+      "flua_inc_roll"    = "#FF7F00",
+      "flub_inc_roll"    = "#984EA3",
+      "scv2_inc_roll"    = "#377EB8",
+      "rsv_inc_roll"     = "#4DAF4A",
+      "total_tested_roll"= "#A65628"
+    )
     
-    # Pivot data for Influenza A subtypes
-    subtype_data <- data %>%
-      select(epiweek, year, inf_a_h1n1, inf_a_h3n2, inf_a_nosub) %>%
-      pivot_longer(cols = c(inf_a_h1n1, inf_a_h3n2, inf_a_nosub), 
-                   names_to = "Subtype", values_to = "Count") %>%
-      mutate(
-        Subtype = recode(Subtype,
-                         inf_a_h1n1 = "A(H1N1)",
-                         inf_a_h3n2 = "A(H3N2)",
-                         inf_a_nosub = "Sin subtipificar")
-      )
+    label_map <-  c(
+      "total_tested_roll" = "ARI",
+      "flu_gen_inc_roll" = "Influenza A & B",
+      "flua_inc_roll"    = "Influenza A",
+      "flub_inc_roll"    = "Influenza B",
+      "scv2_inc_roll"    = "SARS-CoV-2",
+      "rsv_inc_roll"     = "RSV"
+    )
     
-    ggplot(subtype_data, aes(x = factor(paste(year, epiweek, sep = "-")), y = Count, fill = Subtype)) +
-      geom_bar(stat = "identity") +
-      scale_fill_manual(values = c("A(H1N1)" = "#1b9e77", 
-                                   "A(H3N2)" = "#d95f02", 
-                                   "Sin subtipificar" = "#7570b3")) +
-      labs(x = "Semana", y = "Casos positivos",
-           fill = "Subtipo", title = "Subtipos de Influenza A") +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  })
-  
-  
-  
-  output$influenza_a_ages <- renderPlot({
-    data <- gihsn_ages
-    data$grupoetario <- factor(data$grupoetario, levels=c("<5", "5-49", "50-64", ">64"))
-    ggplot(data, aes(n, grupoetario, fill=inf_a_final))+
-      geom_col(color="black")+
-      theme_bw()+ theme(legend.position = "none")+
-      scale_y_discrete(drop=FALSE)+
-      labs(x = "Número de resultados positivos a virus de la influenza tipo A", y="Grupo de edad")
     
-  })
-  
-  output$vsr_ages <- renderPlot({
-    data2 <- gihsn_ages_vsr
-    data2$grupoetario <- factor(data2$grupoetario, levels=c("<5", "5-49", "50-64", ">64"))
-    ggplot(data2, aes(n, grupoetario))+
-      geom_col(color="black", fill="skyblue")+
-      theme_bw()+ theme(legend.position = "none")+
-      labs(x = "Número de resultados positivos a VSR", y="Grupo de edad")
     
-  })
-  
-  vsr_subgroups_plot <- reactive({
+    pathogens_to_plot <- c("flu_gen_inc_roll", "flua_inc_roll", 
+                           "flub_inc_roll", "scv2_inc_roll", "rsv_inc_roll")              
     
-    data <- filtered_data_gihsn()
     
-    data <- data %>%
-      mutate(epiweek_date = as.Date(paste(year, epiweek, 1), format = "%Y %U %u"))
-    
-    subgroup_data <- data %>%
-      select(epiweek, year, vsr_a, vsr_b, vsr_nosub) %>%
+    plot_data <- filtered_data_gihsn() %>%
+      dplyr::select(week_start, denom, denom_roll, total_tested,
+                    inf_a_pos, inf_b_pos, sars_cov2_pos, vsr_pos,
+                    all_of(pathogens_to_plot)) %>%
       pivot_longer(
-        cols = c(vsr_a, vsr_b, vsr_nosub),
-        names_to = "Subgroup",
-        values_to = "Count"
+        cols      = all_of(pathogens_to_plot),
+        names_to  = "pathogen",
+        values_to = "inc_value"
       ) %>%
       mutate(
-        Subgroup = recode(
-          Subgroup,
-          vsr_a = "RSV A",
-          vsr_b = "RSV B",
-          vsr_nosub = "No subgroup"
+        pathogen_label = label_map[pathogen],
+        pos_count = case_when(
+          pathogen == "flu_gen_inc_roll" ~ inf_a_pos + inf_b_pos,
+          pathogen == "flua_inc_roll"    ~ inf_a_pos,
+          pathogen == "flub_inc_roll"    ~ inf_b_pos,
+          pathogen == "scv2_inc_roll"    ~ sars_cov2_pos,
+          pathogen == "rsv_inc_roll"     ~ vsr_pos,
+          # pathogen == "ili_inc_roll"     ~ total_tested,
+          TRUE                           ~ NA
+        ),
+        denom_label = "ARI (tested): ",
+        denom_value    = total_tested,
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", pathogen_label, "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_value, 2), "<br>",
+          if (es) "Pruebas Positivas: " else "Positive Tests: ", pos_count, "<br>",
+          denom_label, denom_value, "<br>",
+          if (es) "Denominador Estimado: " else "Estimated Denominiator: ", denom
         )
-      ) %>%
-      arrange(year, epiweek) %>%
-      mutate(
-        week_label = paste(year, epiweek, sep = "-"),
-        week_label = factor(week_label, levels = unique(week_label))
       )
     
-    ggplot(
-      subgroup_data,
-      aes(x = week_label, y = Count, fill = Subgroup)
-    ) +
-      geom_bar(stat = "identity") +
-      scale_fill_manual(values = c(
-        "RSV A" = "#1b9e77",
-        "RSV B" = "#d95f02",
-        "No subgroup" = "#7570b3"
-      )) +
-      xlab("Week")+
-      scale_x_discrete(
-        breaks = levels(subgroup_data$week_label)[seq(1, length(levels(subgroup_data$week_label)), by = 4)]
-      )+
-      ggtitle("Distribution of RSV cases by subgroup")+
-      theme_minimal() +
-      theme(
-        axis.text.x = element_text(angle = 45, size = 23, hjust = 1),
-        legend.text = element_text(size = 23),
-        legend.title = element_text(size = 25),
-        plot.title = element_text(
-          size = 25,
-          face = "bold",
-          hjust = 0.5
-        ),
-        axis.title.x = element_text(size = 21),
-        axis.title.y = element_text(size = 21),
-        axis.text.y = element_text(size = 23)
-      )
-  })
-  
-  output$vsr_subgroups <- renderPlot({
-    vsr_subgroups_plot()
-  })
-  
-  output$download_vsr_subgroups <- downloadHandler(
-    filename = function() {
-      paste0("RSV_subgroups_", Sys.Date(), ".png")
-    },
-    content = function(file) {
-      ggsave(
-        filename = file,
-        plot = vsr_subgroups_plot(),
-        width = 12,
-        height = 6,
-        dpi = 300
-      )
+    p <- plot_ly()
+    
+    for (path in pathogens_to_plot) {
+      df_path    <- plot_data %>% dplyr::filter(pathogen == path)
+      #  line_style <- if (path == "total_tested_roll") "dash" else "solid"
+      line_style <- "solid"
+      p <- p %>%
+        add_trace(
+          data      = df_path,
+          x         = ~week_start,
+          y         = ~inc_value,
+          type      = "scatter",
+          mode      = "lines+markers",
+          name      = label_map[[path]],
+          line      = list(color = color_map[[path]], width = 2, dash = line_style),
+          marker    = list(color = color_map[[path]], size = 5),
+          text      = ~hover_text,
+          hoverinfo = "text"
+        )
     }
+    
+    footnote <- if (es) {
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      2. El denominador antes del 11-01-2026 es estimado (250); las semanas anteriores a esta fecha
+      corresponden al período previo al uso del formulario de vigilancia."
+    } else {
+      "Notes:
+      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
+      2. The denominator prior to 01-11-2026 is estimated (250); weeks before this date were before the use of the surveillance form."
+    }
+    
+    
+    p %>%
+      layout(
+        xaxis = list(
+          title      = if (es) "Semana" else "Week",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
+        ),
+        yaxis = list(
+          title = if (es) "Pruebas Positivas por 1,000 Personas" else "Positive Tests per 1,000 People"
+        ),
+        annotations = list(
+          list(
+            text      = footnote,
+            x         = 0,
+            y         = -0.6,
+            xref      = "paper",
+            yref      = "paper",
+            xanchor   = "left",
+            yanchor   = "top",
+            showarrow = FALSE,
+            align     = "left",
+            font      = list(size = 10, color = "gray")
+          )
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.35,
+                             xanchor = "left", yanchor = "top", font = list(size = 11)),
+        hovermode     = "closest",
+        margin        = list(b = 190, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })
+
+  # ---- GIHSN symptoms ---------------------------------------------------------
+  gihsn_symptom_vars <- c("both_ilisystemic_malaise", "both_ilisystemic_headache",
+                          "both_ilisystemic_myalgia", "both_ilirespiratory_cough",
+                          "both_ilirespiratory_sorethroat", "both_ilirespiratory_shortnessbreath",
+                          "both_ilirespiratory_wheezing", "both_ilirespiratory_nasalcongestion",
+                          "both_othersymptoms_nausea", "both_othersymptoms_diarrhea",
+                          "both_othersymptoms_smell", "both_othersymptoms_chestpain")
+  
+  gihsn_symptom_label_map <- c(
+    both_ilisystemic_malaise            = "Malestar General",
+    both_ilisystemic_headache           = "Dolor de Cabeza",
+    both_ilisystemic_myalgia            = "Dolor Muscular",
+    both_ilirespiratory_cough           = "Tos",
+    both_ilirespiratory_sorethroat      = "Dolor de Garganta",
+    both_ilirespiratory_shortnessbreath = "Dificultad para Respirar",
+    both_ilirespiratory_wheezing        = "Silbido al Respirar",
+    both_ilirespiratory_nasalcongestion = "Congestión Nasal",
+    both_othersymptoms_nausea           = "Náuseas",
+    both_othersymptoms_diarrhea         = "Diarrea",
+    both_othersymptoms_smell            = "Pérdida del Olfato",
+    both_othersymptoms_chestpain        = "Dolor de Pecho"
   )
+  
+  gihsn_symptom_label_map_en <- c(
+    both_ilisystemic_malaise            = "Malaise",
+    both_ilisystemic_headache           = "Headache",
+    both_ilisystemic_myalgia            = "Muscle Pain",
+    both_ilirespiratory_cough           = "Cough",
+    both_ilirespiratory_sorethroat      = "Sore Throat",
+    both_ilirespiratory_shortnessbreath = "Shortness of Breath",
+    both_ilirespiratory_wheezing        = "Wheezing",
+    both_ilirespiratory_nasalcongestion = "Nasal Congestion",
+    both_othersymptoms_nausea           = "Nausea",
+    both_othersymptoms_diarrhea         = "Diarrhea",
+    both_othersymptoms_smell            = "Loss of Smell",
+    both_othersymptoms_chestpain        = "Chest Pain"
+  )
+  
+  gihsn_symptom_color_map <- setNames(
+    colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(gihsn_symptom_vars)),
+    gihsn_symptom_vars
+  )
+  
+  output$symptoms_tab4_select_ui <- renderUI({
+    es     <- input$language_gihsn == "es"
+    labels <- if (es) gihsn_symptom_label_map else gihsn_symptom_label_map_en
+    
+    selectizeInput(
+      "symptoms_tab4",
+      if (es) "Síntomas (Promedio móvil de 3 semanas):" else "Symptoms (3-week Rolling Average):",
+      choices  = setNames(names(labels), labels),
+      selected = c("both_ilirespiratory_cough", "both_ilirespiratory_sorethroat",
+                   "both_othersymptoms_chestpain", "both_othersymptoms_diarrhea"),
+      multiple = TRUE
+    )
+  })
+  
+  output$symptom_inc_plot_tab4 <- renderPlotly({
+    es                <- input$language_gihsn == "es"
+    selected_symptoms <- input$symptoms_tab4
+    
+    if (is.null(selected_symptoms) || length(selected_symptoms) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "Selecciona al menos un síntoma" else "Select at least one symptom"))
+    }
+    
+    filtered_data <- filtered_data_gihsn()   # applies date range + hospital
+    
+    if (nrow(filtered_data) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    roll_cols <- paste0(selected_symptoms, "_inc_roll")
+    missing   <- setdiff(c(selected_symptoms, roll_cols), names(filtered_data))
+    if (length(missing) > 0) {
+      return(plotly_empty() %>% layout(title = paste("Missing columns:", paste(missing, collapse = ", "))))
+    }
+    
+    labels <- if (es) gihsn_symptom_label_map else gihsn_symptom_label_map_en
+    
+    plot_data <- filtered_data %>%
+      select(week_start, denom, all_of(selected_symptoms), all_of(roll_cols)) %>%
+      pivot_longer(
+        cols      = all_of(roll_cols),
+        names_to  = "symptom_col",
+        values_to = "inc_value"
+      ) %>%
+      mutate(
+        symptom       = sub("_inc_roll$", "", symptom_col),
+        symptom_label = labels[symptom],
+        raw_count     = mapply(function(sym, wk) {
+          filtered_data[[sym]][filtered_data$week_start == wk][1]
+        }, symptom, week_start),
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", symptom_label, "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_value, 2), "<br>",
+          if (es) "Casos: " else "Cases: ", raw_count, "<br>",
+          if (es) "Denominador Estimado: " else "Estimated Denominator: ", denom
+        )
+      )
+    
+    p <- plot_ly()
+    
+    for (sym in selected_symptoms) {
+      df_sym <- plot_data %>% dplyr::filter(symptom == sym)
+      
+      p <- p %>%
+        add_trace(
+          data      = df_sym,
+          x         = ~week_start,
+          y         = ~inc_value,
+          type      = "scatter",
+          mode      = "lines+markers",
+          name      = labels[[sym]],
+          line      = list(color = gihsn_symptom_color_map[[sym]], width = 2),
+          marker    = list(color = gihsn_symptom_color_map[[sym]], size = 5),
+          text      = ~hover_text,
+          hoverinfo = "text"
+        )
+    }
+    
+    footnote <- if (es) {
+      "Nota: Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado."
+    } else {
+      "Note: Data for the most recent week are not yet available due to the centered rolling average calculation."
+    }
+    
+    p %>%
+      layout(
+        xaxis = list(
+          title      = if (es) "Semana" else "Week",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
+        ),
+        yaxis = list(title = if (es) "Casos por 1,000 Personas" else "Cases per 1,000 People"),
+        annotations = list(
+          list(
+            text = footnote, x = 0, y = -0.45, xref = "paper", yref = "paper",
+            xanchor = "left", yanchor = "top", showarrow = FALSE, align = "left",
+            font = list(size = 10, color = "gray")
+          )
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
+        hovermode     = "closest",
+        margin        = list(b = 180, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })  
+  
+    
+  
+    # Pivot data for Influenza A subtypes
+ #   subtype_data <- data %>%
+  #    select(epiweek, year, inf_a_h1n1, inf_a_h3n2, inf_a_nosub) %>%
+   #   pivot_longer(cols = c(inf_a_h1n1, inf_a_h3n2, inf_a_nosub), 
+    #               names_to = "Subtype", values_to = "Count") %>%
+    #  mutate(
+     #   Subtype = recode(Subtype,
+      #                   inf_a_h1n1 = "A(H1N1)",
+      #                   inf_a_h3n2 = "A(H3N2)",
+    #                     inf_a_nosub = "Sin subtipificar")
+     # )
+    
+    #ggplot(subtype_data, aes(x = factor(paste(year, epiweek, sep = "-")), y = Count, fill = Subtype)) +
+     # geom_bar(stat = "identity") +
+      #scale_fill_manual(values = c("A(H1N1)" = "#1b9e77", 
+       #                            "A(H3N2)" = "#d95f02", 
+        #                           "Sin subtipificar" = "#7570b3")) +
+    #  labs(x = "Semana", y = "Casos positivos",
+     #      fill = "Subtipo", title = "Subtipos de Influenza A") +
+    #  theme_minimal() +
+     # theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+  
+  
   
   # --------------------------------------------------------------------------
   #                             VIGICASA
