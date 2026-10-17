@@ -306,4 +306,5 @@ symptom_incidence_chim <- symptom_incidence_chim %>%
     
     
 all_inc_symp <- rbind(symptom_incidence_o, symptom_incidence_chim)
+all_inc_symp <- rbind(all_inc_symp, symptom_incidence_coa)
 write.csv(all_inc_symp, "docs/gihsn_incidence_week.csv")
