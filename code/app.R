@@ -1704,7 +1704,7 @@ server <- function(input, output) {
     es <- input$language_gihsn == "es"
     req(input$date_range_input_tab4)
     
-    filtered_data <- all_inc_symp %>%
+    filtered_data <- gihsn_inc %>%
       filter(
         week_start >= input$date_range_input_tab4[1],
         week_start <= input$date_range_input_tab4[2]
