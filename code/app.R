@@ -462,21 +462,18 @@ ui_tab4 <- function() {
           uiOutput("info_gihsn_text"),
           br(), br(),
           
-          # Incidence plot (all pathogens together)
-          h4(textOutput("inc_plot_title_tab4")),
-          plotlyOutput("inc_plot_tab4"),
+          uiOutput("inc_plot_header_tab4"),
+          plotlyOutput("inc_plot_tab4", height = "550px"),
           br(), br(),
           
-          # Respiratory stacked bar
-        #  h4(textOutput("resp_stacked_title_tab6")),
-         #   plotlyOutput("resp_stacked_plot_tab6"),
-        #  br(), br(),
+          uiOutput("stacked_title_tab4"),
+          plotlyOutput("stacked_plot_tab4", height = "450px"),
+          br(), br(),
           
-        uiOutput("inc_plot_header_tab4")   ,       
-        uiOutput("symptom_inc_plot_header_tab4"),
-        uiOutput("symptoms_tab4_select_ui"),
-        plotlyOutput("symptom_inc_plot_tab4") ,   
-        
+          uiOutput("symptom_inc_plot_header_tab4"),
+          uiOutput("symptoms_tab4_select_ui"),
+          plotlyOutput("symptom_inc_plot_tab4", height = "550px"),
+          br(), br(),
      
           leafletOutput("map_tab4", height = "800px"),
           br(), br(),
@@ -490,6 +487,45 @@ ui_tab4 <- function() {
         
 }
 
+
+ui_tab4b <- function() {
+  fluidPage(
+    titlePanel(""),
+    sidebarLayout(
+      sidebarPanel(
+        radioButtons("language_tab4b", "Idioma / Language:",
+                     choices = c("Español" = "es", "English" = "en"),
+                     selected = "es"),
+        dateRangeInput("date_range_tab4b", "Período del tiempo / Time period:",
+                       start = "2025-03-04", end = Sys.Date(), separator = " a "),
+        selectInput("pathogen_tab4b",
+                    "Selecciona Patógeno / Select Pathogen:",
+                    choices = c(
+                      "Influenza A"   = "flua",
+                      "Influenza B"   = "flub",
+                      "Influenza A&B" = "flu_gen",
+                      "SARS-CoV-2"    = "scv2",
+                      "RSV"           = "rsv"
+                    ),
+                    selected = "flua")
+      ),
+      
+      mainPanel(
+        h2(textOutput("header_tab4b"), style = "color: orange;"),
+        br(),
+        uiOutput("tab4b_positivity_title"),
+        plotlyOutput("positivity_plot_tab4b", height = "450px"),
+        br(), br(),
+        uiOutput("tab4b_incidence_title"),
+        plotlyOutput("incidence_plot_tab4b", height = "550px"),
+        br(), br(),
+        uiOutput("tab4b_hospital_incidence_title"),
+        plotlyOutput("hospital_incidence_plot_tab4b", height = "550px"),
+        br(), br()
+      )
+    )
+  )
+}
 
 ui_tab5 <- function() { 
   fluidPage(
@@ -776,6 +812,7 @@ ui <- fluidPage(
     tabPanel("Introducción", ui_tab_summary()),
     tabPanel("Estudio Biofire", ui_tab3()),
     tabPanel("Vigilancia GIHSN", ui_tab4()),
+    tabPanel("GIHSN Pathogen Deep Dive", ui_tab4b()),
     tabPanel("VIGICASA Overview", ui_tab5()),
     tabPanel("VIGICASA Pathogen Deep Dive", ui_tab5b()),
     tabPanel("VIGIFINCA", ui_tab6()),
@@ -1353,12 +1390,16 @@ server <- function(input, output) {
     h3(if (input$language_gihsn == "es") "Incidencia de Patógenos (Promedio móvil de 3 semanas)" else "Pathogen Incidence (3-week Rolling Average)")
   })
   
-  # output$stacked_plot_header <- renderUI({
-  #    h3(if (input$language_VCasa == "es") "Desglose Semanal de Muestreo" else "Weekly Testing Breakdown")
-  # })
+ 
+  output$stacked_title_tab4 <- renderUI({
+    h3(if (input$language_gihsn == "es") "Desglose Semanal de Muestreo (% de Muestreados)" else "Weekly Testing Breakdown (% of Tested)")
+  })
+  
   output$symptom_inc_plot_header_tab4 <- renderUI({
     h3(if (input$language_gihsn == "es") "Incidencia de Síntomas (Promedio móvil de 3 semanas)" else "Symptom Incidence (3-week Rolling Average)")
   })
+  
+
   
   filtered_data_gihsn <- reactive({
     req(input$date_range_input_tab4, input$hospital)
@@ -1648,17 +1689,117 @@ server <- function(input, output) {
           tickangle  = -45,
           tickfont   = list(size = 10)
         ),
-        yaxis = list(title = if (es) "Casos por 1,000 Personas" else "Cases per 1,000 People"),
-        annotations = list(
-          list(
-            text = footnote, x = 0, y = -0.45, xref = "paper", yref = "paper",
-            xanchor = "left", yanchor = "top", showarrow = FALSE, align = "left",
-            font = list(size = 10, color = "gray")
-          )
-        ),
-        legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
+        yaxis         = list(title = if (es) "Casos por 1,000 Personas" else "Cases per 1,000 People"),
+        legend        = list(orientation = "h", x = 0, y = -0.25, xanchor = "left", yanchor = "top", font = list(size = 11)),
         hovermode     = "closest",
-        margin        = list(b = 180, t = 40, l = 60, r = 20),
+        margin        = list(b = 100, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })
+  # GIHSN - stacked plot ------------------------------------------------------
+
+  
+    output$stacked_plot_tab4 <- renderPlotly({
+    es <- input$language_gihsn == "es"
+    req(input$date_range_input_tab4)
+    
+    filtered_data <- all_inc_symp %>%
+      filter(
+        week_start >= input$date_range_input_tab4[1],
+        week_start <= input$date_range_input_tab4[2]
+      )
+    
+    # Apply the hospital filter only if the data has a hospital column
+    if ("hospital" %in% names(filtered_data)) {
+      hospital_filter <- if (input$hospital == "Ambos Hospitales / Overall") "Overall" else input$hospital
+      filtered_data <- filtered_data %>% filter(hospital == .env$hospital_filter)
+    }
+    
+    if (nrow(filtered_data) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available for this selection"))
+    }
+    
+    # percentage column -> count column (count is used in the hover text)
+    pct_cols   <- c("inf_a_perc", "inf_b_perc", "sars_cov2_perc", "vsr_perc", "allneg")
+    count_cols <- c(inf_a_perc     = "inf_a_pos_co",
+                    inf_b_perc     = "inf_b_pos_co",
+                    sars_cov2_perc = "sars_cov2_pos_co",
+                    vsr_perc       = "vsr_pos_co")
+    
+    color_map <- c(
+      "inf_a_perc"     = "#FF7F00",
+      "inf_b_perc"     = "#984EA3",
+      "sars_cov2_perc" = "#377EB8",
+      "vsr_perc"       = "#4DAF4A",
+      "allneg"         = "#BDBDBD"
+    )
+    
+    label_map <- c(
+      "inf_a_perc"     = "Influenza A",
+      "inf_b_perc"     = "Influenza B",
+      "sars_cov2_perc" = "SARS-CoV-2",
+      "vsr_perc"       = "RSV",
+      "allneg"         = if (es) "Negativo para Todos" else "Negative for All"
+    )
+    
+    plot_data <- filtered_data %>%
+      mutate(neg_count = pmax(total_tested - (inf_a_pos_co + inf_b_pos_co +
+                                                sars_cov2_pos_co + vsr_pos_co), 0)) %>%
+      select(week_start, total_tested, neg_count,
+             all_of(unname(count_cols)), all_of(pct_cols)) %>%
+      pivot_longer(cols = all_of(pct_cols), names_to = "pathogen", values_to = "pct") %>%
+      rowwise() %>%
+      mutate(count = if (pathogen == "allneg") neg_count else get(count_cols[[pathogen]])) %>%
+      ungroup() %>%
+      mutate(
+        week_start_chr = as.character(week_start),
+        hover_text = paste0(
+          "<b>", label_map[pathogen], "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Cantidad: " else "Count: ", count, "<br>",
+          if (es) "% de Muestreados: " else "% of Tested: ", round(pct, 1), "%<br>",
+          if (es) "Total Muestreados: " else "Total Tested: ", total_tested
+        )
+      )
+    
+    p <- plot_ly()
+    
+    for (path in pct_cols) {
+      df_path <- plot_data %>% dplyr::filter(pathogen == path)
+      p <- p %>%
+        add_trace(
+          data         = df_path,
+          x            = ~week_start,
+          y            = ~pct,
+          type         = "bar",
+          name         = label_map[[path]],
+          marker       = list(color = color_map[[path]]),
+          text         = ~hover_text,
+          hoverinfo    = "text",
+          textposition = "none"
+        )
+    }
+    
+    p %>%
+      layout(
+        barmode = "stack",
+        xaxis = list(
+          title      = if (es) "Semana" else "Week",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
+        ),
+        yaxis = list(
+          title      = if (es) "% de Personas Muestreadas" else "% of People Tested",
+          range      = c(0, 100),
+          ticksuffix = "%"
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.25),
+        hovermode     = "closest",
+        margin        = list(b = 80),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -1688,9 +1829,353 @@ server <- function(input, output) {
     #  theme_minimal() +
      # theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+  # --------------------------------------------------------------------------
+  #                  GIHSN PATHOGEN DEEP DIVE (tab4b)
+  # --------------------------------------------------------------------------
   
+  # Column names in gihsn_inc
+  gihsn_roll_col <- function(p) {
+    switch(p,
+           "flua"    = "flua_inc_roll",
+           "flub"    = "flub_inc_roll",
+           "flu_gen" = "flu_gen_inc_roll",
+           "scv2"    = "scv2_inc_roll",
+           "rsv"     = "rsv_inc_roll")
+  }
   
+  gihsn_raw_col <- function(p) {
+    switch(p,
+           "flua"    = "flua_inc",
+           "flub"    = "flub_inc",
+           "flu_gen" = "flu_gen_inc",
+           "scv2"    = "scv2_inc",
+           "rsv"     = "rsv_inc")
+  }
   
+  gihsn_pos_count <- function(d, p) {
+    switch(p,
+           "flua"    = d$inf_a_pos,
+           "flub"    = d$inf_b_pos,
+           "flu_gen" = d$inf_a_pos + d$inf_b_pos,
+           "scv2"    = d$sars_cov2_pos,
+           "rsv"     = d$vsr_pos)
+  }
+  
+  gihsn_hospital_colors <- c(
+    "Overall"                   = "#000000",
+    "Hospital de Coatepeque"    = "#1B9E77",
+    "Hospital de Chimaltenango" = "#D95F02"
+  )
+  
+  gihsn_footnote <- function(es) {
+    if (es) {
+      "Notas:
+      1. Los datos de la semana más reciente aún no están disponibles para la línea suavizada debido al cálculo
+      del promedio móvil centrado.
+      2. El denominador antes del 11-01-2026 es estimado (250); las semanas anteriores a esta fecha
+      corresponden al período previo al uso del formulario de vigilancia."
+    } else {
+      "Notes:
+      1. Data for the most recent week are not yet available for the smoothed line due to the centered
+      rolling average calculation.
+      2. The denominator prior to 01-11-2026 is estimated (250); weeks before this date were before the
+      use of the surveillance form."
+    }
+  }
+  
+  # Overall (both hospitals) data for graphs 1 and 2
+  filtered_tab4b <- reactive({
+    req(input$date_range_tab4b, input$pathogen_tab4b)
+    p_key <- input$pathogen_tab4b
+    
+    d <- gihsn_inc %>%
+      filter(
+        hospital   == "Overall",
+        week_start >= as.Date(input$date_range_tab4b[1]),
+        week_start <= as.Date(input$date_range_tab4b[2])
+      )
+    
+    d$pos_count <- gihsn_pos_count(d, p_key)
+    
+    # Use the raw incidence column if it exists; otherwise compute it per 1,000
+    raw_col <- gihsn_raw_col(p_key)
+    d$inc_raw <- if (raw_col %in% names(d)) {
+      d[[raw_col]]
+    } else {
+      ifelse(d$denom > 0, d$pos_count / d$denom * 1000, NA)
+    }
+    
+    d %>% mutate(week_start_chr = as.character(week_start))
+  })
+  
+  # ---- Titles ----------------------------------------------------------------
+  output$header_tab4b <- renderText({
+    if (input$language_tab4b == "es") "GIHSN: Análisis Detallado por Patógeno" else "GIHSN: Pathogen Deep Dive"
+  })
+  
+  output$tab4b_positivity_title <- renderUI({
+    es    <- input$language_tab4b == "es"
+    label <- pathogen_label(input$pathogen_tab4b, es)
+    tags$h3(
+      if (es) paste("Tasa de Positividad —", label) else paste("Test Positivity —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$tab4b_incidence_title <- renderUI({
+    es    <- input$language_tab4b == "es"
+    label <- pathogen_label(input$pathogen_tab4b, es)
+    tags$h3(
+      if (es) paste("Incidencia —", label) else paste("Incidence —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$tab4b_hospital_incidence_title <- renderUI({
+    es    <- input$language_tab4b == "es"
+    label <- pathogen_label(input$pathogen_tab4b, es)
+    tags$h3(
+      if (es) paste("Incidencia por Hospital (Promedio móvil de 3 semanas) —", label)
+      else paste("Incidence by Hospital (3-week Rolling Average) —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  # ---- Graph 1: Test positivity bar chart -------------------------------------
+  output$positivity_plot_tab4b <- renderPlotly({
+    es    <- input$language_tab4b == "es"
+    p_key <- input$pathogen_tab4b
+    d     <- filtered_tab4b()
+    color <- pathogen_color[[p_key]]
+    label <- pathogen_label(p_key, es)
+    
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    
+    d <- d %>%
+      mutate(
+        pct_pos = ifelse(total_tested > 0, round(100 * pos_count / total_tested, 1), NA),
+        hover_tested = paste0(
+          "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
+          "<b>", if (es) "Total Muestreados:" else "Total Tested:", "</b> ", total_tested
+        ),
+        hover_pos = paste0(
+          "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
+          "<b>", if (es) "Total Positivos:" else "Total Positive:", "</b> ", pos_count, "<br>",
+          "<b>", if (es) "Total Muestreados:" else "Total Tested:", "</b> ", total_tested, "<br>",
+          "<b>", if (es) "% Positivos:" else "% Positive:", "</b> ", pct_pos, "%"
+        )
+      )
+    
+    plot_ly(d, x = ~week_start) %>%
+      add_bars(
+        y            = ~total_tested,
+        name         = if (es) "Total Muestreados" else "Total Tested",
+        marker       = list(color = "grey", opacity = 0.4),
+        text         = ~hover_tested,
+        hoverinfo    = "text",
+        textposition = "none"
+      ) %>%
+      add_bars(
+        y            = ~pos_count,
+        name         = if (es) paste("Positivos —", label) else paste("Positive —", label),
+        marker       = list(color = color),
+        text         = ~hover_pos,
+        hoverinfo    = "text",
+        textposition = "none"
+      ) %>%
+      layout(
+        barmode = "overlay",
+        xaxis = list(
+          title      = if (es) "Semana" else "Week",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
+        ),
+        yaxis         = list(title = if (es) "# Muestreados" else "# Tested"),
+        legend        = list(orientation = "h", x = 0, y = -0.25),
+        hovermode     = "closest",
+        margin        = list(b = 80),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })
+  
+  # ---- Graph 2: Incidence — rolling (solid) + raw weekly (dashed) -------------
+  output$incidence_plot_tab4b <- renderPlotly({
+    es       <- input$language_tab4b == "es"
+    p_key    <- input$pathogen_tab4b
+    d        <- filtered_tab4b()
+    color    <- pathogen_color[[p_key]]
+    label    <- pathogen_label(p_key, es)
+    col_roll <- gihsn_roll_col(p_key)
+    
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    if (!(col_roll %in% names(d))) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- datos aún no disponibles") else paste(label, "- data not yet available")))
+    }
+    
+    d <- d %>%
+      mutate(
+        inc_roll   = .data[[col_roll]],
+        hover_roll = paste0(
+          "<b>", label, " — ", if (es) "promedio móvil (3 sem)" else "rolling avg (3-wk)", "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_roll, 2), "<br>",
+          if (es) "Denominador Estimado: " else "Estimated Denominator: ", denom_roll
+        ),
+        hover_raw = paste0(
+          "<b>", label, " — ", if (es) "semanal" else "weekly", "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_raw, 2), "<br>",
+          if (es) "Pruebas Positivas: " else "Positive Tests: ", pos_count, "<br>",
+          if (es) "Denominador Estimado: " else "Estimated Denominator: ", denom
+        )
+      )
+    
+    plot_ly(d, x = ~week_start) %>%
+      add_trace(
+        y         = ~inc_roll,
+        type      = "scatter",
+        mode      = "lines+markers",
+        name      = if (es) paste(label, "— promedio móvil") else paste(label, "— rolling avg"),
+        line      = list(color = color, width = 2, dash = "solid"),
+        marker    = list(color = color, size = 5),
+        text      = ~hover_roll,
+        hoverinfo = "text"
+      ) %>%
+      add_trace(
+        y         = ~inc_raw,
+        type      = "scatter",
+        mode      = "lines+markers",
+        name      = if (es) paste(label, "— semanal") else paste(label, "— weekly"),
+        line      = list(color = color, width = 2, dash = "dash"),
+        marker    = list(color = color, size = 5, symbol = "circle-open"),
+        text      = ~hover_raw,
+        hoverinfo = "text"
+      ) %>%
+      layout(
+        xaxis = list(
+          title      = if (es) "Semana" else "Week",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
+        ),
+        yaxis = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
+        annotations = list(
+          list(
+            text = gihsn_footnote(es), x = 0, y = -0.6,
+            xref = "paper", yref = "paper", xanchor = "left", yanchor = "top",
+            showarrow = FALSE, align = "left",
+            font = list(size = 10, color = "gray")
+          )
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.35),
+        hovermode     = "closest",
+        margin        = list(b = 190, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })
+  
+  # ---- Graph 3: Rolling incidence by hospital ---------------------------------
+  output$hospital_incidence_plot_tab4b <- renderPlotly({
+    es       <- input$language_tab4b == "es"
+    p_key    <- input$pathogen_tab4b
+    label    <- pathogen_label(p_key, es)
+    col_roll <- gihsn_roll_col(p_key)
+    req(input$date_range_tab4b)
+    
+    if (!(col_roll %in% names(gihsn_inc))) {
+      return(plotly_empty() %>%
+               layout(title = if (es) paste(label, "- datos aún no disponibles") else paste(label, "- data not yet available")))
+    }
+    
+    d <- gihsn_inc %>%
+      filter(
+        week_start >= as.Date(input$date_range_tab4b[1]),
+        week_start <= as.Date(input$date_range_tab4b[2])
+      ) %>%
+      mutate(
+        inc_roll       = .data[[col_roll]],
+        week_start_chr = as.character(week_start)
+      )
+    
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    
+    hospital_levels <- c("Overall", "Hospital de Coatepeque", "Hospital de Chimaltenango")
+    
+    p <- plot_ly()
+    
+    for (h in hospital_levels) {
+      d_h <- filter(d, hospital == h)
+      if (nrow(d_h) == 0) next
+      
+      h_label <- if (h == "Overall") { if (es) "Ambos Hospitales" else "Both Hospitals" } else h
+      color   <- gihsn_hospital_colors[[h]]
+      
+      d_h <- d_h %>%
+        mutate(hover_text = paste0(
+          "<b>", label, " | ", h_label, "</b><br>",
+          if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
+          if (es) "Incidencia (por 1,000): " else "Incidence (per 1,000): ", round(inc_roll, 2), "<br>",
+          if (es) "Denominador Estimado: " else "Estimated Denominator: ", denom_roll
+        ))
+      
+      p <- p %>%
+        add_trace(
+          data        = d_h,
+          x           = ~week_start,
+          y           = ~inc_roll,
+          type        = "scatter",
+          mode        = "lines+markers",
+          name        = h_label,
+          legendgroup = h,
+          line        = list(color = color, width = 2, dash = if (h == "Overall") "dash" else "solid"),
+          marker      = list(color = color, size = 4),
+          text        = ~hover_text,
+          hoverinfo   = "text"
+        )
+    }
+    
+    p %>%
+      layout(
+        xaxis = list(
+          title      = if (es) "Semana" else "Week",
+          type       = "date",
+          tickformat = "%b %Y",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickfont   = list(size = 10)
+        ),
+        yaxis = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
+        annotations = list(
+          list(
+            text = gihsn_footnote(es), x = 0, y = -0.6,
+            xref = "paper", yref = "paper", xanchor = "left", yanchor = "top",
+            showarrow = FALSE, align = "left",
+            font = list(size = 10, color = "gray")
+          )
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.35),
+        hovermode     = "closest",
+        margin        = list(b = 190, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
+      )
+  })
+  
+
   # --------------------------------------------------------------------------
   #                             VIGICASA
   # --------------------------------------------------------------------------
