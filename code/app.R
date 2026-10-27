@@ -2316,13 +2316,13 @@ server <- function(input, output) {
       "flub_inc_roll"    = "#984EA3",
       "scv2_inc_roll"    = "#377EB8",
       "rsv_inc_roll"     = "#4DAF4A",
-      "ili_inc_roll"     = "#A65628",
+      "ari_inc_roll"     = "#A65628",
       "deng_inc_roll"    = "#F781BF",   
       "ali_inc_roll"     = "#999999"   
     )
     
     label_map <-  c(
-      "ili_inc_roll"     = "ARI",
+      "ari_inc_roll"     = "ARI",
       "ali_inc_roll"     = "ALI",   
       "deng_inc_roll"    = "Dengue",     
       "flu_gen_inc_roll" = "Influenza A & B",
@@ -2334,7 +2334,7 @@ server <- function(input, output) {
     
  
     
-    pathogens_to_plot <- c("ili_inc_roll","ali_inc_roll", "flu_gen_inc_roll", "flua_inc_roll", "flub_inc_roll",
+    pathogens_to_plot <- c("ari_inc_roll","ali_inc_roll", "flu_gen_inc_roll", "flua_inc_roll", "flub_inc_roll",
                            "scv2_inc_roll", "rsv_inc_roll", 
                            "deng_inc_roll")              
     
@@ -2355,7 +2355,7 @@ server <- function(input, output) {
           pathogen == "flub_inc_roll"    ~ inf_b_pos,
           pathogen == "scv2_inc_roll"    ~ sars_cov2_pos,
           pathogen == "rsv_inc_roll"     ~ vsr_pos,
-          pathogen == "ili_inc_roll"     ~ tested,
+          pathogen == "ari_inc_roll"     ~ tested,
           pathogen == "deng_inc_roll"    ~ pcr_pos + igm_pos + ns1_pos,
           pathogen == "ali_inc_roll"     ~ total_tested_deng,
           TRUE                           ~ NA
@@ -2382,7 +2382,7 @@ server <- function(input, output) {
     
     for (path in pathogens_to_plot) {
       df_path    <- plot_data %>% dplyr::filter(pathogen == path)
-      line_style <- if (path %in% c("ili_inc_roll", "ali_inc_roll")) "dash" else "solid"
+      line_style <- if (path %in% c("ari_inc_roll", "ali_inc_roll")) "dash" else "solid"
       
       p <- p %>%
         add_trace(
@@ -2789,7 +2789,7 @@ server <- function(input, output) {
            "flu_gen" = "flu_gen_inc_roll",
            "scv2"    = "scv2_inc_roll",
            "rsv"     = "rsv_inc_roll",
-           "ili"     = "ili_inc_roll",
+           "ari"     = "ari_inc_roll",
            "deng"    = "deng_inc_roll",
            "ali"     = "ali_inc_roll"
     )
