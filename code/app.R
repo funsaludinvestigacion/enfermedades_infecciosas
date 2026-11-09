@@ -1435,28 +1435,30 @@ server <- function(input, output) {
     
     
     color_map <- c(
-      "flu_gen_inc_roll" = "#E41A1C",
-      "flua_inc_roll"    = "#FF7F00",
-      "flub_inc_roll"    = "#984EA3",
-      "scv2_inc_roll"    = "#377EB8",
-      "rsv_inc_roll"     = "#4DAF4A",
-      "total_tested_roll"= "#A65628"
+      #"flu_gen_inc_roll" = "#E41A1C",
+      "inf_a_pos_inc_roll"    = "#FF7F00",
+      "inf_b_pos_inc_roll"    = "#984EA3",
+      "sars_cov2_inc_roll"    = "#377EB8",
+      "vsr_pos_inc_roll"     = "#4DAF4A",
+      "total_tested_inc_roll"= "#A65628"
     )
     
     label_map <-  c(
-      "total_tested_roll" = "ARI",
-      "flu_gen_inc_roll" = "Influenza A & B",
-      "flua_inc_roll"    = "Influenza A",
-      "flub_inc_roll"    = "Influenza B",
-      "scv2_inc_roll"    = "SARS-CoV-2",
-      "rsv_inc_roll"     = "RSV"
+      "total_tested_inc_roll" = "ARI",
+      #"flu_gen_inc_roll" = "Influenza A & B",
+      "inf_a_pos_inc_roll"    = "Influenza A",
+      "inf_b_pos_inc_roll"    = "Influenza B",
+      "sars_cov2_inc_roll"    = "SARS-CoV-2",
+      "vsr_pos_inc_roll"     = "RSV"
     )
     
     
     
-    pathogens_to_plot <- c("flu_gen_inc_roll", "flua_inc_roll", 
-                           "flub_inc_roll", "scv2_inc_roll", "rsv_inc_roll")              
-    
+    pathogens_to_plot <- c(   "total_tested_inc_roll",
+                              "inf_a_pos_inc_roll",
+                              "inf_b_pos_inc_roll" ,  
+                              "sars_cov2_inc_roll",    
+                              "vsr_pos_inc_roll" )    
     
     plot_data <- filtered_data_gihsn() %>%
       dplyr::select(week_start, denom, denom_roll, total_tested,
@@ -1470,11 +1472,11 @@ server <- function(input, output) {
       mutate(
         pathogen_label = label_map[pathogen],
         pos_count = case_when(
-          pathogen == "flu_gen_inc_roll" ~ inf_a_pos + inf_b_pos,
-          pathogen == "flua_inc_roll"    ~ inf_a_pos,
-          pathogen == "flub_inc_roll"    ~ inf_b_pos,
-          pathogen == "scv2_inc_roll"    ~ sars_cov2_pos,
-          pathogen == "rsv_inc_roll"     ~ vsr_pos,
+      #    pathogen == "flu_gen_inc_roll" ~ inf_a_pos + inf_b_pos,
+          pathogen == "inf_a_pos_inc_roll"    ~ inf_a_pos,
+          pathogen == "inf_b_pos_inc_roll"    ~ inf_b_pos,
+          pathogen == "sars_cov2_inc_roll"    ~ sars_cov2_pos,
+          pathogen == "vsr_pos_inc_roll"     ~ vsr_pos,
           # pathogen == "ili_inc_roll"     ~ total_tested,
           TRUE                           ~ NA
         ),
