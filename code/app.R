@@ -22,10 +22,10 @@ gihsn_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/e
 vigicasa_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_summary.csv")
 vigicasa_inc <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly.csv")
 vigicasa_inc_co <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_weekly_coinf.csv")
-resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_muni.csv")
-resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_age.csv")
-resp_incidence_sex <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/resp_incidence_sex.csv")
-symptom_incidence <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/symptom_incidence.csv")
+resp_incidence_municipio <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_incidence_muni.csv")
+resp_incidence_age <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_incidence_age.csv")
+resp_incidence_sex <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_resp_incidence_sex.csv")
+symptom_incidence <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigicasa_symptom_incidence.csv")
 symptom_pathogen_stacked <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/symptom_pathogen_stacked.csv")
 vigifinca_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_summary.csv")
 vigifinca_results_roll <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/vigifinca_incidence.csv")
@@ -76,12 +76,12 @@ Header_VCasa <- "Vigilancia de enfermedades respiratorias y Dengue en casas del 
 Header_VCasa_eng <- "Respiratory and Dengue Illness Surveillance in Trifinio Houses"
 
 Info_VCasa <- "
-Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades como dengue. Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, y se realizan pruebas de laboratorio.
+Estamos realizando vigilancia activa en hogares de las comunidades del Trifinio para detectar enfermedades respiratorias y enfermedades como dengue. Los miembros del hogar son evaluados dos veces por semana en busca de síntomas, y si se cumple una o ambas definiciones de caso, se toma una muestra nasal y/o una muestra de sangre, y se realizan pruebas de laboratorio."
 
-#### Definiciones
-"
+
 
 Info_VCasa_defs <- "
+#### Definiciones
 **Infección respiratoria aguda (ARI):** La definición de caso inicial incluye ≥1 de los siguientes síntomas durante uno o más días de evolución:
 
 - Fiebre
@@ -108,11 +108,10 @@ Info_VCasa_defs <- "
 
 Info_VCasa_eng <- "
 We are conducting active surveillance in houses in the Trifinio communities for respiratory illnesses and dengue-like illnesses. Household members are screened twice a week for symptoms, and if either or both case definitions are met, a nasal swab and/or blood sample is taken and lab tests are run.
-
-#### Definitions
 "
 
 Info_VCasa_defs_eng <- "
+#### Definitions
 **Acute respiratory infection (ARI):** The initial case definition includes ≥1 of the following symptoms during one or more days of evolution:
 
 - Fever
@@ -564,7 +563,9 @@ ui_tab5 <- function() {
         uiOutput("symptoms_tab5_select_ui"),
         plotlyOutput("symptom_inc_plot_tab5", height = "450px"),
         
-        br()
+        br(),
+        hr(),
+        uiOutput("info_VCasa_defs")        
       )
     )
   )
@@ -692,7 +693,7 @@ ui_tab6 <- function() {
         plotlyOutput("symptom_inc_plot_resp"),
         br(), br(),
         
-        # Dengue symptom incidence  <-- NEW
+        # Dengue symptom incidence
         h4(textOutput("symptom_inc_deng_title_tab6")),
         uiOutput("symptoms_tab_deng_select_ui"),
         plotlyOutput("symptom_inc_plot_deng"),
@@ -700,8 +701,15 @@ ui_tab6 <- function() {
         
         leafletOutput("map_tab6", height = "800px"),
         br(), br(),
+        class = "content",
+        
+        leafletOutput("map_tab6", height = "800px"),
+        br(), br(),
+        hr(),
+        uiOutput("info_VFinca_defs"),
         class = "content"
-      )
+      ) 
+
     )
   )
 }
@@ -743,6 +751,7 @@ ui_tab6b <- function() {
         uiOutput("tab6b_lugar_incidence_title"),
         plotlyOutput("lugar_incidence_plot_tab6b", height = "400px"),
         br()
+      
       )
     )
   )
@@ -2181,18 +2190,7 @@ server <- function(input, output) {
   # --------------------------------------------------------------------------
   output$info_VCasa_text <- renderUI({
     es <- input$language_VCasa == "es"
-    tagList(
-      tags$style(HTML("
-        .small-defs, .small-defs p, .small-defs li, .small-defs strong {
-          font-size: 12px !important;
-        }
-      ")),
-      markdown(if (es) Info_VCasa else Info_VCasa_eng),
-      div(
-        class = "small-defs",
-        markdown(if (es) Info_VCasa_defs else Info_VCasa_defs_eng)
-      )
-    )
+    markdown(if (es) Info_VCasa else Info_VCasa_eng)
   })
   
   output$inc_plot_header <- renderUI({
@@ -2752,6 +2750,20 @@ server <- function(input, output) {
       )
   })
   
+  output$info_VCasa_defs <- renderUI({
+    es <- input$language_VCasa == "es"
+    tagList(
+      tags$style(HTML("
+      .small-defs, .small-defs p, .small-defs li, .small-defs strong {
+        font-size: 12px !important;
+      }
+    ")),
+      div(
+        class = "small-defs",
+        markdown(if (es) Info_VCasa_defs else Info_VCasa_defs_eng)
+      )
+    )
+  })
   # --------------------------------------------------------------------------
   #                        TAB 5b - PATHOGEN DEEP DIVE
   # --------------------------------------------------------------------------
@@ -4795,7 +4807,20 @@ server <- function(input, output) {
       paper_bgcolor = "white"
     )})
 
-  
+  output$info_VFinca_defs <- renderUI({
+    es <- input$language_VFinca == "es"
+    tagList(
+      tags$style(HTML("
+      .small-defs, .small-defs p, .small-defs li, .small-defs strong {
+        font-size: 12px !important;
+      }
+    ")),
+      div(
+        class = "small-defs",
+        markdown(if (es) Info_VFinca_defs else Info_VFinca_defs_eng)
+      )
+    )
+  })
   # ---- Tab 6 section titles (bilingual) --------------------------------------
   output$inc_plot_title_tab6 <- renderText({
     if (input$language_VFinca == "es") "Incidencia por Patógeno (Promedio móvil de 3 semanas)" else "Incidence by Pathogen (3-week Rolling Average)"
@@ -4810,28 +4835,13 @@ server <- function(input, output) {
   })
   
   # ---- Tab 6 header/info stubs -----------------------------------------------
-  # NOTE: referenced by ui_tab6 (h2/uiOutput) but not defined anywhere you've
-  # shown me yet. Placeholder text below - replace with real study description
-  # whenever you have it, or delete these + the corresponding UI lines if you'd
-  # rather drop that section entirely.
   output$header_VFinca_text <- renderText({
     if (input$language_VFinca == "es") "VigiFinca" else "VigiFinca"
   })
   
   output$info_VFinca_text <- renderUI({
     es <- input$language_VFinca == "es"
-    tagList(
-      tags$style(HTML("
-        .small-defs, .small-defs p, .small-defs li, .small-defs strong {
-          font-size: 12px !important;
-        }
-      ")),
-      markdown(if (es) Info_VFinca else Info_VFinca_eng),
-      div(
-        class = "small-defs",
-        markdown(if (es) Info_VFinca_defs else Info_VFinca_defs_eng)
-      )
-    )
+    markdown(if (es) Info_VFinca else Info_VFinca_eng)
   })
   
   
