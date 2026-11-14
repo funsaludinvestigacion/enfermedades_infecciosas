@@ -3,7 +3,7 @@ name: Weekly Data Update and Deployment
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 13 * * 1"
+     - cron: "0 5 * * 1"
   push:
     branches: [ main ]
 
@@ -42,11 +42,25 @@ jobs:
           Rscript code/data_processing/vigicasa_processing.R
           Rscript code/data_processing/vigifinca_processing.R
           Rscript code/data_processing/geoprocessing.R
+          Rscript code/data_processing/Vigicasa_incidence.R
+          Rscript code/data_processing/vigifinca_processing_inc.R
+          Rscript code/data_processing/gihsn_incidence.R
+          Rscript code/data_processing/geoprocessing.R
 
       - name: Commit updated data to repository
         run: |
           # Check if there are changes in the CSV files
-          if git diff --quiet --exit-code docs/agri_casa_incidence_summary_updated.csv \
+          if git diff --quiet --exit-code docs/finca_symptom_incidence_resp.csv\
+             && git diff --quiet --exit-code docs/finca_symptom_incidence_deng.csv \
+             && git diff --quiet --exit-code docs/vigifinca_incidence.csv \
+             && git diff --quiet --exit-code docs/symptom_pathogen_stacked.csv \
+             && git diff --quiet --exit-code docs/vigicasa_symptom_incidence.csv \
+             && git diff --quiet --exit-code docs/vigicasa_resp_incidence_sex.csv \
+             && git diff --quiet --exit-code docs/vigicasa_resp_incidence_age.csv \
+             && git diff --quiet --exit-code docs/vigicasa_resp_incidence_muni.csv \
+             && git diff --quiet --exit-code docs/vigicasa_resp_weekly_coinf.csv\
+             && git diff --quiet --exit-code docs/vigicasa_resp_weekly.csv \
+             && git diff --quiet --exit-code docs/gihsn_incidence_week.csv \
              && git diff --quiet --exit-code docs/agri_casa_symptom_summary_updated.csv \
              && git diff --quiet --exit-code docs/influenza_summary_updated.csv \
              && git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv \
@@ -67,6 +81,36 @@ jobs:
             branch_name="update-csv-$timestamp"
             git checkout -b "$branch_name"
             
+            if ! git diff --quiet --exit-code docs/finca_symptom_incidence_resp.csv; then
+              git add docs/finca_symptom_incidence_resp.csv
+            fi
+            if ! git diff --quiet --exit-code docs/finca_symptom_incidence_deng.csv; then
+              git add docs/finca_symptom_incidence_deng.csv
+            fi
+            if ! git diff --quiet --exit-code docs/vigifinca_incidence.csv; then
+              git add docs/vigifinca_incidence.csv
+            fi
+            if ! git diff --quiet --exit-code docs/symptom_pathogen_stacked.csv; then
+              git add docs/symptom_pathogen_stacked.csv
+            fi
+            if ! git diff --quiet --exit-code docs/vigicasa_resp_incidence_sex.csv; then
+              git add docs/vigicasa_resp_incidence_sex.csv
+            fi
+            if ! git diff --quiet --exit-code docs/vigicasa_resp_incidence_age.csv; then
+              git add docs/vigicasa_resp_incidence_age.csv
+            fi
+                  if ! git diff --quiet --exit-code docs/vigicasa_resp_incidence_muni.csv; then
+              git add docs/vigicasa_resp_incidence_muni.csv
+            fi
+            if ! git diff --quiet --exit-code docs/vigicasa_resp_weekly_coinf.csv; then
+              git add docs/vigicasa_resp_weekly_coinf.csv
+            fi
+                  if ! git diff --quiet --exit-code docs/vigicasa_resp_weekly.csv; then
+              git add docs/vigicasa_resp_weekly.csv
+            fi
+            if ! git diff --quiet --exit-code docs/gihsn_incidence_week.csv; then
+              git add docs/gihsn_incidence_week.csv
+            fi
             if ! git diff --quiet --exit-code docs/agri_casa_incidence_summary_updated.csv; then
               git add docs/agri_casa_incidence_summary_updated.csv
             fi
