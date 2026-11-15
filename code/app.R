@@ -2109,8 +2109,7 @@ server <- function(input, output) {
   })
   
   # Tab4b Test positivity bar chart -------------------------------------
-
-    output$positivity_plot_tab4b <- renderPlotly({
+  output$positivity_plot_tab4b <- renderPlotly({
     es    <- input$language_tab4b == "es"
     p_key <- input$pathogen_tab4b
     d     <- filtered_tab4b()
@@ -2126,7 +2125,9 @@ server <- function(input, output) {
         pct_pos = ifelse(total_tested > 0, round(100 * pos_count / total_tested, 1), NA),
         hover_tested = paste0(
           "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
-          "<b>", if (es) "Total Muestreados:" else "Total Tested:", "</b> ", total_tested
+          "<b>", if (es) "Total Muestreados:" else "Total Tested:", "</b> ", total_tested, "<br>",
+          "<b>", if (es) "Total Positivos:" else "Total Positive:", "</b> ", pos_count, "<br>",
+          "<b>", if (es) "% Positivos:" else "% Positive:", "</b> ", pct_pos, "%"
         ),
         hover_pos = paste0(
           "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
@@ -2163,7 +2164,22 @@ server <- function(input, output) {
           tickangle  = -45,
           tickfont   = list(size = 10)
         ),
-        yaxis         = list(title = if (es) "# Muestreados" else "# Tested"),
+        yaxis = list(title = if (es) "# Muestreados" else "# Tested"),
+        annotations = list(
+          list(
+            text      = gihsn_footnote_co(es),
+            x         = 0,
+            y         = 0,
+            xref      = "paper",
+            yref      = "paper",
+            xanchor   = "left",
+            yanchor   = "top",
+            yshift    = -140,
+            showarrow = FALSE,
+            align     = "left",
+            font      = list(size = 10, color = "gray")
+          )
+        ),
         legend        = list(orientation = "h", x = 0, y = -0.25),
         hovermode     = "closest",
         margin        = list(b = 220, t = 40, l = 60, r = 20),
@@ -2171,7 +2187,6 @@ server <- function(input, output) {
         paper_bgcolor = "white"
       )
   })
-  
   
   # ---- Graph 2: Incidence — rolling (solid) + raw weekly (dashed) -------------
   output$incidence_plot_tab4b <- renderPlotly({
@@ -4086,7 +4101,7 @@ server <- function(input, output) {
       )
   })  # closes resp_stacked_plot_tab6
   
-  # ---- Tab 6c: Dengue stacked bar (% of tested, IgM+ vs negative) -----------
+  # ---- Tab 6b: Dengue stacked bar (% of tested, IgM+ vs negative) -----------
   output$deng_stacked_plot_tab6 <- renderPlotly({
     es <- input$language_VFinca == "es"
     
@@ -4643,9 +4658,9 @@ server <- function(input, output) {
   
   # ---- Graph 1: Positivity bar chart (weekly counts) -------------------------
   output$positivity_plot_tab6b <- renderPlotly({
-    es    <- input$language_tab6b == "es"
-    p_key <- input$pathogen_tab6b
-    d     <- filtered_tab6b()
+    es    <- input$language_tab5b == "es"
+    p_key <- input$pathogen_tab5b
+    d     <- filtered_tab5b()
     color <- pathogen_color[[p_key]]
     label <- pathogen_label(p_key, es)
     
@@ -4655,33 +4670,37 @@ server <- function(input, output) {
     
     d <- d %>%
       mutate(
+        week_start_chr = as.character(week_start),
         pos_count = case_when(
-          p_key == "flu_gen" ~ flu_gen_pos,
+          p_key == "flu_gen" ~ inf_a_pos + inf_b_pos,
+          p_key == "ili"     ~ tested,
           p_key == "flua"    ~ inf_a_pos,
           p_key == "flub"    ~ inf_b_pos,
-          p_key == "scv2"    ~ scv2_pos,
+          p_key == "scv2"    ~ sars_cov2_pos,
           p_key == "rsv"     ~ vsr_pos,
-          p_key == "ili"     ~ ari,
-          p_key == "deng"    ~ igm_pos,
-          p_key == "ali"     ~ ali,
-          TRUE               ~ total_tested
+          p_key == "deng"    ~ pcr_pos + igm_pos + ns1_pos,
+          p_key == "ali"     ~ total_tested_deng,
+          TRUE               ~ tested
         ),
-        pct_pos = ifelse(total_tested > 0, round(100 * pos_count / total_tested, 1), NA),
+        total_tested_path = if (p_key %in% c("deng", "ali")) total_tested_deng else tested,
+        pct_pos = ifelse(total_tested_path > 0, round(100 * pos_count / total_tested_path, 1), NA),
         hover_tested = paste0(
           "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
-          "<b>", if (es) "Total Muestreados (semanal):" else "Total Tested (weekly):", "</b> ", total_tested
+          "<b>", if (es) "Total Muestreados:" else "Total Tested:", "</b> ", total_tested_path, "<br>",
+          "<b>", if (es) "Total Positivos:" else "Total Positive:", "</b> ", pos_count, "<br>",
+          "<b>", if (es) "% Positivos:" else "% Positive:", "</b> ", pct_pos, "%"
         ),
         hover_pos = paste0(
           "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
-          "<b>", if (es) "Total Positivos (semanal):" else "Total Positive (weekly):", "</b> ", pos_count, "<br>",
-          "<b>", if (es) "Total Muestreados (semanal):" else "Total Tested (weekly):", "</b> ", total_tested, "<br>",
+          "<b>", if (es) "Total Positivos:" else "Total Positive:", "</b> ", pos_count, "<br>",
+          "<b>", if (es) "Total Muestreados:" else "Total Tested:", "</b> ", total_tested_path, "<br>",
           "<b>", if (es) "% Positivos:" else "% Positive:", "</b> ", pct_pos, "%"
         )
       )
     
     plot_ly(d, x = ~week_start) %>%
       add_bars(
-        y            = ~total_tested,
+        y            = ~total_tested_path,
         name         = if (es) "Total Muestreados" else "Total Tested",
         marker       = list(color = "grey", opacity = 0.4),
         text         = ~hover_tested,
@@ -4699,22 +4718,21 @@ server <- function(input, output) {
       layout(
         barmode = "overlay",
         xaxis = list(
-          title      = if (es) "Mes" else "Month",
+          title      = if (es) "Semana" else "Week",
           type       = "date",
+          tickformat = "%b %Y",
           dtick      = "M1",
           tickangle  = -45,
-          tickformat = "%b %Y",
           tickfont   = list(size = 10)
         ),
         yaxis         = list(title = if (es) "# Muestreados" else "# Tested"),
-        legend        = list(orientation = "h", x = 0, y = -0.35),
+        legend        = list(orientation = "h", x = 0, y = -0.25),
         hovermode     = "closest",
-        margin        = list(b = 120),
+        margin        = list(b = 80, t = 60),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
   })
-  
   # ---- Graph 2: Incidence line chart (rolling solid + weekly dashed) ---------
   output$incidence_plot_tab6b <- renderPlotly({
     es       <- input$language_tab6b == "es"
