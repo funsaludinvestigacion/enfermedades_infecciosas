@@ -627,7 +627,7 @@ ui_tab5b <- function() {
         br(),
         #Rolling and raw incidence plot
         uiOutput("tab5b_incidence_title"),
-        plotlyOutput("incidence_plot_tab5b"),
+        plotlyOutput("incidence_plot_tab5b", height = "550px"),
         br(),
         #Incidence by age group plot
         uiOutput("tab5b_age_incidence_title"),
@@ -675,27 +675,33 @@ ui_tab6 <- function() {
         h2(textOutput("header_VFinca_text"), style = "color: orange;"),
         uiOutput("info_VFinca_text"),
         br(),
+        # Cards
+        uiOutput("finca_cards_week"),
+        fluidRow(
+          column(6, uiOutput("finca_card_tested")),
+          column(6, uiOutput("finca_card_top_pathogen"))
+        ),
         # Incidence plot (all pathogens together)
         h4(textOutput("inc_plot_title_tab6")),
-        plotlyOutput("inc_plot_tab6"),
+        plotlyOutput("inc_plot_tab6", height = "550px"),
         br(), br(),
         # Respiratory stacked bar
         h4(textOutput("resp_stacked_title_tab6")),
-        plotlyOutput("resp_stacked_plot_tab6"),
+        plotlyOutput("resp_stacked_plot_tab6", height = "550px"),
         br(), br(),
         # Dengue stacked bar
         h4(textOutput("deng_stacked_title_tab6")),
-        plotlyOutput("deng_stacked_plot_tab6"),
+        plotlyOutput("deng_stacked_plot_tab6", height = "550px"),
         br(), br(),
-        # Respiratory symptom incidence  <-- NEW
+        # Respiratory symptom incidence  
         h4(textOutput("symptom_inc_resp_title_tab6")),
         uiOutput("symptoms_tab_resp_select_ui"),
-        plotlyOutput("symptom_inc_plot_resp"),
+        plotlyOutput("symptom_inc_plot_resp", height = "550px"),
         br(), br(),
         # Dengue symptom incidence
         h4(textOutput("symptom_inc_deng_title_tab6")),
         uiOutput("symptoms_tab_deng_select_ui"),
-        plotlyOutput("symptom_inc_plot_deng"),
+        plotlyOutput("symptom_inc_plot_deng", height = "550px"),
         br(), br(),
         uiOutput("info_VFinca_defs"),
         class = "content"
@@ -735,13 +741,13 @@ ui_tab6b <- function() {
         h2(textOutput("header_tab6b"), style = "color: orange;"),
         br(),
         uiOutput("tab6b_positivity_title"),
-        plotlyOutput("positivity_plot_tab6b"),
+        plotlyOutput("positivity_plot_tab6b", height = "550px"),
         br(),
         uiOutput("tab6b_incidence_title"),
-        plotlyOutput("incidence_plot_tab6b"),
+        plotlyOutput("incidence_plot_tab6b", height = "550px"),
         br(),
         uiOutput("tab6b_lugar_incidence_title"),
-        plotlyOutput("lugar_incidence_plot_tab6b", height = "400px"),
+        plotlyOutput("lugar_incidence_plot_tab6b", height = "550px"),
         br(),
         class = "content"  
       )
@@ -1430,27 +1436,8 @@ server <- function(input, output) {
     }
   }
   
-  
-  gihsn_footnote_co <- function(es) {
-    if (es) {
-      "Notas: Se define como coinfección a todo paciente con resultado positivo para al
-      menos 2 de los patógenos<br>para los que fue analizado."
-    } else {
-      "Notes:<br>Coinfection is defined as any patient who tested positive for
-      at least 2 of the pathogens for which they were tested."
-    }}
+
     
-    
-  gihsn_footnote_co <- function(es) {
-    if (es) {
-      "Notas:
-      1. Los datos se presentan como promedios móviles centrados de 3 semanas, con excepción de la semana de datos más reciente (promedio móvil de 2 semanas).
-      2. Los denominadores se estiman con base en el número estimado de camas disponibles en cada hospital.
-      Hospital de Chimaltenango = 232, Hospital de Coatepeque = 152"
-    } else {
-      "Notes:
-     Coinfection is defined as any patient that tested positive for at least 2 pathogens for which they were tested for."
-    }}
   
   filtered_data_gihsn <- reactive({
     req(input$date_range_input_tab4, input$hospital)
@@ -1670,7 +1657,7 @@ server <- function(input, output) {
             yref      = "paper",
             xanchor   = "left",
             yanchor   = "top",
-            yshift    = -160,
+            yshift    = -180,
             showarrow = FALSE,
             align     = "left",
             font      = list(size = 10, color = "gray")
@@ -1689,11 +1676,10 @@ server <- function(input, output) {
   
   gihsn_footnote_co <- function(es) {
     if (es) {
-      "Notas: 1. Se define como coinfección a todo paciente con resultado positivo para al
-              menos 2 de los patógenos para los que fue analizado."
+      "Notas: 1. Se define como coinfección a todo paciente con resultado positivo para al menos 2 de los patógenos
+                 para los que fue analizado."
     } else {
-      "Notes: 1. Coinfection is defined as any patient who tested positive for
-              at least 2 of the pathogens for which they were tested."
+      "Notes: 1. Coinfection is defined as any patient who tested positive for at least 2 of the pathogens for which they were tested."
     } }
     
   output$stacked_plot_tab4 <- renderPlotly({
@@ -1841,6 +1827,7 @@ server <- function(input, output) {
   })
   
   # ---- Graph 3: GIHSN Rolling incidence Symptoms ---------------------------------
+
   gihsn_symptom_vars <- c("both_ilisystemic_malaise", "both_ilisystemic_headache",
                           "both_ilisystemic_myalgia", "both_ilirespiratory_cough",
                           "both_ilirespiratory_sorethroat", "both_ilirespiratory_shortnessbreath",
@@ -2379,15 +2366,15 @@ server <- function(input, output) {
   })
   
   output$inc_plot_header <- renderUI({
-    h3(if (input$language_VCasa == "es") "Incidencia de Patógenos (Promedio móvil de 3 semanas)" else "Pathogen Incidence (3-week Rolling Average)")
+    h3(if (input$language_VCasa == "es") "VigiCasa - Incidencia de Patógenos (Promedio móvil de 3 semanas)" else "Pathogen Incidence (3-week Rolling Average)")
   })
   
   output$stacked_plot_header <- renderUI({
-    h3(if (input$language_VCasa == "es") "Desglose Semanal de Muestreo" else "Weekly Testing Breakdown")
+    h3(if (input$language_VCasa == "es") "VigiCasa - Desglose Semanal de Muestreo" else "Weekly Testing Breakdown")
   })
   
   output$symptom_inc_plot_header <- renderUI({
-    h3(if (input$language_VCasa == "es") "Incidencia de Síntomas  (Promedio móvil de 3 semanas)" else "Symptom Incidence (3-week Rolling Average)")
+    h3(if (input$language_VCasa == "es") "VigiCasa - Incidencia de Síntomas  (Promedio móvil de 3 semanas)" else "Symptom Incidence (3-week Rolling Average)")
   })
   
   filtered_data_vigicasa_inc <- reactive({
@@ -2479,24 +2466,20 @@ server <- function(input, output) {
   # ---- VigiCASA Graph 1 - Incidence for all pathogens  ------------------------------------------------------------------
   
   footnote_casa <- function(es) {
-    lines <- if (isTRUE(es)) {
-      c(
-        "Notas:",
-        "1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.",
-        "2. El denominador antes del 11-01-2026 es estimado (250); las semanas anteriores a esta fecha corresponden al",
-        "período previo al uso del formulario de vigilancia."
-      )
+    txt <- if (isTRUE(es)) {
+      "Notas:
+      1. Los datos se presentan como promedios móviles centrados de 3 semanas, con excepción de la semana de datos
+      más reciente (promedio móvil de 2 semanas).
+      2. El denominador antes del 11-01-2026 es estimado (250); las semanas anteriores a esta fecha corresponden al
+      período previo al uso del formulario de vigilancia."
     } else {
-      c(
-        "Notes:",
-        "1. Data for the most recent week are not yet available due to the centered rolling average calculation.",
-        "2. The denominator prior to 01-11-2026 is estimated (250); weeks before this date were before the use",
-        "of the surveillance form."
-      )
+      "Notes:
+      1. Data are displayed as 3-week centered rolling averages with the exception of the most recent week of data
+      (2-week rolling average).
+      2. The denominator prior to 01-11-2026 is estimated (250); weeks before this date correspond to the period
+      before the surveillance form was in use."
     }
-    paste(lines, collapse = "<br>")
   }
-  
   
   output$inc_plot_tab5 <- renderPlotly({
     es <- input$language_VCasa == "es"
@@ -2651,14 +2634,17 @@ server <- function(input, output) {
 
   # ---- VigiCASA Graph 2 - Pathogen positivty stacked plot  ------------------------------------------------------------------
  
- casa_footnote_co <- function(es) {
-    if (es) {
-      "Notas: 1. Se define como coinfección a todo paciente con resultado positivo para al menos 2 de
-              los patógenos para los que fue analizado."
+  casa_footnote_co <- function(es) {
+    txt <- if (isTRUE(es)) {
+      "Notas:
+      Se define como coinfección a todo paciente con resultado positivo para al menos 2 de los patógenos
+      para los que fue analizado."
     } else {
-      "Notes: 1. Coinfection is defined as any patient who tested positive for at least 2
-              of the pathogens for which they were tested."
-    } }
+      "Notes:
+      Coinfection is defined as any patient who tested positive for at least 2 of the pathogens
+      for which they were tested."
+    }
+  }
   
    output$stacked_plot_tab5 <- renderPlotly({
     es <- input$language_VCasa == "es"
@@ -2778,15 +2764,17 @@ server <- function(input, output) {
    casa_footnote_symptoms <- function(es) {
      txt <- if (isTRUE(es)) {
        "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
+      1. Los datos se presentan como promedios móviles centrados de 3 semanas, con excepción de la semana de datos
+      más reciente (promedio móvil de 2 semanas).
       2. No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque estos datos se
       recopilan mediante el formulario de vigilancia, que comenzó a usarse en esa fecha."
      } else {
        "Notes:
-      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
-      2. No data are available prior to 01-11-2026 (01-18-2026 for rolling averages)
-      because these data are collected using the surveillance form, which began on that date."
-     }   }
+      1. Data are displayed as 3-week centered rolling averages with the exception of the most recent week of data
+      (2-week rolling average).
+      2. No data are available prior to 01-11-2026 (01-18-2026 for rolling averages) because these data are
+      collected using the surveillance form, which began on that date."
+     } }
    
    symptom_vars <- c(
      "fiebre", "tos", "dolor_oido", "congestion_nasal", "escurrimiento_nasal",
@@ -3008,14 +2996,14 @@ server <- function(input, output) {
   
   output$header_tab5b <- renderText({
     es <- input$language_tab5b == "es"
-    if (es) "VIGICASA: Análisis Detallado por Patógeno" else "VIGICASA: Pathogen Deep Dive"
+    if (es) "VigiCasa: Análisis Detallado por Patógeno" else "VigiCasa: Pathogen Deep Dive"
   })
   
   output$tab5b_positivity_title <- renderUI({
     es    <- input$language_tab5b == "es"
     label <- pathogen_label(input$pathogen_tab5b, es)
     tags$h3(
-      if (es) paste("Tasa de Positividad —", label) else paste("Test Positivity  —", label),
+      if (es) paste("VigiCasa - Tasa de Positividad —", label) else paste("VigiCasa - Test Positivity  —", label),
       style = "font-weight: bold; text-align: center;"
     )
   })
@@ -3024,10 +3012,42 @@ server <- function(input, output) {
     es    <- input$language_tab5b == "es"
     label <- pathogen_label(input$pathogen_tab5b, es)
     tags$h3(
-      if (es) paste("Incidencia  —", label) else paste("Incidence —", label),
+      if (es) paste("VigiCasa - Incidencia  —", label) else paste("Incidence —", label),
       style = "font-weight: bold; text-align: center;"
     )
   })
+  
+
+  output$tab5b_age_incidence_title <- renderUI({
+    es    <- input$language_tab5b == "es"
+    label <- pathogen_label(input$pathogen_tab5b, es)
+    tags$h3(
+      if (es) paste("VigiCasa - Incidencia por Grupo de Edad (Promedio móvil de 3 semanas) —", label)
+      else paste("Incidence by Age Group (3-week Rolling Average) —",     label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$tab5b_municipio_incidence_title <- renderUI({
+    es    <- input$language_tab5b == "es"
+    label <- pathogen_label(input$pathogen_tab5b, es)
+    tags$h3(
+      if (es) paste("VigiCasa - Incidencia por Municipio (Promedio móvil de 3 semanas) —", label)
+      else paste("VigiCasa - Incidence by Municipality (3-week Rolling Average) —",   label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$tab5b_sex_incidence_title <- renderUI({
+    es    <- input$language_tab5b == "es"
+    label <- pathogen_label(input$pathogen_tab5b, es)
+    tags$h3(
+      if (es) paste("VigiCasa - Incidencia por Sexo (Promedio móvil de 3 semanas) —", label)
+      else paste("VigiCasa - Incidence by Sex (3-week Rolling Average) —",       label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
   pathogen_pos_col <- function(p) {
     switch(p,
            "flua"    = "inf_a_pos",
@@ -3208,6 +3228,24 @@ server <- function(input, output) {
   })
   
   # Incidence line chart (tab5b) — rolling solid + weekly dashed --------------
+  
+  casa_footnote <- function(es) {
+    txt <- if (isTRUE(es)) {
+      "Notas:
+      1. Los datos se presentan como promedios móviles centrados de 3 semanas, con excepción de la semana de datos
+      más reciente (promedio móvil de 2 semanas).
+      2. El denominador antes del 11-01-2026 es estimado (250); las semanas anteriores a esta fecha corresponden al
+      período previo al uso del formulario de vigilancia."
+    } else {
+      "Notes:
+      1. Data are displayed as 3-week centered rolling averages with the exception of the most recent week of data
+      (2-week rolling average).
+      2. The denominator prior to 01-11-2026 is estimated (250); weeks before this date correspond to the period
+      before the surveillance form was in use."
+    }  }
+  
+  
+  
   output$incidence_plot_tab5b <- renderPlotly({
     es       <- input$language_tab5b == "es"
     p_key    <- input$pathogen_tab5b
@@ -3278,19 +3316,6 @@ server <- function(input, output) {
         )
     }
     
-    footnote <- if (es) {
-      "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles para la línea suavizada debido al cálculo 
-      del promedio móvil centrado.
-      2. El denominador antes del 11-01-2026 es estimado (250); datos anteriores a esta fecha corresponden
-      al período previo al uso del formulario de vigilancia."
-    } else {
-      "Notes:
-      1. Data for the most recent week are not yet available for the smoothed line due to the centered 
-      rolling average calculation.
-      2. The denominator prior to 01-11-2026 is estimated (250); data before this date were before the
-      use of the surveillance form."
-    } 
     
     p %>%
       layout(
@@ -3305,9 +3330,9 @@ server <- function(input, output) {
         yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
         annotations   = list(
           list(
-            text      = footnote,
+            text      = casa_footnote(es),
             x         = 0,
-            y         = -0.6,
+            y         = -0.5,
             xref      = "paper",
             yref      = "paper",
             xanchor   = "left",
@@ -3317,9 +3342,9 @@ server <- function(input, output) {
             font      = list(size = 10, color = "gray")
           )
         ),
-        legend        = list(orientation = "h", x = 0, y = -0.35),
+        legend        = list(orientation = "h", x = 0, y = -0.25),
         hovermode     = "closest",
-        margin        = list(b = 180, t = 40, l = 60, r = 20),
+        margin        = list(b = 260, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -3333,15 +3358,7 @@ server <- function(input, output) {
     "65+"   = "#984EA3"
   )
   
-  output$tab5b_age_incidence_title <- renderUI({
-    es    <- input$language_tab5b == "es"
-    label <- pathogen_label(input$pathogen_tab5b, es)
-    tags$h3(
-      if (es) paste("Incidencia por Grupo de Edad (Promedio móvil de 3 semanas) —", label)
-      else paste("Incidence by Age Group (3-week Rolling Average) —",     label),
-      style = "font-weight: bold; text-align: center;"
-    )
-  })
+
   
   output$age_incidence_plot_tab5b <- renderPlotly({
     es       <- input$language_tab5b == "es"
@@ -3382,7 +3399,6 @@ server <- function(input, output) {
       
       if (nrow(d_ag) == 0) next
       
-      # Build hover text now so the current age group is stored with the data
       d_ag <- d_ag %>%
         dplyr::mutate(hover_text = paste0(
           "<b>", label, " | ", ag, " — ",
@@ -3410,19 +3426,6 @@ server <- function(input, output) {
         )
     }
     
-    
-    footnote <- if (es) {
-      "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
-      2. No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque no contamos 
-      con denominadores por grupo de edad antes de esa fecha."
-    } else {
-      "Notes:
-      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
-      2. Data are not available before 01-11-2026 (01-18-2026 for rolling averages) because age-specific 
-      denominators are not available before this date."
-    }
-    
     p %>% layout(
       xaxis = list(
         title      = if (es) "Semana" else "Week",
@@ -3435,7 +3438,7 @@ server <- function(input, output) {
       yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
       annotations   = list(
         list(
-          text      = footnote,
+          text      = casa_footnote(es),
           x         = 0,
           y         = -0.6,
           xref      = "paper",
@@ -3449,21 +3452,12 @@ server <- function(input, output) {
       ),
       legend        = list(orientation = "h", x = 0, y = -0.3),
       hovermode     = "closest",
-      margin        = list(b = 170, t = 40, l = 60, r = 20),
+      margin        = list(b = 260, t = 40, l = 60, r = 20),
       plot_bgcolor  = "white",
       paper_bgcolor = "white"
     )
   })
   
-  output$tab5b_municipio_incidence_title <- renderUI({
-    es    <- input$language_tab5b == "es"
-    label <- pathogen_label(input$pathogen_tab5b, es)
-    tags$h3(
-      if (es) paste("Incidencia por Municipio (Promedio móvil de 3 semanas) —", label)
-      else paste("Incidence by Municipality (3-week Rolling Average) —",   label),
-      style = "font-weight: bold; text-align: center;"
-    )
-  })
   
   output$municipio_incidence_plot_tab5b <- renderPlotly({
     es       <- input$language_tab5b == "es"
@@ -3529,18 +3523,6 @@ server <- function(input, output) {
     }
     
     
-    footnote <- if (es) {
-      "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
-      2. No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque no contamos 
-      con denominadores por grupo de edad antes de esa fecha."
-    } else {
-      "Notes:
-      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
-      2. Data are not available before 01-11-2026 (01-18-2026 for rolling averages) because age-specific 
-      denominators are not available before this date."
-    }
-    
     p %>% layout(
       xaxis = list(
         title      = if (es) "Semana" else "Week",
@@ -3553,7 +3535,7 @@ server <- function(input, output) {
       yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
       annotations   = list(
         list(
-          text      = footnote,
+          text      = casa_footnote(es),
           x         = 0,
           y         = -0.6,
           xref      = "paper",
@@ -3567,7 +3549,7 @@ server <- function(input, output) {
       ),
       legend        = list(orientation = "h", x = 0, y = -0.3),
       hovermode     = "closest",
-      margin        = list(b = 190, t = 40, l = 60, r = 20),
+      margin        = list(b = 260, t = 40, l = 60, r = 20),
       plot_bgcolor  = "white",
       paper_bgcolor = "white"
     )
@@ -3576,15 +3558,7 @@ server <- function(input, output) {
   
   # --- Sex stratification -----------------------------------------------------
   
-  output$tab5b_sex_incidence_title <- renderUI({
-    es    <- input$language_tab5b == "es"
-    label <- pathogen_label(input$pathogen_tab5b, es)
-    tags$h3(
-      if (es) paste("Incidencia por Sexo (Promedio móvil de 3 semanas) —", label)
-      else paste("Incidence by Sex (3-week Rolling Average) —",       label),
-      style = "font-weight: bold; text-align: center;"
-    )
-  })
+
   
   sex_label <- function(code, es) {
     code_chr <- as.character(code)
@@ -3659,18 +3633,7 @@ server <- function(input, output) {
         )
     }
     
-    
-    footnote <- if (es) {
-      "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
-      2. No hay datos disponibles antes del 11-01-2026 (18-01-2026 para los promedios móviles) porque no contamos 
-      con denominadores por grupo de edad antes de esa fecha."
-    } else {
-      "Notes:
-      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
-      2. Data are not available before 01-11-2026 (01-18-2026 for rolling averages) because age-specific 
-      denominators are not available before this date."
-    }
+  
     
     p %>% layout(
       xaxis = list(
@@ -3684,7 +3647,7 @@ server <- function(input, output) {
       yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
       annotations   = list(
         list(
-          text      = footnote,
+          text      = casa_footnote(es),
           x         = 0,
           y         = -0.6,
           xref      = "paper",
@@ -3698,7 +3661,7 @@ server <- function(input, output) {
       ),
       legend        = list(orientation = "h", x = 0, y = -0.3),
       hovermode     = "closest",
-      margin        = list(b = 170, t = 40, l = 60, r = 20),
+      margin        = list(b = 260, t = 40, l = 60, r = 20),
       plot_bgcolor  = "white",
       paper_bgcolor = "white"
     )
@@ -3708,6 +3671,116 @@ server <- function(input, output) {
   # --------------------------------------------------------------------------
   #                             VIGIFINCA
   # --------------------------------------------------------------------------
+  
+  # ---- VigiFinca plot titles -------------------------------------------------
+  output$finca_inc_plot_header <- renderUI({
+    h3(if (input$language_VFinca == "es") "VigiFinca - Incidencia de Patógenos (Promedio móvil de 3 semanas)" else "VigiFinca - Pathogen Incidence (3-week Rolling Average)")
+  })
+  
+  output$finca_resp_stacked_plot_header <- renderUI({
+    h3(if (input$language_VFinca == "es") "VigiFinca - Desglose Semanal de Muestreo Respiratorio" else "VigiFinca - Weekly Respiratory Testing Breakdown")
+  })
+  
+  output$finca_deng_stacked_plot_header <- renderUI({
+    h3(if (input$language_VFinca == "es") "VigiFinca - Desglose Semanal de Muestreo de Dengue" else "VigiFinca - Weekly Dengue Testing Breakdown")
+  })
+  
+  output$finca_symptom_resp_plot_header <- renderUI({
+    h3(if (input$language_VFinca == "es") "VigiFinca - Incidencia de Síntomas Respiratorios (Promedio móvil de 3 semanas)" else "VigiFinca - Respiratory Symptom Incidence (3-week Rolling Average)")
+  })
+  
+  output$finca_symptom_deng_plot_header <- renderUI({
+    h3(if (input$language_VFinca == "es") "VigiFinca - Incidencia de Síntomas de Dengue (Promedio móvil de 3 semanas)" else "VigiFinca - Dengue Symptom Incidence (3-week Rolling Average)")
+  })
+  
+  # ---- VigiFinca footnotes ---------------------------------------------------
+  finca_footnote <- function(es) {
+    txt <- if (isTRUE(es)) {
+      "Notas:
+      1. Los datos se presentan como promedios móviles centrados de 3 semanas, con excepción de la semana de datos
+      más reciente (promedio móvil de 2 semanas).
+      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
+    } else {
+      "Notes:
+      1. Data are displayed as 3-week centered rolling averages with the exception of the most recent week of data
+      (2-week rolling average).
+      2. Denominators are estimated based on seasonal farm workforce sizes."
+    }
+    gsub("\\s*\n\\s*", "<br>", txt)
+  }
+  
+  finca_footnote_co <- function(es) {
+    txt <- if (isTRUE(es)) {
+      "Notas:
+      Se define como coinfección a todo paciente con resultado positivo para al menos 2 de los patógenos
+      para los que fue analizado."
+    } else {
+      "Notes:
+      Coinfection is defined as any patient who tested positive for at least 2 of the pathogens
+      for which they were tested."
+    }
+    gsub("\\s*\n\\s*", "<br>", txt)
+  }
+  
+  # ---- VigiFinca Cards ------------------------------------------------------
+  selected_week_data_finca <- reactive({
+    d <- vigifinca_results_roll %>%
+      dplyr::filter(
+        lugar      == input$lugar_tab6,
+        source     == "Resp",
+        week_start >= input$date_range_input_tab6[1],
+        week_start <= input$date_range_input_tab6[2]
+      )
+    req(nrow(d) > 0)
+    d %>% dplyr::filter(week_start == max(week_start))
+  })
+  
+  output$finca_cards_week <- renderUI({
+    d  <- selected_week_data_finca()
+    req(nrow(d) > 0)
+    es <- input$language_VFinca == "es"
+    
+    wk <- as.Date(d$week_start)
+    date_txt <- if (es) format(wk, "%d/%m/%Y") else format(wk, "%m/%d/%Y")
+    
+    h4(
+      paste0(if (es) "Semana del " else "Week of ", date_txt),
+      style = "color: #666; margin-bottom: 10px;"
+    )
+  })
+  
+  output$finca_card_tested <- renderUI({
+    d  <- selected_week_data_finca()
+    req(nrow(d) > 0)
+    es <- input$language_VFinca == "es"
+    make_card(
+      title = if (es) "Participantes analizados" else "Tested Participants",
+      value = scales::comma(d$total_tested),
+      color = "#F77F00"
+    )
+  })
+  
+  output$finca_card_top_pathogen <- renderUI({
+    d  <- selected_week_data_finca()
+    req(nrow(d) > 0)
+    es <- input$language_VFinca == "es"
+    
+    pathogen_counts <- c(
+      "Influenza A" = d$inf_a_pos,
+      "Influenza B" = d$inf_b_pos,
+      "SARS-CoV-2"  = d$scv2_pos,
+      "RSV"         = d$vsr_pos
+    )
+    top_name  <- names(which.max(pathogen_counts))
+    top_count <- max(pathogen_counts, na.rm = TRUE)
+    
+    make_card(
+      title    = if (es) "Patógeno Más Común" else "Most Common Pathogen",
+      value    = top_name,
+      subtitle = paste0(top_count, if (es) " casos positivos" else " positive cases"),
+      color    = "#D7191C"
+    )
+  })
   
   # ---- Tab 6a: Incidence plot (rolling, all pathogens together) ------------
   output$inc_plot_tab6 <- renderPlotly({
@@ -3723,8 +3796,8 @@ server <- function(input, output) {
       mutate(
         flu_gen_pos_roll = inf_a_pos_roll + inf_b_pos_roll,
         flu_gen_inc_roll = flu_gen_pos_roll / denom_roll,
-        ari_inc_roll = tested_inc_roll,
-        ari_roll = total_tested_roll 
+        ari_inc_roll     = tested_inc_roll,
+        ari_roll         = total_tested_roll
       )
     
     deng_data <- vigifinca_results_roll %>%
@@ -3733,7 +3806,7 @@ server <- function(input, output) {
         source     == "Deng",
         week_start >= input$date_range_input_tab6[1],
         week_start <= input$date_range_input_tab6[2]
-      ) %>% 
+      ) %>%
       mutate(
         ali_inc_roll = tested_inc_roll,
         ali_roll     = total_tested_roll
@@ -3751,35 +3824,21 @@ server <- function(input, output) {
       "vsr_pos_inc_roll"   = "#4DAF4A",
       "scv2_pos_inc_roll"  = "#377EB8",
       "igm_pos_inc_roll"   = "#F781BF",
-      "ari_inc_roll"       = "#999999",
-      "ali_inc_roll"       = "#A65628"
+      "ari_inc_roll"       = "#A65628",
+      "ali_inc_roll"       = "#999999"
     )
     
-    label_map <- if (es) {
-      c(
-        "flu_gen_inc_roll"   = "Influenza (General)",
-        "inf_a_pos_inc_roll" = "Influenza A",
-        "inf_b_pos_inc_roll" = "Influenza B",
-        "scv2_pos_inc_roll"  = "SARS-CoV-2",
-        "vsr_pos_inc_roll"   = "RSV",
-        "igm_pos_inc_roll"   = "Dengue",
-        "ari_inc_roll"       = "ARI",
-        "ali_inc_roll"       = "ALI"
-      )
-    } else {
-      c(
-        "flu_gen_inc_roll"   = "Influenza (General)",
-        "inf_a_pos_inc_roll" = "Influenza A",
-        "inf_b_pos_inc_roll" = "Influenza B",
-        "scv2_pos_inc_roll"  = "SARS-CoV-2",
-        "vsr_pos_inc_roll"   = "RSV",
-        "igm_pos_inc_roll"   = "Dengue",
-        "ari_inc_roll"       = "ARI",
-        "ali_inc_roll"       = "ALI"
-      )
-    }
+    label_map <- c(
+      "flu_gen_inc_roll"   = "Influenza (General)",
+      "inf_a_pos_inc_roll" = "Influenza A",
+      "inf_b_pos_inc_roll" = "Influenza B",
+      "scv2_pos_inc_roll"  = "SARS-CoV-2",
+      "vsr_pos_inc_roll"   = "RSV",
+      "igm_pos_inc_roll"   = "Dengue",
+      "ari_inc_roll"       = "ARI",
+      "ali_inc_roll"       = "ALI"
+    )
     
-    # respiratory pathogens, long format
     resp_long <- resp_data %>%
       select(week_start, total_tested_roll, denom_roll,
              flu_gen_inc_roll, inf_a_pos_inc_roll, inf_b_pos_inc_roll, vsr_pos_inc_roll, scv2_pos_inc_roll, ari_inc_roll,
@@ -3823,9 +3882,9 @@ server <- function(input, output) {
     
     plot_data <- bind_rows(resp_long, deng_long) %>%
       mutate(
-        pathogen_label   = label_map[pathogen],
-        inc_value_per1k  = inc_value * 1000,   # NOTE: assumes inc_roll is a raw proportion; drop *1000 if already scaled
-        week_start_chr   = as.character(week_start),
+        pathogen_label  = label_map[pathogen],
+        inc_value_per1k = inc_value * 1000,
+        week_start_chr  = as.character(week_start),
         hover_text = paste0(
           "<b>", pathogen_label, "</b><br>",
           if (es) "Semana: " else "Week: ", week_start_chr, "<br>",
@@ -3838,16 +3897,17 @@ server <- function(input, output) {
     
     p <- plot_ly()
     
-
-    pathogens_to_plot <- c("ari_inc_roll","ali_inc_roll", "flu_gen_inc_roll", "inf_a_pos_inc_roll", "inf_b_pos_inc_roll",
-                           "scv2_pos_inc_roll", "vsr_pos_inc_roll",  "igm_pos_inc_roll")              
+    pathogens_to_plot <- c("ari_inc_roll", "ali_inc_roll", "flu_gen_inc_roll", "inf_a_pos_inc_roll", "inf_b_pos_inc_roll",
+                           "scv2_pos_inc_roll", "vsr_pos_inc_roll", "igm_pos_inc_roll")
     
+    # ARI on right axis
+    y2_paths <- c("ari_inc_roll")
     
-      for (path in pathogens_to_plot) {
-     df_path <- plot_data %>% dplyr::filter(pathogen == path)
-     line_style <- if (path %in% c("ili_inc_roll", "ali_inc_roll")) "dash" else "solid"  # both dashed
+    for (path in pathogens_to_plot) {
+      df_path    <- plot_data %>% dplyr::filter(pathogen == path)
+      line_style <- if (path %in% c("ari_inc_roll", "ali_inc_roll")) "dash" else "solid"
       if (nrow(df_path) == 0) next
-
+      
       p <- p %>%
         add_trace(
           data      = df_path,
@@ -3856,45 +3916,47 @@ server <- function(input, output) {
           type      = "scatter",
           mode      = "lines+markers",
           name      = label_map[path],
+          yaxis     = if (path %in% y2_paths) "y2" else "y",
           line      = list(color = color_map[path], width = 2, dash = line_style),
           marker    = list(color = color_map[path], size = 5),
           text      = ~hover_text,
           hoverinfo = "text"
         )
-      }
-    
-    footnote <- if (es) {
-      "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
-      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
-    } else {
-      "Notes:
-      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
-      2. Denominators are estimated based on seasonal farm workforce sizes."
     }
     
     p %>%
       layout(
         xaxis = list(
-          title     = if (es) "Semana" else "Week",
-          type      = "date",
-          dtick     = "M1",
+          title      = if (es) "Semana" else "Week",
+          type       = "date",
+          dtick      = "M1",
           tickangle  = -45,
           tickformat = "%b %Y",
-          tickfont  = list(size = 10)
+          tickfont   = list(size = 10)
         ),
         yaxis = list(
-          title = if (es) "Incidencia (por 1,000 Personas)" else "Incidence (per 1,000 People)"
+          title     = if (es) "Incidencia (por 1,000 Personas)" else "Incidence (per 1,000 People)",
+          rangemode = "tozero"
         ),
-        annotations   = list(
+        yaxis2 = list(
+          title      = if (es) "ARI (muestreados) por 1,000 Personas" else "ARI (tested) per 1,000 People",
+          overlaying = "y",
+          side       = "right",
+          showgrid   = FALSE,
+          rangemode  = "tozero",
+          titlefont  = list(color = color_map[["ari_inc_roll"]]),
+          tickfont   = list(color = color_map[["ari_inc_roll"]])
+        ),
+        annotations = list(
           list(
-            text      = footnote,
+            text      = finca_footnote(es),
             x         = 0,
-            y         = -0.6,
+            y         = 0,
             xref      = "paper",
             yref      = "paper",
             xanchor   = "left",
             yanchor   = "top",
+            yshift    = -150,
             showarrow = FALSE,
             align     = "left",
             font      = list(size = 10, color = "gray")
@@ -3905,12 +3967,11 @@ server <- function(input, output) {
           xanchor = "left", yanchor = "top", font = list(size = 11)
         ),
         hovermode     = "closest",
-        margin        = list(b = 170, t = 40, l = 60, r = 20),
+        margin        = list(b = 240, t = 40, l = 60, r = 70),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
-  })  
-  
+  })
   
   # ---- Tab 6b: Respiratory stacked bar (% of tested) ------------------------
   output$resp_stacked_plot_tab6 <- renderPlotly({
@@ -3924,8 +3985,6 @@ server <- function(input, output) {
         week_start <= input$date_range_input_tab6[2]
       ) %>%
       mutate(
-        # FIX #7: neg_all must also subtract scv2_pos, or COVID-positive
-        # people get miscounted as "Negative for All" in the stacked bar.
         neg_all = total_tested - (inf_a_pos + inf_b_pos + vsr_pos + scv2_pos),
         neg_all = ifelse(neg_all < 0, 0, neg_all)
       )
@@ -3943,8 +4002,6 @@ server <- function(input, output) {
       "neg_all"   = "#BDBDBD"
     )
     
-    # FIX #7 (cont.): added scv2_pos label so it renders in the legend now
-    # that it's included in `pathogens` below.
     label_map <- if (es) {
       c("inf_a_pos" = "Influenza A", "inf_b_pos" = "Influenza B",
         "scv2_pos" = "SARS-CoV-2", "vsr_pos" = "RSV", "neg_all" = "Negativo para Todos")
@@ -3953,8 +4010,6 @@ server <- function(input, output) {
         "scv2_pos" = "SARS-CoV-2", "vsr_pos" = "RSV", "neg_all" = "Negative for All")
     }
     
-    # FIX #7 (cont.): scv2_pos added so the SARS-CoV-2 bar segment actually
-    # gets drawn (previously defined in color_map but never plotted).
     pathogens <- c("inf_a_pos", "inf_b_pos", "scv2_pos", "vsr_pos", "neg_all")
     
     plot_data <- filtered_data %>%
@@ -3994,7 +4049,7 @@ server <- function(input, output) {
     
     p %>%
       layout(
-        barmode     = "stack",
+        barmode = "stack",
         xaxis = list(
           title      = if (es) "Semana" else "Week",
           type       = "date",
@@ -4008,14 +4063,28 @@ server <- function(input, output) {
           range      = c(0, 100),
           ticksuffix = "%"
         ),
+        annotations = list(
+          list(
+            text      = finca_footnote_co(es),
+            x         = 0,
+            y         = 0,
+            xref      = "paper",
+            yref      = "paper",
+            xanchor   = "left",
+            yanchor   = "top",
+            yshift    = -170,
+            showarrow = FALSE,
+            align     = "left",
+            font      = list(size = 10, color = "gray")
+          )
+        ),
         legend        = list(orientation = "h", x = 0, y = -0.4),
         hovermode     = "closest",
-        margin        = list(b = 120),
+        margin        = list(b = 240, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
   })  # closes resp_stacked_plot_tab6
-  
   
   # ---- Tab 6c: Dengue stacked bar (% of tested, IgM+ vs negative) -----------
   output$deng_stacked_plot_tab6 <- renderPlotly({
@@ -4085,7 +4154,7 @@ server <- function(input, output) {
     
     p %>%
       layout(
-        barmode     = "stack",
+        barmode = "stack",
         xaxis = list(
           title      = if (es) "Semana" else "Week",
           type       = "date",
@@ -4105,8 +4174,9 @@ server <- function(input, output) {
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
-  })  
+  })  # closes deng_stacked_plot_tab6
   
+  # ---- Symptom variables, labels, colors ------------------------------------
   symptom_vars_r <- c(
     "fiebre_38", "ante_fiebre", "tos_p", "malestar", "dolor_decabeza",
     "dolor_muscular_articulaciones", "odinofagia", "rinorrea", "conjuntivitis",
@@ -4125,7 +4195,6 @@ server <- function(input, output) {
     "tos_d", "vomito_d", "vomito_sangre_d", "manifestaciones_neurologicas_d"
   )
   
-  # ---- Spanish labels (existing) ----
   symptom_label_map_r_es <- c(
     "fiebre_38"                     = "Fiebre 38",
     "ante_fiebre"                   = "Antecedente de Fiebre",
@@ -4149,7 +4218,6 @@ server <- function(input, output) {
     "vomitos_diarrea"               = "Vómitos/Diarrea"
   )
   
-  # ---- English labels (new) ----
   symptom_label_map_r_en <- c(
     "fiebre_38"                     = "Fever 38",
     "ante_fiebre"                   = "History of Fever",
@@ -4174,57 +4242,57 @@ server <- function(input, output) {
   )
   
   symptom_label_map_d_es <- c(
-    "anorexia_d"                       = "Anorexia",
-    "dolor_articular_d"                = "Dolor Articular",
-    "articulares_hinchados_d"          = "Articulaciones Hinchadas",
-    "fatiga_d"                         = "Fatiga",
-    "dolor_cabeza_d"                   = "Dolor de Cabeza",
-    "conjuntivitis_d"                  = "Conjuntivitis",
-    "diarrea_d"                        = "Diarrea",
-    "dolor_abdominal_d"                = "Dolor Abdominal",
-    "enterorragia_d"                   = "Enterorragia",
-    "epistaxis_d"                      = "Epistaxis",
-    "sarpullido_d"                     = "Sarpullido",
-    "fiebre_d"                         = "Fiebre",
-    "hemorragia_encías_d"              = "Hemorragia de Encías",
-    "hemorragia_urinaria_d"            = "Hemorragia Urinaria",
-    "hemorragia_vaginal_d"             = "Hemorragia Vaginal",
-    "melena_d"                         = "Melena",
-    "dolor_cuerpo_d"                   = "Dolor de Cuerpo",
-    "petequias_d"                      = "Petequias",
-    "piel_fria_d"                      = "Piel Fría",
-    "sudoracion_d"                     = "Sudoración",
-    "tos_d"                            = "Tos",
-    "vomito_d"                         = "Vómito",
-    "vomito_sangre_d"                  = "Vómito con Sangre",
-    "manifestaciones_neurologicas_d"   = "Manifestaciones Neurológicas"
+    "anorexia_d"                     = "Anorexia",
+    "dolor_articular_d"              = "Dolor Articular",
+    "articulares_hinchados_d"        = "Articulaciones Hinchadas",
+    "fatiga_d"                       = "Fatiga",
+    "dolor_cabeza_d"                 = "Dolor de Cabeza",
+    "conjuntivitis_d"                = "Conjuntivitis",
+    "diarrea_d"                      = "Diarrea",
+    "dolor_abdominal_d"              = "Dolor Abdominal",
+    "enterorragia_d"                 = "Enterorragia",
+    "epistaxis_d"                    = "Epistaxis",
+    "sarpullido_d"                   = "Sarpullido",
+    "fiebre_d"                       = "Fiebre",
+    "hemorragia_encías_d"            = "Hemorragia de Encías",
+    "hemorragia_urinaria_d"          = "Hemorragia Urinaria",
+    "hemorragia_vaginal_d"           = "Hemorragia Vaginal",
+    "melena_d"                       = "Melena",
+    "dolor_cuerpo_d"                 = "Dolor de Cuerpo",
+    "petequias_d"                    = "Petequias",
+    "piel_fria_d"                    = "Piel Fría",
+    "sudoracion_d"                   = "Sudoración",
+    "tos_d"                          = "Tos",
+    "vomito_d"                       = "Vómito",
+    "vomito_sangre_d"                = "Vómito con Sangre",
+    "manifestaciones_neurologicas_d" = "Manifestaciones Neurológicas"
   )
   
   symptom_label_map_d_en <- c(
-    "anorexia_d"                       = "Anorexia",
-    "dolor_articular_d"                = "Joint Pain",
-    "articulares_hinchados_d"          = "Swollen Joints",
-    "fatiga_d"                         = "Fatigue",
-    "dolor_cabeza_d"                   = "Headache",
-    "conjuntivitis_d"                  = "Conjunctivitis",
-    "diarrea_d"                        = "Diarrhea",
-    "dolor_abdominal_d"                = "Abdominal Pain",
-    "enterorragia_d"                   = "Rectal Bleeding",
-    "epistaxis_d"                      = "Nosebleed",
-    "sarpullido_d"                     = "Rash",
-    "fiebre_d"                         = "Fever",
-    "hemorragia_encías_d"              = "Gum Bleeding",
-    "hemorragia_urinaria_d"            = "Urinary Bleeding",
-    "hemorragia_vaginal_d"             = "Vaginal Bleeding",
-    "melena_d"                         = "Melena",
-    "dolor_cuerpo_d"                   = "Body Pain",
-    "petequias_d"                      = "Petechiae",
-    "piel_fria_d"                      = "Cold Skin",
-    "sudoracion_d"                     = "Sweating",
-    "tos_d"                            = "Cough",
-    "vomito_d"                         = "Vomiting",
-    "vomito_sangre_d"                  = "Vomiting Blood",
-    "manifestaciones_neurologicas_d"   = "Neurological Manifestations"
+    "anorexia_d"                     = "Anorexia",
+    "dolor_articular_d"              = "Joint Pain",
+    "articulares_hinchados_d"        = "Swollen Joints",
+    "fatiga_d"                       = "Fatigue",
+    "dolor_cabeza_d"                 = "Headache",
+    "conjuntivitis_d"                = "Conjunctivitis",
+    "diarrea_d"                      = "Diarrhea",
+    "dolor_abdominal_d"              = "Abdominal Pain",
+    "enterorragia_d"                 = "Rectal Bleeding",
+    "epistaxis_d"                    = "Nosebleed",
+    "sarpullido_d"                   = "Rash",
+    "fiebre_d"                       = "Fever",
+    "hemorragia_encías_d"            = "Gum Bleeding",
+    "hemorragia_urinaria_d"          = "Urinary Bleeding",
+    "hemorragia_vaginal_d"           = "Vaginal Bleeding",
+    "melena_d"                       = "Melena",
+    "dolor_cuerpo_d"                 = "Body Pain",
+    "petequias_d"                    = "Petechiae",
+    "piel_fria_d"                    = "Cold Skin",
+    "sudoracion_d"                   = "Sweating",
+    "tos_d"                          = "Cough",
+    "vomito_d"                       = "Vomiting",
+    "vomito_sangre_d"                = "Vomiting Blood",
+    "manifestaciones_neurologicas_d" = "Neurological Manifestations"
   )
   
   symptom_color_map_r <- setNames(
@@ -4236,6 +4304,7 @@ server <- function(input, output) {
     colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(length(symptom_vars_d)),
     symptom_vars_d
   )
+  
   # ---- Symptom picker UIs ----------------------------------------------------
   output$symptoms_tab_resp_select_ui <- renderUI({
     es <- input$language_VFinca == "es"
@@ -4256,7 +4325,7 @@ server <- function(input, output) {
     
     selectizeInput(
       "symptoms_tab_deng",
-      if (es) "Síntomas de Dengue(Promedio móvil de 3 semanas):" else "Dengue Symptoms (3-week Rolling Average):",
+      if (es) "Síntomas de Dengue (Promedio móvil de 3 semanas):" else "Dengue Symptoms (3-week Rolling Average):",
       choices  = setNames(names(symptom_label_map_d), symptom_label_map_d),
       selected = symptom_vars_d[1:5],
       multiple = TRUE
@@ -4329,16 +4398,6 @@ server <- function(input, output) {
         )
     }
     
-    footnote <- if (es) {
-      "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
-      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
-    } else {
-      "Notes:
-      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
-      2. Denominators are estimated based on seasonal farm workforce sizes."
-    }
-    
     p %>%
       layout(
         xaxis = list(
@@ -4349,18 +4408,19 @@ server <- function(input, output) {
           tickangle  = -45,
           tickfont   = list(size = 10)
         ),
-        yaxis         = list(
+        yaxis = list(
           title = if (es) "Casos por 1,000 Personas" else "Cases per 1,000 People"
         ),
-        annotations   = list(
+        annotations = list(
           list(
-            text      = footnote,
+            text      = finca_footnote(es),
             x         = 0,
-            y         = -0.6,
+            y         = 0,
             xref      = "paper",
             yref      = "paper",
             xanchor   = "left",
             yanchor   = "top",
+            yshift    = -160,
             showarrow = FALSE,
             align     = "left",
             font      = list(size = 10, color = "gray")
@@ -4368,7 +4428,7 @@ server <- function(input, output) {
         ),
         legend        = list(orientation = "h", x = 0, y = -0.30, xanchor = "left", yanchor = "top", font = list(size = 11)),
         hovermode     = "closest",
-        margin        = list(b = 170, t = 40, l = 60, r = 20),
+        margin        = list(b = 260, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
@@ -4440,16 +4500,6 @@ server <- function(input, output) {
         )
     }
     
-    footnote <- if (es) {
-      "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
-      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
-    } else {
-      "Notes:
-      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
-      2. Denominators are estimated based on seasonal farm workforce sizes."
-    }
-    
     p %>%
       layout(
         xaxis = list(
@@ -4460,18 +4510,19 @@ server <- function(input, output) {
           tickangle  = -45,
           tickfont   = list(size = 10)
         ),
-        yaxis         = list(
+        yaxis = list(
           title = if (es) "Casos por 1,000 Personas" else "Cases per 1,000 People"
         ),
-        annotations   = list(
+        annotations = list(
           list(
-            text      = footnote,
+            text      = finca_footnote(es),
             x         = 0,
-            y         = -0.6,
+            y         = 0,
             xref      = "paper",
             yref      = "paper",
             xanchor   = "left",
             yanchor   = "top",
+            yshift    = -170,
             showarrow = FALSE,
             align     = "left",
             font      = list(size = 10, color = "gray")
@@ -4479,20 +4530,51 @@ server <- function(input, output) {
         ),
         legend        = list(orientation = "h", x = 0, y = -0.35, xanchor = "left", yanchor = "top", font = list(size = 11)),
         hovermode     = "closest",
-        margin        = list(b = 170, t = 40, l = 60, r = 20),
+        margin        = list(b = 270, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
-  })  # closes symptom_inc_plot_deng
+  })  
   
   # --------------------------------------------------------------------------
-  #                  VIGIFINCA PATHOGEN DEEP DIVE (tab6b)
+  #                   TAB 6b - VIGIFINCA PATHOGEN DEEP DIVE
   # --------------------------------------------------------------------------
   
-  # NOTE: column names in vigifinca_results_roll differ from vigicasa_inc,
-  # so these are separate mapping functions from pathogen_inc_roll_col()/
-  # pathogen_inc_col() (used by tab5b) to avoid a silent mismatch like the
-  # one fixed in inc_plot_tab6.
+  # ---- Tab 6b headers and titles ---------------------------------------------
+  output$header_tab6b <- renderText({
+    es <- input$language_tab6b == "es"
+    if (es) "VigiFinca: Análisis Detallado por Patógeno" else "VigiFinca: Pathogen Deep Dive"
+  })
+  
+  output$tab6b_positivity_title <- renderUI({
+    es    <- input$language_tab6b == "es"
+    label <- pathogen_label(input$pathogen_tab6b, es)
+    tags$h3(
+      if (es) paste("VigiFinca - Tasa de Positividad —", label) else paste("VigiFinca - Test Positivity —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$tab6b_incidence_title <- renderUI({
+    es    <- input$language_tab6b == "es"
+    label <- pathogen_label(input$pathogen_tab6b, es)
+    tags$h3(
+      if (es) paste("VigiFinca - Incidencia —", label) else paste("VigiFinca - Incidence —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  output$tab6b_lugar_incidence_title <- renderUI({
+    es    <- input$language_tab6b == "es"
+    label <- pathogen_label(input$pathogen_tab6b, es)
+    tags$h3(
+      if (es) paste("VigiFinca - Incidencia por Lugar (Promedio móvil de 3 semanas) —", label)
+      else paste("VigiFinca - Incidence by Site (3-week Rolling Average) —", label),
+      style = "font-weight: bold; text-align: center;"
+    )
+  })
+  
+  # ---- Tab 6b helpers --------------------------------------------------------
   pathogen_inc_roll_col_vf <- function(p) {
     switch(p,
            "flua"    = "inf_a_pos_inc_roll",
@@ -4531,13 +4613,6 @@ server <- function(input, output) {
     "Pantaleon" = "#D95F02"
   )
   
-  output$header_tab6b <- renderText({
-    es <- input$language_tab6b == "es"
-    if (es) "VIGIFINCA: Análisis Detallado por Patógeno" else "VIGIFINCA: Pathogen Deep Dive"
-  })
-  
-  # "Overall" filtered dataset (source depends on pathogen), used for graphs 1 & 2
-  # Includes both rolling (_roll) and raw (non-roll) computed columns.
   filtered_tab6b <- reactive({
     p_key <- input$pathogen_tab6b
     src   <- if (p_key %in% c("deng", "ali")) "Deng" else "Resp"
@@ -4550,55 +4625,23 @@ server <- function(input, output) {
         week_start <= input$date_range_tab6b[2]
       ) %>%
       mutate(
-        # rolling composites
         flu_gen_pos_roll = inf_a_pos_roll + inf_b_pos_roll,
-        flu_gen_inc_roll  = flu_gen_pos_roll / denom_roll,
-        ari_inc_roll      = tested_inc_roll,
-        ari_roll          = total_tested_roll,
-        ali_inc_roll      = tested_inc_roll,
-        ali_roll          = total_tested_roll,
-        # raw (non-rolling) composites
-        flu_gen_pos = inf_a_pos + inf_b_pos,
-        flu_gen_inc = flu_gen_pos / denom,
-        ari         = total_tested,
-        ari_inc     = tested_inc,
-        ali         = total_tested,
-        ali_inc     = tested_inc,
-        week_start_chr = as.character(week_start)
+        flu_gen_inc_roll = flu_gen_pos_roll / denom_roll,
+        ari_inc_roll     = tested_inc_roll,
+        ari_roll         = total_tested_roll,
+        ali_inc_roll     = tested_inc_roll,
+        ali_roll         = total_tested_roll,
+        flu_gen_pos      = inf_a_pos + inf_b_pos,
+        flu_gen_inc      = flu_gen_pos / denom,
+        ari              = total_tested,
+        ari_inc          = tested_inc,
+        ali              = total_tested,
+        ali_inc          = tested_inc,
+        week_start_chr   = as.character(week_start)
       )
   })
   
-  output$tab6b_positivity_title <- renderUI({
-    es    <- input$language_tab6b == "es"
-    label <- pathogen_label(input$pathogen_tab6b, es)
-    tags$h3(
-      if (es) paste("Tasa de Positividad —", label) else paste("Test Positivity —", label),
-      style = "font-weight: bold; text-align: center;"
-    )
-  })
-  
-  output$tab6b_incidence_title <- renderUI({
-    es    <- input$language_tab6b == "es"
-    label <- pathogen_label(input$pathogen_tab6b, es)
-    tags$h3(
-      if (es) paste("Incidencia —", label) else paste("Incidence —", label),
-      style = "font-weight: bold; text-align: center;"
-    )
-  })
-  
-  output$tab6b_lugar_incidence_title <- renderUI({
-    es    <- input$language_tab6b == "es"
-    label <- pathogen_label(input$pathogen_tab6b, es)
-    tags$h3(
-      if (es) paste("Incidencia por Lugar (Promedio móvil de 3 semanas) —", label) else paste("Incidence by Site (3-week Rolling Average) —", label),
-      style = "font-weight: bold; text-align: center;"
-    )
-  })
-  
-  # ---- Graph 1: Positivity bar chart (tested vs. positive) -----------------
-  # NOT rolling — uses raw weekly counts. Axis/hover text explicitly say
-  # "Semanal" (weekly) rather than the "(3 sem)" label used for rolling plots,
-  # to keep it visually/textually distinct from the rolling incidence graph below.
+  # ---- Graph 1: Positivity bar chart (weekly counts) -------------------------
   output$positivity_plot_tab6b <- renderPlotly({
     es    <- input$language_tab6b == "es"
     p_key <- input$pathogen_tab6b
@@ -4623,6 +4666,7 @@ server <- function(input, output) {
           p_key == "ali"     ~ ali,
           TRUE               ~ total_tested
         ),
+        pct_pos = ifelse(total_tested > 0, round(100 * pos_count / total_tested, 1), NA),
         hover_tested = paste0(
           "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
           "<b>", if (es) "Total Muestreados (semanal):" else "Total Tested (weekly):", "</b> ", total_tested
@@ -4630,7 +4674,8 @@ server <- function(input, output) {
         hover_pos = paste0(
           "<b>", if (es) "Semana:" else "Week:", "</b> ", week_start_chr, "<br>",
           "<b>", if (es) "Total Positivos (semanal):" else "Total Positive (weekly):", "</b> ", pos_count, "<br>",
-          "<b>", if (es) "Total Muestreados (semanal):" else "Total Tested (weekly):", "</b> ", total_tested
+          "<b>", if (es) "Total Muestreados (semanal):" else "Total Tested (weekly):", "</b> ", total_tested, "<br>",
+          "<b>", if (es) "% Positivos:" else "% Positive:", "</b> ", pct_pos, "%"
         )
       )
     
@@ -4670,7 +4715,7 @@ server <- function(input, output) {
       )
   })
   
-  # ---- Graph 2: Incidence line chart — rolling (solid) + raw (dashed) -------
+  # ---- Graph 2: Incidence line chart (rolling solid + weekly dashed) ---------
   output$incidence_plot_tab6b <- renderPlotly({
     es       <- input$language_tab6b == "es"
     p_key    <- input$pathogen_tab6b
@@ -4741,23 +4786,6 @@ server <- function(input, output) {
         )
     }
     
-    
-
-    
-    footnote <- if (es) {
-      "Notas: 
-      1.Los datos de la semana más reciente aún no están disponibles para la línea suavizada debido al cálculo 
-      del promedio móvil centrado.
-      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
-
-    } else {
-      "Notes:
-      1. Data for the most recent week are not yet available for the smoothed line due to the 
-      centered rolling average calculation.
-      2. Denominators are estimated based on seasonal farm workforce sizes."
-    }
-    
-    
     p %>%
       layout(
         xaxis = list(
@@ -4768,16 +4796,17 @@ server <- function(input, output) {
           tickformat = "%b %Y",
           tickfont   = list(size = 10)
         ),
-        yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
-        annotations   = list(
+        yaxis = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
+        annotations = list(
           list(
-            text      = footnote,
+            text      = finca_footnote(es),
             x         = 0,
-            y         = -0.6,
+            y         = 0,
             xref      = "paper",
             yref      = "paper",
             xanchor   = "left",
             yanchor   = "top",
+            yshift    = -150,
             showarrow = FALSE,
             align     = "left",
             font      = list(size = 10, color = "gray")
@@ -4785,14 +4814,13 @@ server <- function(input, output) {
         ),
         legend        = list(orientation = "h", x = 0, y = -0.30),
         hovermode     = "closest",
-        margin        = list(b = 170, t = 40, l = 60, r = 20),
+        margin        = list(b = 250, t = 40, l = 60, r = 20),
         plot_bgcolor  = "white",
         paper_bgcolor = "white"
       )
   })
   
-  # ---- Graph 3: Incidence by lugar (Overall vs Banasa vs Pantaleon) ---------
-  # Unchanged — still rolling only, per original design.
+  # ---- Graph 3: Incidence by site (Overall vs Banasa vs Pantaleon) -----------
   output$lugar_incidence_plot_tab6b <- renderPlotly({
     es       <- input$language_tab6b == "es"
     p_key    <- input$pathogen_tab6b
@@ -4814,16 +4842,16 @@ server <- function(input, output) {
         week_start_chr   = as.character(week_start)
       )
     
+    if (nrow(d) == 0) {
+      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
+    }
+    
     if (!(col_roll %in% names(d))) {
       return(plotly_empty() %>%
                layout(title = if (es) paste(label, "- datos aún no disponibles") else paste(label, "- data not yet available")))
     }
     
     d <- d %>% mutate(inc_roll = .data[[col_roll]] * 1000)
-    
-    if (nrow(d) == 0) {
-      return(plotly_empty() %>% layout(title = if (es) "No hay datos disponibles" else "No data available"))
-    }
     
     lugar_levels <- c("Overall", "Banasa", "Pantaleon")
     
@@ -4853,86 +4881,44 @@ server <- function(input, output) {
             if (es) "Denominador: " else "Denominator: ", denom_roll
           ),
           hoverinfo   = "text"
-        )}
-      footnote <- if (es) {
-        "Notas:
-      1. Los datos de la semana más reciente aún no están disponibles debido al cálculo del promedio móvil centrado.
-      2. Los denominadores son estimados según el tamaño de la fuerza laboral estacional de las fincas."
-      } else {
-        "Notes:
-      1. Data for the most recent week are not yet available due to the centered rolling average calculation.
-      2. Denominators are estimated based on seasonal farm workforce sizes."
-      }
-    
-    
-    p %>% layout(
-      xaxis = list(
-        title      = if (es) "Mes" else "Month",
-        type       = "date",
-        dtick      = "M1",
-        tickangle  = -45,
-  
-        tickformat = "%b %Y",
-        tickfont   = list(size = 10)
-      ),
-      yaxis         = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
-      annotations   = list(
-        list(
-          text      = footnote,
-          x         = 0,
-          y         = -0.6,
-          xref      = "paper",
-          yref      = "paper",
-          xanchor   = "left",
-          yanchor   = "top",
-          showarrow = FALSE,
-          align     = "left",
-          font      = list(size = 10, color = "gray")
         )
-      ),
-      legend        = list(orientation = "h", x = 0, y = -0.3),
-      hovermode     = "closest",
-      margin        = list(b = 170, t = 40, l = 60, r = 20),
-      plot_bgcolor  = "white",
-      paper_bgcolor = "white"
-    )})
-
-  output$info_VFinca_defs <- renderUI({
-    es <- input$language_VFinca == "es"
-    tagList(
-      tags$style(HTML("
-      .small-defs, .small-defs p, .small-defs li, .small-defs strong {
-        font-size: 12px !important;
-      }
-    ")),
-      div(
-        class = "small-defs",
-        markdown(if (es) Info_VFinca_defs else Info_VFinca_defs_eng)
+    }
+    
+    p %>%
+      layout(
+        xaxis = list(
+          title      = if (es) "Mes" else "Month",
+          type       = "date",
+          dtick      = "M1",
+          tickangle  = -45,
+          tickformat = "%b %Y",
+          tickfont   = list(size = 10)
+        ),
+        yaxis = list(title = if (es) "Casos por 1,000 personas" else "Cases per 1,000 people"),
+        annotations = list(
+          list(
+            text      = finca_footnote(es),
+            x         = 0,
+            y         = 0,
+            xref      = "paper",
+            yref      = "paper",
+            xanchor   = "left",
+            yanchor   = "top",
+            yshift    = -150,
+            showarrow = FALSE,
+            align     = "left",
+            font      = list(size = 10, color = "gray")
+          )
+        ),
+        legend        = list(orientation = "h", x = 0, y = -0.3),
+        hovermode     = "closest",
+        margin        = list(b = 250, t = 40, l = 60, r = 20),
+        plot_bgcolor  = "white",
+        paper_bgcolor = "white"
       )
-    )
-  })
-  # ---- Tab 6 section titles (bilingual) --------------------------------------
-  output$inc_plot_title_tab6 <- renderText({
-    if (input$language_VFinca == "es") "Incidencia por Patógeno (Promedio móvil de 3 semanas)" else "Incidence by Pathogen (3-week Rolling Average)"
   })
   
-  output$resp_stacked_title_tab6 <- renderText({
-    if (input$language_VFinca == "es") "Resultados Respiratorios (% de Muestreados)" else "Respiratory Results (% of Tested)"
-  })
-  
-  output$deng_stacked_title_tab6 <- renderText({
-    if (input$language_VFinca == "es") "Resultados de Dengue (% de Muestreados)" else "Dengue Results (% of Tested)"
-  })
-  
-  # ---- Tab 6 header/info stubs -----------------------------------------------
-  output$header_VFinca_text <- renderText({
-    if (input$language_VFinca == "es") "VigiFinca" else "VigiFinca"
-  })
-  
-  output$info_VFinca_text <- renderUI({
-    es <- input$language_VFinca == "es"
-    markdown(if (es) Info_VFinca else Info_VFinca_eng)
-  })
+ 
   
   
   cdc_fichas_filtradas <- reactive({
