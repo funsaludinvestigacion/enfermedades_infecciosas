@@ -3,7 +3,7 @@ name: Weekly Data Update and Deployment
 on:
   workflow_dispatch:
   schedule:
-     - cron: "0 5 * * 1"
+     - cron: "0 3 * * 1"
   push:
     branches: [ main ]
 
@@ -42,7 +42,7 @@ jobs:
           Rscript code/data_processing/vigicasa_processing.R
           Rscript code/data_processing/vigifinca_processing.R
           Rscript code/data_processing/geoprocessing.R
-          Rscript code/data_processing/Vigicasa_incidence.R
+          Rscript code/data_processing/vigicasa_incidence.R
           Rscript code/data_processing/vigifinca_processing_inc.R
           Rscript code/data_processing/gihsn_incidence.R
           Rscript code/data_processing/geoprocessing.R
