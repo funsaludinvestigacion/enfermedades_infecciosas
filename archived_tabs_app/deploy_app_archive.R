@@ -7,8 +7,9 @@ getwd()
 list.files()
 
 # Same account/token as before
-shinyio_token <- "4C87ED61532F4E5CE51893065807839B"
-shinyio_secret <- "UFdUc7Q3Bu3HPLsJMg//GdE2lT35bDTz5dOYP7TK"
+shinyio_token <- Sys.getenv("shinyio_token")
+shinyio_secret <- Sys.getenv("shinyio_secret")
+
 rsconnect::setAccountInfo(name = 'funsaludinvestigacion', token = shinyio_token, secret = shinyio_secret)
 
 rsconnect::deployApp('.', appName = 'archivo_agri_agricasa',
