@@ -1,10 +1,9 @@
 # Load libraries -----------------------------------------------------------
-library(REDCapR)
-library(lubridate)
-library(tidyr)
-library(dplyr)
-library(stringr)
-library(zoo)
+
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = "https://cloud.r-project.org")
+}
+pacman::p_load(REDCapR, dplyr, tidyr, stringr, lubridate, zoo)
 
 # Load data -----------------------------------------------------------------
 vigi_banasa_token <- Sys.getenv("vigi_banasa_token")

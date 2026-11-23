@@ -1,20 +1,12 @@
 #comentario
 #library(shiny) #keep commented for app to be deployed on R Shiny
-library(shiny)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(lubridate)
-library(plotly)
-library(DT)
-library(reactable)
-library(leaflet)
-library(shinythemes)
-library(lubridate)
-library(patchwork)
-library(scales)
-library(htmltools)
-library(tibble)
+
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = "https://cloud.r-project.org")
+}
+pacman::p_load(dplyr, tidyr, ggplot2, lubridate, DT, plotly, 
+               reactable, leaflet, shinythemes, patchwork, scales, htmltools, tibble )
+
 
 # Load dataframes -----------------------------------------------------------------------
 namru_biofire_summary <- read.csv("https://raw.githubusercontent.com/funsaludinvestigacion/enfermedades_infecciosas/main/docs/namru_biofire_summary_updated.csv")

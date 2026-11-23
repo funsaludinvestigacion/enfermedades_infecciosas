@@ -1,8 +1,9 @@
 
-library(dplyr)
-library(lubridate)
-library(zoo)
-library(tidyr)
+
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = "https://cloud.r-project.org")
+}
+pacman::p_load(REDCapR, dplyr, tidyr, stringr, lubridate, zoo)
 
 # Load data -----------------------------------------------------------------
 gihsn_token <- Sys.getenv("gihsn_token")
