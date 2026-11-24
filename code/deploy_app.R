@@ -3,7 +3,6 @@
 # Using shinyapp.io
 #install.packages("rsconnect", repos = "https://cran.rstudio.com")
 library(rsconnect)
-library(plotly)
 
 if (!requireNamespace("pacman", quietly = TRUE)) {
   install.packages("pacman", repos = "https://cloud.r-project.org")
