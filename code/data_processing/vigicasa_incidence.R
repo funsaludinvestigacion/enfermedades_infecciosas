@@ -437,7 +437,7 @@ vigicasa2 <- left_join(vigicasa, municipios)
 
 
 resp_weekly_muni <- vigicasa2 %>%
-  group_by(year, week_start, municipio_recent) %>%
+  group_by( week_start, municipio_recent) %>%
   summarise(
     total_tested    = n_distinct(record_id),
     sars_cov2_pos   = sum(virus_detectado___4 == 1, na.rm = TRUE),
