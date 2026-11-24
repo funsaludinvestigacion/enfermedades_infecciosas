@@ -7,6 +7,9 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   run_update_data:
     runs-on: ubuntu-latest
@@ -15,7 +18,7 @@ jobs:
         shell: bash -el {0}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up MicroMamba
         uses: mamba-org/setup-micromamba@v1
@@ -48,29 +51,8 @@ jobs:
 
       - name: Commit updated data to repository
         run: |
-          # Check if there are changes in the CSV files
-          if git diff --quiet --exit-code docs/finca_symptom_incidence_resp.csv\
-             && git diff --quiet --exit-code docs/finca_symptom_incidence_deng.csv \
-             && git diff --quiet --exit-code docs/vigifinca_incidence.csv \
-             && git diff --quiet --exit-code docs/symptom_pathogen_stacked.csv \
-             && git diff --quiet --exit-code docs/vigicasa_symptom_incidence.csv \
-             && git diff --quiet --exit-code docs/vigicasa_resp_incidence_sex.csv \
-             && git diff --quiet --exit-code docs/vigicasa_resp_incidence_age.csv \
-             && git diff --quiet --exit-code docs/vigicasa_resp_incidence_muni.csv \
-             && git diff --quiet --exit-code docs/vigicasa_resp_weekly_coinf.csv\
-             && git diff --quiet --exit-code docs/vigicasa_resp_weekly.csv \
-             && git diff --quiet --exit-code docs/gihsn_incidence_week.csv \
-             && git diff --quiet --exit-code docs/influenza_summary_updated.csv \
-             && git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv \
-             && git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv \
-             && git diff --quiet --exit-code docs/gihsn_summary.csv \
-             && git diff --quiet --exit-code docs/vigicasa_summary.csv \
-             && git diff --quiet --exit-code docs/vigifinca_summary.csv \
-             && git diff --quiet --exit-code docs/todas_las_fichas.csv \
-             && git diff --quiet --exit-code docs/conteo_por_criterio.csv \
-             && git diff --quiet --exit-code docs/conteo_por_individuo.csv \
-             && git diff --quiet --exit-code docs/conteo_por_comunidad.csv \
-             && git diff --quiet --exit-code code/vigifinca_joined.rds; then
+          # Check if there are changes (modified or new) in the data files
+          if [ -z "$(git status --porcelain docs/*.csv code/vigifinca_joined.rds)" ]; then
             echo "No changes in CSV files. Skipping commit and push."
           else
             git config --local user.name "GitHub Actions"
@@ -78,74 +60,10 @@ jobs:
             timestamp=$(date +'%Y%m%d%H%M%S')
             branch_name="update-csv-$timestamp"
             git checkout -b "$branch_name"
-            
-            if ! git diff --quiet --exit-code docs/finca_symptom_incidence_resp.csv; then
-              git add docs/finca_symptom_incidence_resp.csv
-            fi
-            if ! git diff --quiet --exit-code docs/finca_symptom_incidence_deng.csv; then
-              git add docs/finca_symptom_incidence_deng.csv
-            fi
-            if ! git diff --quiet --exit-code docs/vigifinca_incidence.csv; then
-              git add docs/vigifinca_incidence.csv
-            fi
-            if ! git diff --quiet --exit-code docs/symptom_pathogen_stacked.csv; then
-              git add docs/symptom_pathogen_stacked.csv
-            fi
-            if ! git diff --quiet --exit-code docs/vigicasa_resp_incidence_sex.csv; then
-              git add docs/vigicasa_resp_incidence_sex.csv
-            fi
-            if ! git diff --quiet --exit-code docs/vigicasa_resp_incidence_age.csv; then
-              git add docs/vigicasa_resp_incidence_age.csv
-            fi
-                  if ! git diff --quiet --exit-code docs/vigicasa_resp_incidence_muni.csv; then
-              git add docs/vigicasa_resp_incidence_muni.csv
-            fi
-            if ! git diff --quiet --exit-code docs/vigicasa_resp_weekly_coinf.csv; then
-              git add docs/vigicasa_resp_weekly_coinf.csv
-            fi
-                  if ! git diff --quiet --exit-code docs/vigicasa_resp_weekly.csv; then
-              git add docs/vigicasa_resp_weekly.csv
-            fi
-            if ! git diff --quiet --exit-code docs/gihsn_incidence_week.csv; then
-              git add docs/gihsn_incidence_week.csv
-            fi
-            if ! git diff --quiet --exit-code docs/influenza_summary_updated.csv; then
-              git add docs/influenza_summary_updated.csv
-            fi
-            if ! git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv; then
-              git add docs/influenza_symptom_summary_updated.csv
-            fi
-            if ! git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv; then
-              git add docs/namru_biofire_summary_updated.csv
-            fi
-            if ! git diff --quiet --exit-code docs/gihsn_summary.csv; then
-              git add docs/gihsn_summary.csv
-            fi
-            if ! git diff --quiet --exit-code docs/vigicasa_summary.csv; then
-              git add docs/vigicasa_summary.csv
-            fi
-            if ! git diff --quiet --exit-code docs/vigifinca_summary.csv; then
-              git add docs/vigifinca_summary.csv
-            fi
-            if ! git diff --quiet --exit-code docs/todas_las_fichas.csv; then
-              git add docs/todas_las_fichas.csv
-            fi
 
-            if ! git diff --quiet --exit-code docs/conteo_por_criterio.csv; then
-              git add docs/conteo_por_criterio.csv
-            fi
+            # Add all changed and new CSVs in docs/ plus the RDS file
+            git add docs/*.csv code/vigifinca_joined.rds
 
-            if ! git diff --quiet --exit-code docs/conteo_por_individuo.csv; then
-              git add docs/conteo_por_individuo.csv
-            fi
-
-            if ! git diff --quiet --exit-code docs/conteo_por_comunidad.csv; then
-              git add docs/conteo_por_comunidad.csv
-            fi
-            if ! git diff --quiet --exit-code code/vigifinca_joined.rds; then
-              git add code/vigifinca_joined.rds
-            fi
-            
             git commit -m "Update CSV files"
             git push origin "$branch_name"
             git checkout main
