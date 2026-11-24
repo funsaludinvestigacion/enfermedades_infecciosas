@@ -5,6 +5,10 @@
 library(rsconnect)
 library(plotly)
 
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = "https://cloud.r-project.org")
+}
+pacman::p_load(library(plotly))
 
 
 # Save secret token for connecting to R shiny account
