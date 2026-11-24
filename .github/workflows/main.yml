@@ -62,6 +62,7 @@ jobs:
              && git diff --quiet --exit-code docs/vigicasa_resp_weekly.csv \
              && git diff --quiet --exit-code docs/gihsn_incidence_week.csv \
              && git diff --quiet --exit-code docs/agri_casa_symptom_summary_updated.csv \
+             && git diff --quiet --exit-code docs/agri_casa_incidence_summary_updated.csv\
              && git diff --quiet --exit-code docs/influenza_summary_updated.csv \
              && git diff --quiet --exit-code docs/influenza_symptom_summary_updated.csv \
              && git diff --quiet --exit-code docs/namru_biofire_summary_updated.csv \
